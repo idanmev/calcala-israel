@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ספריית חידונים - Calcala-News Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/admin/css/admin-styles.css">
+  <style>
+    /* Drag and drop visual feedback */
+    [draggable="true"]:active {
+      cursor: grabbing !important;
+    }
+
+    [draggable="true"]:hover {
+      border-color: #3b82f6 !important;
+    }
+
+    [draggable="true"].dragging {
+      opacity: 0.4;
+      border: 2px dashed #3b82f6;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+  <!-- Top Bar -->
+  <div
+    class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-30 h-16 flex items-center justify-between px-6">
+    <h1 class="text-xl font-bold text-gray-900">Calcala-News Admin</h1>
+    <div class="flex items-center gap-4">
+      <a href="/" target="_blank" class="text-sm text-blue-600 hover:underline">צפייה באתר ↗</a>
+      <button onclick="logout()" class="text-sm text-red-600 hover:underline">התנתקות</button>
+    </div>
+  </div>
+
+  <div class="flex mt-16">
+    <!-- Sidebar -->
+    <aside class="fixed right-0 top-16 bottom-0 w-56 bg-white border-l border-gray-200 p-4 overflow-y-auto">
+      <nav class="space-y-1">
+        <a href="/admin/dashboard.html"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm">📰 מאמרים</a>
+        <a href="/admin/categories.html"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm">🏷️ קטגוריות</a>
+        <a href="/admin/leads.html"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm">🎯 לידים</a>
+        <a href="/admin/quiz-config.html"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold text-sm">❓ ספריית
+          חידונים</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 p-8 mr-56">
+
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-900">ספריית חידונים</h2>
+          <p class="text-gray-500 mt-1">צור וערוך חידוני זכאות — שייך לכל מאמר בנפרד</p>
+        </div>
+        <button onclick="showCreateModal()"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl text-sm flex items-center gap-2">
+          + צור חידון חדש
+        </button>
+      </div>
+
+      <!-- Quiz cards grid -->
+      <div id="quiz-library" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div class="col-span-full text-center py-12 text-gray-400">טוען חידונים...</div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal"
+    class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl w-full max-w-2xl my-8">
+      <div class="flex justify-between items-center p-6 border-b">
+        <h3 class="text-xl font-bold" id="edit-modal-title">עריכת חידון</h3>
+        <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+      </div>
+      <div class="p-6" id="edit-modal-body">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/admin/js/supabase-client.js"></script>
+  <script src="/admin/js/auth.js"></script>
+  <script>
+    checkAuth();
+    let quizzes = [];
+    let editingQuiz = null;
+
+    // ---- LOAD ALL QUIZZES ----
+    async function loadQuizzes() {
+      const { data, error } = await supabaseClient
+        .from('quiz_configs')
+        .select('*')
+        .order('vertical_name');
+
+      if (error) { console.error(error); return; }
+      quizzes = data || [];
+      renderQuizLibrary();
+    }
+
+    // ---- RENDER LIBRARY ----
+    function renderQuizLibrary() {
+      const container = document.getElementById('quiz-library');
+      if (quizzes.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">אין חידונים עדיין. צור את הראשון!</div>';
+        return;
+      }
+
+      container.innerHTML = quizzes.map(quiz => {
+        const questions = Array.isArray(quiz.questions) ? quiz.questions : (JSON.parse(quiz.questions || '[]'));
+        return `
+        <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h4 class="font-bold text-gray-900 text-lg">${quiz.display_name || quiz.vertical_name}</h4>
+              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${quiz.vertical_name}</span>
+            </div>
+            <span class="w-3 h-3 rounded-full ${quiz.is_active ? 'bg-green-400' : 'bg-gray-300'}" title="${quiz.is_active ? 'פעיל' : 'לא פעיל'}"></span>
+          </div>
+          
+          <div class="text-sm text-gray-600 mb-3 space-y-1">
+            <p>🎯 <strong>Entry hook:</strong> ${quiz.entry_hook_title || '—'}</p>
+            <p>🔘 <strong>כפתורים:</strong> ${quiz.button_a_label || '—'} / ${quiz.button_b_label || '—'}</p>
+            <p>❓ <strong>שאלות:</strong> ${questions.length}</p>
+            <p>✅ <strong>הצלחה:</strong> ${quiz.success_range || '—'}</p>
+          </div>
+
+          <div class="flex gap-2 pt-3 border-t border-gray-100">
+            <button onclick="editQuiz('${quiz.id}')" 
+                    class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 rounded-lg text-sm transition-colors">
+              ✏️ ערוך
+            </button>
+            <button onclick="duplicateQuiz('${quiz.id}')" 
+                    class="bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold py-2 px-3 rounded-lg text-sm transition-colors">
+              📋 שכפל
+            </button>
+            <button onclick="toggleQuizActive('${quiz.id}', ${quiz.is_active})" 
+                    class="bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold py-2 px-3 rounded-lg text-sm transition-colors">
+              ${quiz.is_active ? '⏸️' : '▶️'}
+            </button>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    // ---- EDIT QUIZ ----
+    function editQuiz(quizId) {
+      editingQuiz = quizzes.find(q => q.id === quizId);
+      if (!editingQuiz) return;
+
+      document.getElementById('edit-modal-title').textContent = 'עריכת: ' + (editingQuiz.display_name || editingQuiz.vertical_name);
+      renderEditForm(editingQuiz);
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function showCreateModal() {
+      editingQuiz = null;
+      document.getElementById('edit-modal-title').textContent = 'חידון חדש';
+      renderEditForm(null);
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.add('hidden');
+      editingQuiz = null;
+    }
+
+    function renderEditForm(quiz) {
+      // Initialize localQuestions with deep copy
+      localQuestions = quiz ? (Array.isArray(quiz.questions) ? JSON.parse(JSON.stringify(quiz.questions)) : JSON.parse(quiz.questions || '[]')) : [];
+
+      document.getElementById('edit-modal-body').innerHTML = `
+        <div class="space-y-5">
+          
+          <!-- Basic info -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">שם החידון *</label>
+              <input type="text" id="f-display-name" value="${quiz?.display_name || ''}" 
+                     placeholder="לדוגמה: החזר מס - שכירים"
+                     class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">ורטיקל</label>
+              <input type="text" id="f-vertical-name" value="${quiz?.vertical_name || ''}"
+                     placeholder="לדוגמה: מיסוי"
+                     class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+          </div>
+
+          <!-- Entry Hook -->
+          <div class="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <h4 class="font-bold text-gray-800 mb-3 text-sm">🎯 כפתורי כניסה לחידון</h4>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">כותרת</label>
+                <input type="text" id="f-hook-title" value="${quiz?.entry_hook_title || ''}"
+                       placeholder="האם מגיע לך החזר מס?"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">תת-כותרת</label>
+                <input type="text" id="f-hook-subtitle" value="${quiz?.entry_hook_subtitle || ''}"
+                       placeholder="בדוק תוך 60 שניות"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-gray-600 mb-1">כפתור א׳</label>
+                  <input type="text" id="f-btn-a-label" value="${quiz?.button_a_label || ''}"
+                         placeholder="מעל גיל 30"
+                         class="w-full border rounded-lg px-3 py-2 text-sm">
+                  <input type="hidden" id="f-btn-a-value" value="${quiz?.button_a_value || 'option_a'}">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-600 mb-1">כפתור ב׳</label>
+                  <input type="text" id="f-btn-b-label" value="${quiz?.button_b_label || ''}"
+                         placeholder="מתחת לגיל 30"
+                         class="w-full border rounded-lg px-3 py-2 text-sm">
+                  <input type="hidden" id="f-btn-b-value" value="${quiz?.button_b_value || 'option_b'}">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Questions -->
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="font-bold text-gray-800 text-sm">❓ שאלות (${localQuestions.length})</h4>
+              <button onclick="addQuestion()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">+ הוסף שאלה</button>
+            </div>
+            <div id="questions-container" class="space-y-3">
+              <!-- Questions rendered by separate function -->
+            </div>
+          </div>
+
+          <!-- Success Screen -->
+          <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+            <h4 class="font-bold text-gray-800 mb-3 text-sm">✅ מסך תוצאות</h4>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">כותרת</label>
+                <input type="text" id="f-success-title" value="${quiz?.success_title || ''}"
+                       placeholder="בשורות מצוינות!"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">תת-כותרת</label>
+                <input type="text" id="f-success-subtitle" value="${quiz?.success_subtitle || ''}"
+                       placeholder="על פי הנתונים, מגיע לך:"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">טווח סכום</label>
+                <input type="text" id="f-success-range" value="${quiz?.success_range || ''}"
+                       placeholder="₪2,000 - ₪12,000"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+            </div>
+          </div>
+
+          <!-- Save -->
+          <div class="flex gap-3 pt-2">
+            <button onclick="saveQuiz()" 
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">
+              💾 שמור
+            </button>
+            <button onclick="closeEditModal()" 
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-xl text-sm">
+              ביטול
+            </button>
+          </div>
+
+        </div>
+      `;
+
+      refreshQuestionsContainer();
+    }
+
+    function renderQuestionRow(q, index) {
+      return `
+        <div class="border border-gray-200 rounded-xl p-3 bg-white cursor-move hover:border-blue-400 transition-colors"
+             id="q-row-${index}"
+             draggable="true"
+             ondragstart="handleDragStart(event, ${index})"
+             ondragover="handleDragOver(event)"
+             ondrop="handleDrop(event, ${index})"
+             ondragend="handleDragEnd(event)">
+
+          <!-- Drag handle indicator -->
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 cursor-move text-lg">⋮⋮</span>
+              <span class="text-xs font-bold text-gray-500">שאלה ${index + 1}</span>
+            </div>
+            <button onclick="removeQuestion(${index})" class="text-red-400 hover:text-red-600 text-xs">🗑️ הסר</button>
+          </div>
+
+          <input type="text" placeholder="טקסט השאלה" value="${q.text || ''}"
+                 onclick="event.stopPropagation()"
+                 onchange="updateQ(${index}, 'text', this.value)"
+                 class="w-full border rounded-lg px-3 py-2 text-sm mb-2">
+          <label class="block text-xs text-gray-500 mb-1">תשובות (אחת בשורה):</label>
+          <textarea onclick="event.stopPropagation()"
+                    onchange="updateQ(${index}, 'options', this.value.split('\\n').filter(x=>x.trim()))"
+                    class="w-full border rounded-lg px-3 py-2 text-sm h-20 resize-none"
+                    >${(q.options || []).join('\n')}</textarea>
+        </div>
+      `;
+    }
+
+    let localQuestions = [];
+
+    function addQuestion() {
+      localQuestions.push({ id: 'q' + Date.now(), text: '', options: [] });
+      refreshQuestionsContainer();
+    }
+
+    function removeQuestion(index) {
+      localQuestions.splice(index, 1);
+      refreshQuestionsContainer();
+    }
+
+    function updateQ(index, field, value) {
+      if (localQuestions[index]) localQuestions[index][field] = value;
+    }
+
+    function refreshQuestionsContainer() {
+      const container = document.getElementById('questions-container');
+      if (container) {
+        container.innerHTML = localQuestions.map((q, i) => renderQuestionRow(q, i)).join('');
+      }
+    }
+
+    // ---- DRAG AND DROP LOGIC ----
+
+    let draggedQuestionIndex = null;
+
+    function handleDragStart(event, index) {
+      draggedQuestionIndex = index;
+      event.target.style.opacity = '0.4';
+      event.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+
+    function handleDrop(event, targetIndex) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (draggedQuestionIndex === null || draggedQuestionIndex === targetIndex) {
+        return false;
+      }
+
+      // Reorder the localQuestions array
+      const draggedItem = localQuestions[draggedQuestionIndex];
+      localQuestions.splice(draggedQuestionIndex, 1);
+      localQuestions.splice(targetIndex, 0, draggedItem);
+
+      // Re-render the questions with new order
+      refreshQuestionsContainer();
+
+      return false;
+    }
+
+    function handleDragEnd(event) {
+      event.target.style.opacity = '1';
+      draggedQuestionIndex = null;
+    }
+
+    async function saveQuiz() {
+      const displayName = document.getElementById('f-display-name')?.value?.trim();
+      const verticalName = document.getElementById('f-vertical-name')?.value?.trim();
+
+      if (!displayName) {
+        alert('נא להזין שם לחידון');
+        return;
+      }
+
+      // Collect current questions state (redundant but safe)
+      const questions = localQuestions.map(q => ({
+        id: q.id,
+        text: q.text,
+        options: Array.isArray(q.options) ? q.options.filter(o => o.trim()) : []
+      })).filter(q => q.text && q.options.length > 0);
+
+      const payload = {
+        display_name: displayName,
+        vertical_name: verticalName || displayName,
+        category_slug: verticalName?.toLowerCase().replace(/\s+/g, '-') || 'general',
+        entry_hook_title: document.getElementById('f-hook-title')?.value || '',
+        entry_hook_subtitle: document.getElementById('f-hook-subtitle')?.value || '',
+        button_a_label: document.getElementById('f-btn-a-label')?.value || '',
+        button_a_value: document.getElementById('f-btn-a-value')?.value || 'option_a',
+        button_b_label: document.getElementById('f-btn-b-label')?.value || '',
+        button_b_value: document.getElementById('f-btn-b-value')?.value || 'option_b',
+        questions: questions,
+        success_title: document.getElementById('f-success-title')?.value || '',
+        success_subtitle: document.getElementById('f-success-subtitle')?.value || '',
+        success_range: document.getElementById('f-success-range')?.value || '',
+        is_active: true,
+        updated_at: new Date().toISOString()
+      };
+
+      let error;
+      if (editingQuiz) {
+        ({ error } = await supabaseClient.from('quiz_configs').update(payload).eq('id', editingQuiz.id));
+      } else {
+        ({ error } = await supabaseClient.from('quiz_configs').insert(payload));
+      }
+
+      if (error) {
+        alert('שגיאה בשמירה: ' + error.message);
+      } else {
+        closeEditModal();
+        loadQuizzes();
+        alert('✅ נשמר בהצלחה!');
+      }
+    }
+
+    async function duplicateQuiz(quizId) {
+      const original = quizzes.find(q => q.id === quizId);
+      if (!original) return;
+
+      const { id, created_at, updated_at, ...rest } = original;
+      rest.display_name = rest.display_name + ' (עותק)';
+
+      const { error } = await supabaseClient.from('quiz_configs').insert(rest);
+      if (error) {
+        alert('שגיאה בשכפול');
+      } else {
+        loadQuizzes();
+      }
+    }
+
+    async function toggleQuizActive(quizId, currentState) {
+      await supabaseClient.from('quiz_configs').update({ is_active: !currentState }).eq('id', quizId);
+      loadQuizzes();
+    }
+
+    loadQuizzes();
+  </script>
+</body>
+
+</html>

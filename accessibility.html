@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>הצהרת נגישות — כלכלה-ניוז</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#0F172A", "accent": "#F97316", "text-main": "#334155", "text-muted": "#64748B", "border-color": "#E2E8F0" },
+                    fontFamily: { "heading": ["Heebo", "sans-serif"], "body": ["Assistant", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body
+    class="bg-gray-50 font-body text-text-main antialiased selection:bg-accent selection:text-white flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-border-color sticky top-0 z-40 shadow-sm">
+        <div class="max-w-[1280px] mx-auto px-4 h-16 flex items-center">
+            <a class="flex items-center gap-2 text-primary group" href="index.html">
+                <div class="size-8 bg-primary text-white flex items-center justify-center rounded-sm">
+                    <span class="material-symbols-outlined">candlestick_chart</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-heading font-extrabold text-xl leading-none tracking-tight">כלכלה</span>
+                    <span class="font-heading font-medium text-[10px] tracking-[0.2em] text-accent uppercase">ניוז
+                        פולס</span>
+                </div>
+            </a>
+            <div class="mr-auto"><a href="index.html"
+                    class="text-sm text-text-muted hover:text-primary transition-colors">← חזרה לדף הבית</a></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-4xl mx-auto px-4 py-20 w-full text-center">
+        <h1 class="text-4xl font-heading font-extrabold text-primary mb-6">הצהרת נגישות</h1>
+        <p class="text-lg text-text-muted">עמוד זה בבניה ויעודכן בקרוב.</p>
+    </main>
+
+    <!-- Footer Script injected via JS or copied below -->
+    <script src="js/main.js"></script>
+    <script src="js/cookie-consent.js"></script>
+    <script src="js/accessibility-widget.js"></script>
+</body>
+
+</html>

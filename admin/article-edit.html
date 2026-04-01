@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עריכת מאמר - Calcala-News</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Admin Styles -->
+    <link rel="stylesheet" href="css/admin-styles.css">
+
+    <!-- Editor.js Custom Styles -->
+    <style>
+        .codex-editor {
+            direction: rtl;
+        }
+
+        .ce-toolbar__actions {
+            right: 0;
+            left: auto;
+        }
+
+        .ce-block__content,
+        .ce-toolbar__content {
+            max-width: 100%;
+            margin: 0;
+        }
+    </style>
+
+    <!-- Image Compression -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="sidebar">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-gray-900">Calcala-News</h1>
+                <p class="text-sm text-gray-500 mt-1">לוח בקרה</p>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="dashboard" class="sidebar-menu-item active">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    מאמרים
+                </a>
+                <a href="categories" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    קטגוריות
+                </a>
+                <a href="leads" class="sidebar-menu-item">
+                    <span class="w-6 h-6 flex items-center justify-center text-lg">🎯</span>
+                    לידים
+                </a>
+                <a href="quiz-config" class="sidebar-menu-item">
+                    <span class="w-6 h-6 flex items-center justify-center text-lg">❓</span>
+                    חידוני זכאות
+                </a>
+
+
+                <a href="#" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                    </svg>
+                    תגיות
+                </a>
+                <a href="#" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    </svg>
+                    ניהול תוכן
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Top Bar -->
+            <header class="admin-topbar">
+                <div class="flex items-center gap-4">
+                    <button class="hamburger-btn" id="hamburgerBtn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900" id="pageTitle">מאמר חדש</h2>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="/" target="_blank" class="btn btn-secondary text-sm">
+                        צפייה באתר החי
+                    </a>
+                    <button onclick="window.authUtils.logout()" class="btn btn-ghost text-sm">
+                        התנתקות
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="admin-content">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Auto-save indicator -->
+                    <div id="autoSaveIndicator" class="hidden mb-4 text-sm text-gray-500 text-center">
+                        שמירה אוטומטית...
+                    </div>
+
+                    <!-- Article Form -->
+                    <form id="articleForm" class="space-y-6">
+                        <!-- Title -->
+                        <div class="form-group">
+                            <label for="title" class="form-label">כותרת *</label>
+                            <input type="text" id="title" name="title" class="form-input" placeholder="הזן כותרת למאמר"
+                                required>
+                            <div id="titleError" class="form-error hidden"></div>
+                        </div>
+
+                        <!-- Slug -->
+                        <div class="form-group">
+                            <label for="slug" class="form-label">Slug *</label>
+                            <input type="text" id="slug" name="slug" class="form-input" placeholder="article-slug"
+                                required>
+                            <div class="form-helper">נוצר אוטומטית מהכותרת, ניתן לערוך</div>
+                            <div id="slugError" class="form-error hidden"></div>
+                        </div>
+
+                        <!-- Featured Image -->
+                        <div class="form-group">
+                            <label class="form-label">תמונה ראשית</label>
+                            <div class="upload-zone" id="uploadZone">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
+                                    viewBox="0 0 48 48">
+                                    <path
+                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-600">גרור תמונה או לחץ לבחירה</p>
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG, WEBP עד 10MB</p>
+                                <input type="file" id="imageInput" class="hidden" accept="image/*">
+                            </div>
+                            <div id="imagePreview" class="hidden image-preview">
+                                <img id="previewImg" src="" alt="תצוגה מקדימה">
+                                <button type="button" onclick="removeImage()" class="mt-2 btn btn-danger btn-sm">הסר
+                                    תמונה</button>
+                            </div>
+                            <div id="uploadProgress" class="hidden progress-bar">
+                                <div id="uploadProgressFill" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                            <input type="hidden" id="featuredImageUrl" name="featured_image_url">
+                        </div>
+
+                        <!-- Author -->
+                        <div class="form-group">
+                            <label for="author" class="form-label">כותב</label>
+                            <input type="text" id="author" name="author" class="form-input" value="צוות כלכליסט">
+                        </div>
+
+                        <!-- Category -->
+                        <div class="form-group">
+                            <label for="category" class="form-label">קטגוריה</label>
+                            <select id="category" name="category_id" class="form-select">
+                                <option value="">בחר קטגוריה</option>
+                            </select>
+                        </div>
+
+                        <!-- Quiz selector -->
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                חידון זכאות
+                                <span class="text-gray-400 font-normal text-xs mr-2">(אופציונלי — אם לא נבחר, ישתמש
+                                    בחידון הקטגוריה)</span>
+                            </label>
+                            <select id="article-quiz-id" name="quiz_id"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                                <option value="">ללא חידון מיוחד (ברירת מחדל)</option>
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="form-group">
+                            <label for="tags" class="form-label">תגיות</label>
+                            <select id="tags" name="tags" class="form-select" multiple>
+                            </select>
+                            <div id="selectedTags" class="tag-chips"></div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="form-group">
+                            <label for="body" class="form-label">תוכן המאמר *</label>
+                            <div id="editor" class="bg-white border border-gray-300 rounded-md p-4 min-h-[400px]"></div>
+                            <div id="bodyError" class="form-error hidden"></div>
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div class="form-group">
+                            <label for="metaDescription" class="form-label">תיאור מטא</label>
+                            <textarea id="metaDescription" name="meta_description" class="form-textarea" rows="3"
+                                maxlength="160" placeholder="תיאור קצר למנועי חיפוש (עד 160 תווים)"></textarea>
+                            <div id="charCounter" class="char-counter">0 / 160</div>
+                        </div>
+
+                        <!-- Custom Disclaimer -->
+                        <div class="form-group">
+                            <label for="disclaimer" class="form-label">גילוי נאות (אופציונלי)</label>
+                            <textarea id="disclaimer" name="disclaimer" class="form-textarea" rows="2"
+                                placeholder="גילוי נאות ספציפי למאמר זה (יוצג בסוף הכתבה אופציונלית)..."></textarea>
+                        </div>
+
+                        <!-- Status Toggle -->
+                        <div class="form-group">
+                            <label class="form-label">מצב</label>
+                            <div class="flex items-center gap-3">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="statusToggle" name="status">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span id="statusLabel" class="text-gray-700">טיוטה</span>
+                            </div>
+                        </div>
+
+                        <!-- Featured Checkbox -->
+                        <div class="form-group">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="isFeatured" name="is_featured" class="w-5 h-5">
+                                <span class="form-label mb-0">מוצג בעמוד הבית?</span>
+                            </label>
+                        </div>
+
+                        <!-- Publish Date -->
+                        <div class="form-group">
+                            <label for="publishDate" class="form-label">תאריך פרסום</label>
+                            <input type="datetime-local" id="publishDate" name="publish_date" class="form-input">
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-3 pt-6 border-t">
+                            <button type="submit" id="publishBtn" class="btn btn-primary">
+                                <span id="publishBtnText">פרסם</span>
+                                <div id="publishSpinner" class="hidden spinner"
+                                    style="width: 20px; height: 20px; border-width: 2px;"></div>
+                            </button>
+                            <button type="button" onclick="saveDraft()" id="draftBtn" class="btn btn-secondary">
+                                שמור טיוטה
+                            </button>
+                            <a href="dashboard" class="btn btn-ghost">
+                                ביטול
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Editor.js Core & Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@1.9.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/raw@latest"></script>
+
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/quiz-block-tool.js"></script>
+    <script src="js/article-editor.js"></script>
+</body>
+
+</html>

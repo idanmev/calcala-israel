@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח בקרה - Calcala-News</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Admin Styles -->
+    <link rel="stylesheet" href="css/admin-styles.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="sidebar">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-gray-900">Calcala-News</h1>
+                <p class="text-sm text-gray-500 mt-1">לוח בקרה</p>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="dashboard" class="sidebar-menu-item active">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    מאמרים
+                </a>
+                <a href="categories" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    קטגוריות
+                </a>
+                <a href="leads" class="sidebar-menu-item">
+                    <span class="w-6 h-6 flex items-center justify-center text-lg">🎯</span>
+                    לידים
+                </a>
+                <a href="quiz-config" class="sidebar-menu-item">
+                    <span class="w-6 h-6 flex items-center justify-center text-lg">❓</span>
+                    חידוני זכאות
+                </a>
+
+
+                <a href="#" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                    </svg>
+                    תגיות
+                </a>
+                <a href="#" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    </svg>
+                    ניהול תוכן
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Top Bar -->
+            <header class="admin-topbar">
+                <div class="flex items-center gap-4">
+                    <button class="hamburger-btn" id="hamburgerBtn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900">לוח בקרה - Calcala-News</h2>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="/" target="_blank" class="btn btn-secondary text-sm">
+                        צפייה באתר החי
+                    </a>
+                    <button onclick="window.authUtils.logout()" class="btn btn-ghost text-sm">
+                        התנתקות
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">ניהול מאמרים</h1>
+                    <a href="article-edit?id=new" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        מאמר חדש
+                    </a>
+                </div>
+
+                <!-- Filters -->
+                <div class="admin-card mb-6">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <!-- Search -->
+                        <div class="flex-1">
+                            <input type="text" id="searchInput" class="form-input" placeholder="חיפוש מאמרים...">
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="w-full md:w-48">
+                            <select id="statusFilter" class="form-select">
+                                <option value="all">הכל</option>
+                                <option value="published">פורסם</option>
+                                <option value="draft">טיוטה</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="flex justify-center items-center py-12">
+                    <div class="spinner"></div>
+                </div>
+
+                <!-- Articles Table (Desktop) -->
+                <div id="articlesTableContainer" class="admin-table hidden">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>כותרת</th>
+                                <th>קטגוריה</th>
+                                <th>סטטוס</th>
+                                <th>תאריך פרסום</th>
+                                <th>צפיות</th>
+                                <th>פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="articlesTableBody">
+                            <!-- Articles will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Articles Cards (Mobile) -->
+                <div id="articlesCardsContainer" class="admin-table-mobile hidden">
+                    <!-- Cards will be inserted here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">אין מאמרים</h3>
+                    <p class="mt-1 text-sm text-gray-500">התחל על ידי יצירת מאמר חדש</p>
+                    <div class="mt-6">
+                        <a href="article-edit?id=new" class="btn btn-primary">
+                            מאמר חדש
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="paginationContainer" class="hidden pagination">
+                    <button id="prevPage" class="pagination-btn">הקודם</button>
+                    <div id="pageNumbers"></div>
+                    <button id="nextPage" class="pagination-btn">הבא</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="modal-title">מחיקת מאמר</h3>
+            <p class="text-gray-600">האם אתה בטוח שברצונך למחוק את המאמר? פעולה זו אינה ניתנת לביטול.</p>
+            <div class="modal-actions">
+                <button onclick="confirmDelete()" class="btn btn-danger">מחק</button>
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/sanitize.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Check authentication
+        window.authUtils.checkAuth();
+
+        // Escape utility
+        const _d = (s) => window.CalcalaSanitize ? window.CalcalaSanitize.escapeHtml(s) : String(s || '');
+
+        // State
+        let articles = [];
+        let filteredArticles = [];
+        let currentPage = 1;
+        const articlesPerPage = 20;
+        let articleToDelete = null;
+
+        // DOM Elements
+        const loadingState = document.getElementById('loadingState');
+        const articlesTableContainer = document.getElementById('articlesTableContainer');
+        const articlesCardsContainer = document.getElementById('articlesCardsContainer');
+        const articlesTableBody = document.getElementById('articlesTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const deleteModal = document.getElementById('deleteModal');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        // Hamburger menu toggle
+        hamburgerBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('show-mobile');
+        });
+
+        // Load articles
+        async function loadArticles() {
+            try {
+                loadingState.classList.remove('hidden');
+                articlesTableContainer.classList.add('hidden');
+                articlesCardsContainer.classList.add('hidden');
+                emptyState.classList.add('hidden');
+
+                const { data, error } = await supabaseClient
+                    .from('articles')
+                    .select(`
+            id,
+            title,
+            slug,
+            status,
+            publish_date,
+            view_count,
+            created_at,
+            category_id,
+            categories (
+              name
+            )
+          `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                articles = data || [];
+                filteredArticles = articles;
+
+                renderArticles();
+
+            } catch (error) {
+                console.error('Error loading articles:', error);
+                window.authUtils.showError('שגיאה בטעינת מאמרים');
+            } finally {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        // Render articles
+        function renderArticles() {
+            if (filteredArticles.length === 0) {
+                emptyState.classList.remove('hidden');
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * articlesPerPage;
+            const endIndex = startIndex + articlesPerPage;
+            const pageArticles = filteredArticles.slice(startIndex, endIndex);
+
+            // Render table (desktop)
+            articlesTableBody.innerHTML = pageArticles.map(article => `
+        <tr>
+          <td class="font-medium">${_d(article.title)}</td>
+          <td>${_d(article.categories?.name || 'ללא קטגוריה')}</td>
+          <td>
+            <span class="status-badge ${article.status}">
+              ${article.status === 'published' ? 'פורסם' : 'טיוטה'}
+            </span>
+          </td>
+          <td>${article.publish_date ? formatDate(article.publish_date) : '-'}</td>
+          <td>${article.view_count || 0}</td>
+          <td>
+            <div class="flex gap-2">
+              <a href="article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600 hover:text-blue-700">
+                ✏️
+              </a>
+              <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600 hover:text-red-700">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+            // Render cards (mobile)
+            articlesCardsContainer.innerHTML = pageArticles.map(article => `
+        <div class="table-card">
+          <div class="table-card-row">
+            <span class="table-card-label">כותרת</span>
+            <span class="font-medium">${_d(article.title)}</span>
+          </div>
+          <div class="table-card-row">
+            <span class="table-card-label">קטגוריה</span>
+            <span>${_d(article.categories?.name || 'ללא קטגוריה')}</span>
+          </div>
+          <div class="table-card-row">
+            <span class="table-card-label">סטטוס</span>
+            <span class="status-badge ${article.status}">
+              ${article.status === 'published' ? 'פורסם' : 'טיוטה'}
+            </span>
+          </div>
+          <div class="table-card-row">
+            <span class="table-card-label">תאריך</span>
+            <span>${article.publish_date ? formatDate(article.publish_date) : '-'}</span>
+          </div>
+          <div class="table-card-row">
+            <span class="table-card-label">פעולות</span>
+            <div class="flex gap-3">
+              <a href="article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600">ערוך</a>
+              <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600">מחק</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+            articlesTableContainer.classList.remove('hidden');
+            articlesCardsContainer.classList.remove('hidden');
+
+            // Event delegation for delete buttons
+            document.querySelectorAll('.delete-article-btn').forEach(btn => {
+                btn.addEventListener('click', () => openDeleteModal(btn.dataset.deleteId));
+            });
+
+            renderPagination();
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+
+            paginationContainer.classList.remove('hidden');
+
+            const pageNumbers = document.getElementById('pageNumbers');
+            pageNumbers.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => {
+                    currentPage = i;
+                    renderArticles();
+                };
+                pageNumbers.appendChild(btn);
+            }
+
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        // Pagination handlers
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderArticles();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderArticles();
+            }
+        });
+
+        // Search handler
+        searchInput.addEventListener('input', (e) => {
+            filterArticles();
+        });
+
+        // Status filter handler
+        statusFilter.addEventListener('change', () => {
+            filterArticles();
+        });
+
+        // Filter articles
+        function filterArticles() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const status = statusFilter.value;
+
+            filteredArticles = articles.filter(article => {
+                const matchesSearch = article.title.toLowerCase().includes(searchTerm);
+                const matchesStatus = status === 'all' || article.status === status;
+                return matchesSearch && matchesStatus;
+            });
+
+            currentPage = 1;
+            renderArticles();
+        }
+
+        // Delete modal
+        function openDeleteModal(articleId) {
+            articleToDelete = articleId;
+            deleteModal.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            articleToDelete = null;
+            deleteModal.classList.add('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!articleToDelete) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('articles')
+                    .delete()
+                    .eq('id', articleToDelete);
+
+                if (error) throw error;
+
+                window.authUtils.showSuccess('המאמר נמחק בהצלחה');
+                closeDeleteModal();
+                loadArticles();
+
+            } catch (error) {
+                console.error('Error deleting article:', error);
+                window.authUtils.showError('שגיאה במחיקת המאמר');
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('he-IL', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        // Close modal on outside click
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+
+        // Initialize
+        loadArticles();
+    </script>
+</body>
+
+</html>

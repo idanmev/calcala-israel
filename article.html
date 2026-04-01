@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>משרד האוצר חושף את מתווה החזרי המס החדש — כלכלה-ניוז</title>
+    <meta name="description"
+        content="בצעד מפתיע, שר האוצר חשף תוכנית תקציב המפעילה החזרים אוטומטיים לאזרחים. כל הפרטים כאן." />
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0F172A",
+                        "primary-light": "#1E293B",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#020617",
+                        "accent": "#F97316",
+                        "accent-secondary": "#EC4899",
+                        "success": "#10B981",
+                        "error": "#EF4444",
+                        "conversion-bg": "#FEFCE8",
+                        "text-main": "#334155",
+                        "text-muted": "#64748B",
+                        "border-color": "#E2E8F0",
+                    },
+                    fontFamily: {
+                        "heading": ["Heebo", "sans-serif"],
+                        "body": ["Assistant", "sans-serif"],
+                        "mono": ["Rubik", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                        'sticky': '0 -2px 10px rgba(0,0,0,0.05)',
+                    },
+                    borderRadius: {
+                        DEFAULT: "2px",
+                        "sm": "2px",
+                        "md": "4px",
+                        "lg": "4px",
+                        "full": "9999px",
+                    }
+                },
+            },
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body dir="rtl" class="bg-gray-50 font-heebo">
+
+    <!-- ============================== -->
+    <!-- STICKY HEADER                  -->
+    <!-- ============================== -->
+    <header class="bg-white border-b border-border-color sticky top-0 z-40 shadow-sm">
+        <div class="max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-8 h-full">
+                <a class="flex items-center gap-2 text-primary group" href="index.html">
+                    <div class="size-8 bg-primary text-white flex items-center justify-center rounded-sm">
+                        <span class="material-symbols-outlined">candlestick_chart</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-extrabold text-xl leading-none tracking-tight">כלכלה</span>
+                        <span class="font-heading font-medium text-[10px] tracking-[0.2em] text-accent uppercase">ניוז
+                            פולס</span>
+                    </div>
+                </a>
+                <nav class="hidden lg:flex items-center h-full gap-1" id="desktopNav">
+                    <a class="h-full flex items-center px-3 text-sm font-medium text-text-main border-b-2 border-transparent hover:border-accent/50 hover:text-primary transition-colors"
+                        href="index.html">ראשי</a>
+                    <!-- Category links loaded dynamically by nav-loader.js -->
+                </nav>
+            </div>
+            <div class="flex items-center gap-3">
+
+                <button id="mobileMenuToggle"
+                    class="lg:hidden flex items-center justify-center size-10 text-primary hover:bg-slate-100 rounded-sm transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">menu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="mobile-menu-overlay"></div>
+
+    <!-- Mobile Menu Drawer -->
+    <div id="mobileMenuDrawer" class="mobile-menu-drawer" dir="rtl">
+        <div class="flex items-center justify-between p-4 border-b border-border-color">
+            <span class="font-heading font-extrabold text-lg text-primary">תפריט</span>
+            <button id="mobileMenuClose" class="text-text-muted hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-4">
+            <nav class="flex flex-col gap-1">
+                <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-text-main hover:bg-slate-50 rounded-sm transition-colors"
+                    href="index.html">
+                    <span class="material-symbols-outlined text-[18px]">home</span> ראשי
+                </a>
+                <!-- Category links loaded dynamically by nav-loader.js -->
+            </nav>
+        </div>
+    </div>
+
+    <!-- SKELETON LOADER: Shows while article loads -->
+    <div id="article-skeleton" class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Main content skeleton -->
+            <div class="lg:col-span-8">
+                <div class="bg-gray-200 animate-pulse h-8 w-32 mb-4 rounded"></div>
+                <div class="bg-gray-200 animate-pulse h-12 w-full mb-2 rounded"></div>
+                <div class="bg-gray-200 animate-pulse h-12 w-3/4 mb-6 rounded"></div>
+                <div class="bg-gray-200 animate-pulse h-96 w-full mb-6 rounded"></div>
+                <div class="space-y-3">
+                    <div class="bg-gray-200 animate-pulse h-4 w-full rounded"></div>
+                    <div class="bg-gray-200 animate-pulse h-4 w-full rounded"></div>
+                    <div class="bg-gray-200 animate-pulse h-4 w-5/6 rounded"></div>
+                    <div class="bg-gray-200 animate-pulse h-4 w-full rounded"></div>
+                    <div class="bg-gray-200 animate-pulse h-4 w-4/5 rounded"></div>
+                </div>
+            </div>
+            <!-- Sidebar skeleton -->
+            <div class="lg:col-span-4 hidden lg:block">
+                <div class="bg-gray-200 animate-pulse h-64 w-full rounded mb-4"></div>
+                <div class="bg-gray-200 animate-pulse h-48 w-full rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ARTICLE CONTENT: Hidden until loaded -->
+    <div id="article-content" class="hidden">
+        <div class="max-w-[1280px] mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- ===== MAIN CONTENT COLUMN ===== -->
+                <div class="lg:col-span-8">
+
+                    <!-- Article Header -->
+                    <div id="article-header" class="mb-6">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Featured Image -->
+                    <div id="article-featured-image" class="mb-6">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Article Meta (author, date, read time) -->
+                    <div id="article-meta"
+                        class="flex items-center gap-4 text-sm text-gray-500 mb-8 pb-4 border-b border-gray-200">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Article Body -->
+                    <div id="article-body" class="prose prose-lg max-w-none mb-12 text-right">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Custom Contextual Disclaimer (if exists) -->
+                    <div id="article-custom-disclaimer"
+                        class="hidden my-8 bg-gray-50 border border-gray-200 rounded-lg p-5 text-sm text-gray-600 italic mt-6">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- BOTTOM CTA BLOCK (full width, end of article) -->
+                    <div class="bg-gradient-to-r from-red-700 to-red-600 rounded-xl p-8 text-center text-white mb-12">
+                        <h3 class="text-2xl font-bold mb-2">קראת עד הסוף?</h3>
+                        <p class="text-lg mb-1 opacity-90">סימן שהנושא הזה רלוונטי עבורך.</p>
+                        <p class="text-base mb-6 opacity-80">בדוק עכשיו אם מגיע לך החזר מס — לוקח 60 שניות.</p>
+                        <button onclick="openQuizModal()"
+                            class="bg-white text-red-700 font-bold py-4 px-10 rounded-lg text-xl hover:bg-gray-100 transition-colors shadow-lg">
+                            ← בדוק את זכאותך בחינם
+                        </button>
+                        <p class="text-sm mt-4 opacity-70">✓ ללא עלות ✓ ללא התחייבות ✓ תוצאה מיידית</p>
+                    </div>
+
+                    <!-- RELATED ARTICLES -->
+                    <div class="mb-12">
+                        <h3 class="text-xl font-bold mb-6 border-b-2 border-red-600 pb-2">מאמרים נוספים שיעניינו אותך
+                        </h3>
+                        <div id="related-articles" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- WHATSAPP SHARE -->
+                    <div class="flex items-center gap-4 py-6 border-t border-gray-200 mb-8">
+                        <span class="text-sm font-bold text-gray-600">שתף:</span>
+                        <a id="whatsapp-share" href="#" target="_blank"
+                            class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                            📱 שתף בוואטסאפ
+                        </a>
+                        <a id="facebook-share" href="#" target="_blank"
+                            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                            📘 שתף בפייסבוק
+                        </a>
+                        <button onclick="copyArticleLink()"
+                            class="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                            🔗 העתק קישור
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- ===== SIDEBAR COLUMN ===== -->
+                <div class="lg:col-span-4">
+
+                    <!-- Sticky wrapper -->
+                    <div class="sticky top-24 space-y-6">
+
+                        <!-- SIDEBAR CTA CARD (main conversion unit) — hidden by default, hydrated by JS -->
+                        <div id="sidebar-quiz-cta"
+                            class="bg-white border-2 border-red-600 rounded-lg overflow-hidden shadow-lg hidden">
+                            <div class="bg-red-600 text-white text-center py-3 px-4">
+                                <p class="font-bold text-lg">💰 החזר מס 2025</p>
+                                <p class="text-sm opacity-90">בדוק כמה מגיע לך</p>
+                            </div>
+                            <div class="p-5">
+                                <div class="flex justify-between text-sm text-gray-600 mb-4">
+                                    <span>⏱️ לוקח 60 שניות</span>
+                                    <span>✅ חינמי לגמרי</span>
+                                </div>
+                                <ul class="text-sm text-gray-700 space-y-2 mb-5">
+                                    <li>✓ שכירים שעבדו ב-2020-2024</li>
+                                    <li>✓ עובדים שהחליפו עבודה</li>
+                                    <li>✓ הורים לילדים</li>
+                                    <li>✓ בעלי הכנסה מרובה</li>
+                                </ul>
+                                <button onclick="openQuizModal()"
+                                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors">
+                                    ← בדוק זכאות עכשיו
+                                </button>
+                                <p class="text-xs text-gray-400 text-center mt-2">✓ ללא עלות ✓ ללא התחייבות</p>
+                            </div>
+                        </div>
+
+                        <!-- MOST READ SIDEBAR WIDGET -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-2 mb-4 border-b-2 border-red-600 pb-2">
+                                <span class="text-red-600">📈</span>
+                                <h3 class="font-bold text-gray-900">הנקראים ביותר</h3>
+                            </div>
+                            <div id="sidebar-most-read" class="space-y-3">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- SITEWIDE FOOTER                -->
+    <!-- ============================== -->
+    <footer class="bg-gray-900 border-t border-gray-800 pt-12 pb-28 mb-16 sm:mb-12 text-gray-400 text-sm">
+        <div class="max-w-[1280px] mx-auto px-4">
+            <div
+                class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 border-b border-gray-800 pb-8">
+                <!-- Branding -->
+                <a class="flex items-center gap-2 text-white group grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all"
+                    href="index.html">
+                    <div class="size-8 bg-white text-gray-900 flex items-center justify-center rounded-sm">
+                        <span class="material-symbols-outlined">candlestick_chart</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-extrabold text-xl leading-none tracking-tight">כלכלה</span>
+                        <span class="font-heading font-medium text-[10px] tracking-[0.2em] text-gray-300 uppercase">ניוז
+                            פולס</span>
+                    </div>
+                </a>
+
+                <!-- Policy Links -->
+                <nav class="flex flex-wrap justify-center gap-x-6 gap-y-3 font-medium">
+                    <a href="privacy.html" class="hover:text-white transition-colors">מדיניות פרטיות</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">תקנון</a>
+                    <a href="about.html" class="hover:text-white transition-colors">אודות</a>
+                    <a href="usage.html" class="hover:text-white transition-colors">תנאי שימוש</a>
+                    <a href="accessibility.html" class="hover:text-white transition-colors">הצהרת נגישות</a>
+                </nav>
+            </div>
+
+            <!-- Mandatory Disclaimer -->
+            <div class="text-xs text-gray-500 text-center max-w-4xl mx-auto leading-relaxed">
+                <p>גילוי נאות — המידע האמור הוא כללי בלבד ואין בו כדי להוות תחליף לייעוץ השקעות בעל רישיון בלתי תלוי,
+                    בהתחשב בצרכים, בנתונים ובנסיבות הספציפיות לכל אדם. אין גם לראות בתשואת עבר, מיקום או דירוג כדי
+                    להבטיח תשואה, מיקום או דירוג דומה בעתיד.</p>
+                <p class="mt-4 opacity-50">&copy; 2026 כלכלה-ניוז. כל הזכויות שמורות.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- READING PROGRESS BAR -->
+    <div id="reading-progress" class="fixed top-0 left-0 h-1 bg-red-600 z-50 transition-all duration-100"
+        style="width: 0%"></div>
+
+
+    <!-- QUIZ MODAL -->
+    <div id="quiz-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-60 p-4"
+        dir="rtl">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-screen overflow-y-auto relative">
+
+            <!-- Close button -->
+            <button onclick="closeQuizModal()"
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 text-2xl font-bold z-10">
+                ✕
+            </button>
+
+            <!-- Modal content (populated by modal.js) -->
+            <div id="quiz-modal-content" class="p-8">
+                <!-- JavaScript populates this -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Supabase JS Library (if not already included) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Security: DOMPurify for article body HTML sanitization -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+
+    <!-- Security: Sanitization utilities (must load before app scripts) -->
+    <script src="js/sanitize.js"></script>
+
+    <script src="js/main.js"></script>
+    <script src="js/nav-loader.js"></script>
+    <script src="js/modal.js"></script>
+    <script src="js/tracking.js"></script>
+
+    <!-- Dynamic Article Loader -->
+    <script src="/js/article-loader.js"></script>
+
+    <!-- Legal Compliance: Cookie Consent & Accessibility Widget -->
+    <script src="js/cookie-consent.js"></script>
+    <script src="js/accessibility-widget.js"></script>
+</body>
+
+</html>

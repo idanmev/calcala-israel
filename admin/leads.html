@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ניהול לידים - Calcala-News</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/admin/css/admin-styles.css">
+</head>
+
+<body class="bg-gray-100">
+
+    <!-- Top bar (same as dashboard) -->
+    <div id="admin-topbar"></div>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <div id="admin-sidebar">
+            <aside class="fixed right-0 top-16 bottom-0 w-64 bg-white border-l border-gray-200 overflow-y-auto">
+                <nav class="p-4 space-y-1">
+                    <a href="dashboard"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                        <span class="text-lg">📰</span>
+                        מאמרים
+                    </a>
+                    <a href="categories"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                        <span class="text-lg">🏷️</span>
+                        קטגוריות
+                    </a>
+                    <a href="leads"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold text-sm transition-colors">
+                        <span class="text-lg">🎯</span>
+                        לידים
+                    </a>
+                    <a href="quiz-config"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm transition-colors">
+                        <span class="text-lg">❓</span>
+                        חידוני זכאות
+                    </a>
+                </nav>
+            </aside>
+        </div>
+
+        <!-- Main content -->
+        <main class="flex-1 p-8 mr-64 mt-16">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">ניהול לידים</h1>
+                <div class="flex gap-3">
+                    <select id="vertical-filter" onchange="filterLeads()"
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">כל הוורטיקלים</option>
+                        <option value="מיסוי">מיסוי</option>
+                        <option value="ביטוח בריאות">ביטוח בריאות</option>
+                        <option value="פנסיה">פנסיה</option>
+                        <option value="נדל" ן">נדל"ן</option>
+                    </select>
+                    <select id="status-filter" onchange="filterLeads()"
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">כל הסטטוסים</option>
+                        <option value="new">חדש</option>
+                        <option value="contacted">יצרנו קשר</option>
+                        <option value="qualified">מוסמך</option>
+                        <option value="rejected">נדחה</option>
+                    </select>
+                    <button onclick="exportLeads()"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold">
+                        📥 ייצוא CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="grid grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-4 shadow-sm text-center">
+                    <p class="text-3xl font-bold text-gray-900" id="stat-total">—</p>
+                    <p class="text-sm text-gray-500 mt-1">סה"כ לידים</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm text-center">
+                    <p class="text-3xl font-bold text-red-600" id="stat-today">—</p>
+                    <p class="text-sm text-gray-500 mt-1">היום</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm text-center">
+                    <p class="text-3xl font-bold text-blue-600" id="stat-week">—</p>
+                    <p class="text-sm text-gray-500 mt-1">השבוע</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm text-center">
+                    <p class="text-3xl font-bold text-green-600" id="stat-qualified">—</p>
+                    <p class="text-sm text-gray-500 mt-1">מוסמכים</p>
+                </div>
+            </div>
+
+            <!-- Leads table -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">שם</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">טלפון</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">ורטיקל</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">תשובות</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">תאריך</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">סטטוס</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center py-12 text-gray-400">טוען לידים...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/admin/js/supabase-client.js"></script>
+    <script src="/admin/js/auth.js"></script>
+    <script>
+        checkAuth();
+        let allLeads = [];
+
+        async function loadLeads() {
+            const { data, error } = await supabaseClient
+                .from('leads')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) { console.error(error); return; }
+            allLeads = data;
+
+            updateStats(data);
+            renderLeads(data);
+        }
+
+        function updateStats(leads) {
+            const today = new Date().toDateString();
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+            document.getElementById('stat-total').textContent = leads.length;
+            document.getElementById('stat-today').textContent =
+                leads.filter(l => new Date(l.created_at).toDateString() === today).length;
+            document.getElementById('stat-week').textContent =
+                leads.filter(l => new Date(l.created_at) > weekAgo).length;
+            document.getElementById('stat-qualified').textContent =
+                leads.filter(l => l.status === 'qualified').length;
+        }
+
+        function renderLeads(leads) {
+            const tbody = document.getElementById('leads-table-body');
+            if (leads.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-gray-400">אין לידים עדיין</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = leads.map(lead => `
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+          <td class="px-6 py-4 font-medium">${lead.name || '—'}</td>
+          <td class="px-6 py-4">
+            <a href="tel:${lead.phone}" class="text-blue-600 hover:underline font-mono">${lead.phone}</a>
+          </td>
+          <td class="px-6 py-4">
+            <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">${lead.vertical}</span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+            ${Object.entries(lead.answers || {}).map(([k, v]) => `<span class="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs m-0.5">${v}</span>`).join('')}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            ${new Date(lead.created_at).toLocaleDateString('he-IL')}
+          </td>
+          <td class="px-6 py-4">
+            <select onchange="updateLeadStatus('${lead.id}', this.value)"
+                    class="text-sm border border-gray-200 rounded px-2 py-1">
+              <option value="new" ${lead.status === 'new' ? 'selected' : ''}>חדש</option>
+              <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>יצרנו קשר</option>
+              <option value="qualified" ${lead.status === 'qualified' ? 'selected' : ''}>מוסמך</option>
+              <option value="rejected" ${lead.status === 'rejected' ? 'selected' : ''}>נדחה</option>
+            </select>
+          </td>
+          <td class="px-6 py-4">
+            <a href="https://wa.me/972${lead.phone.replace(/^0/, '').replace(/-/g, '')}" 
+               target="_blank"
+               class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">
+              💬 וואטסאפ
+            </a>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function filterLeads() {
+            const vertical = document.getElementById('vertical-filter').value;
+            const status = document.getElementById('status-filter').value;
+            let filtered = allLeads;
+            if (vertical) filtered = filtered.filter(l => l.vertical === vertical);
+            if (status) filtered = filtered.filter(l => l.status === status);
+            renderLeads(filtered);
+        }
+
+        async function updateLeadStatus(id, status) {
+            await supabaseClient.from('leads').update({ status }).eq('id', id);
+        }
+
+        function exportLeads() {
+            const vertical = document.getElementById('vertical-filter').value;
+            let leads = allLeads;
+            if (vertical) leads = leads.filter(l => l.vertical === vertical);
+
+            const csv = [
+                ['שם', 'טלפון', 'דוא"ל', 'ורטיקל', 'תשובות', 'מקור', 'תאריך', 'סטטוס'],
+                ...leads.map(l => [
+                    l.name, l.phone, l.email || '',
+                    l.vertical,
+                    JSON.stringify(l.answers),
+                    l.source_url || '',
+                    new Date(l.created_at).toLocaleDateString('he-IL'),
+                    l.status
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Also add Leads link to admin sidebar in dashboard.html, article-edit.html, categories.html
+        // Add: <a href="/admin/leads.html">לידים 🎯</a> to the sidebar menu
+
+        loadLeads();
+    </script>
+</body>
+
+</html>

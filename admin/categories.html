@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול קטגוריות - Calcala-News</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Admin Styles -->
+    <link rel="stylesheet" href="css/admin-styles.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- SortableJS for drag-and-drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="sidebar">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-gray-900">Calcala-News</h1>
+                <p class="text-sm text-gray-500 mt-1">לוח בקרה</p>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="dashboard" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    מאמרים
+                </a>
+                <a href="categories" class="sidebar-menu-item active">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    קטגוריות
+                </a>
+                <a href="leads" class="sidebar-menu-item">
+                    <span class="w-6 h-6 flex items-center justify-center text-lg">🎯</span>
+                    לידים
+                </a>
+                <a href="quiz-config" class="sidebar-menu-item">
+                    <span class="w-6 h-6 flex items-center justify-center text-lg">❓</span>
+                    חידוני זכאות
+                </a>
+
+
+                <a href="#" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                    </svg>
+                    תגיות
+                </a>
+                <a href="#" class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    </svg>
+                    ניהול תוכן
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Top Bar -->
+            <header class="admin-topbar">
+                <div class="flex items-center gap-4">
+                    <button class="hamburger-btn" id="hamburgerBtn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900">ניהול קטגוריות</h2>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="/" target="_blank" class="btn btn-secondary text-sm">
+                        צפייה באתר החי
+                    </a>
+                    <button onclick="window.authUtils.logout()" class="btn btn-ghost text-sm">
+                        התנתקות
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">קטגוריות</h1>
+                    <button onclick="openNewCategoryModal()" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        קטגוריה חדשה
+                    </button>
+                </div>
+
+                <!-- Info Box -->
+                <div class="admin-card mb-6 bg-blue-50 border border-blue-200">
+                    <p class="text-sm text-blue-800">
+                        💡 ניתן לגרור ולשחרר קטגוריות כדי לשנות את סדר התצוגה. לחץ על שם הקטגוריה לעריכה.
+                    </p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="flex justify-center items-center py-12">
+                    <div class="spinner"></div>
+                </div>
+
+                <!-- Categories Table -->
+                <div id="categoriesTableContainer" class="admin-table hidden">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">↕️</th>
+                                <th>שם</th>
+                                <th>Slug</th>
+                                <th>סדר תצוגה</th>
+                                <th>מספר מאמרים</th>
+                                <th>פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <!-- Categories will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">אין קטגוריות</h3>
+                    <p class="mt-1 text-sm text-gray-500">התחל על ידי יצירת קטגוריה חדשה</p>
+                    <div class="mt-6">
+                        <button onclick="openNewCategoryModal()" class="btn btn-primary">
+                            קטגוריה חדשה
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- New/Edit Category Modal -->
+    <div id="categoryModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">קטגוריה חדשה</h3>
+            <form id="categoryForm" class="space-y-4">
+                <div class="form-group">
+                    <label for="categoryName" class="form-label">שם הקטגוריה *</label>
+                    <input type="text" id="categoryName" class="form-input" placeholder="לדוגמה: שוק ההון" required>
+                    <div id="nameError" class="form-error hidden"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="categorySlug" class="form-label">Slug *</label>
+                    <input type="text" id="categorySlug" class="form-input" placeholder="stock-market" required>
+                    <div class="form-helper">נוצר אוטומטית, ניתן לערוך</div>
+                    <div id="slugError" class="form-error hidden"></div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span id="saveBtnText">שמור</span>
+                        <div id="saveSpinner" class="hidden spinner"
+                            style="width: 20px; height: 20px; border-width: 2px;"></div>
+                    </button>
+                    <button type="button" onclick="closeCategoryModal()" class="btn btn-secondary">
+                        ביטול
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="modal-title">מחיקת קטגוריה</h3>
+            <p class="text-gray-600" id="deleteMessage">האם אתה בטוח שברצונך למחוק את הקטגוריה?</p>
+            <div id="deleteWarning" class="hidden mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-sm text-yellow-800">⚠️ קיימים מאמרים המשויכים לקטגוריה זו. מחיקתה תסיר את השיוך.</p>
+            </div>
+            <div class="modal-actions">
+                <button onclick="confirmDelete()" class="btn btn-danger">מחק</button>
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Check authentication
+        window.authUtils.checkAuth();
+
+        // State
+        let categories = [];
+        let editingCategoryId = null;
+        let categoryToDelete = null;
+        let sortable = null;
+
+        // DOM Elements
+        const loadingState = document.getElementById('loadingState');
+        const categoriesTableContainer = document.getElementById('categoriesTableContainer');
+        const categoriesTableBody = document.getElementById('categoriesTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const categoryModal = document.getElementById('categoryModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+        const categoryForm = document.getElementById('categoryForm');
+        const categoryName = document.getElementById('categoryName');
+        const categorySlug = document.getElementById('categorySlug');
+
+        // Hamburger menu toggle
+        hamburgerBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('show-mobile');
+        });
+
+        // Auto-generate slug from name
+        categoryName.addEventListener('input', () => {
+            if (!categorySlug.dataset.manuallyEdited) {
+                categorySlug.value = generateSlug(categoryName.value);
+            }
+        });
+
+        categorySlug.addEventListener('input', () => {
+            categorySlug.dataset.manuallyEdited = 'true';
+        });
+
+        // Form submission
+        categoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveCategory();
+        });
+
+        // Generate slug
+        function generateSlug(name) {
+            return name
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                loadingState.classList.remove('hidden');
+                categoriesTableContainer.classList.add('hidden');
+                emptyState.classList.add('hidden');
+
+                const { data, error } = await supabaseClient
+                    .from('categories')
+                    .select(`
+            *,
+            articles (count)
+          `)
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                categories = data || [];
+                renderCategories();
+
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                window.authUtils.showError('שגיאה בטעינת קטגוריות');
+            } finally {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        // Render categories
+        function renderCategories() {
+            if (categories.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            categoriesTableBody.innerHTML = categories.map((cat, index) => `
+        <tr data-id="${cat.id}">
+          <td class="cursor-move text-center">⋮⋮</td>
+          <td>
+            <span class="font-medium editable" onclick="editInline(this, '${cat.id}', 'name')">${cat.name}</span>
+          </td>
+          <td>
+            <span class="text-gray-600 editable" onclick="editInline(this, '${cat.id}', 'slug')">${cat.slug}</span>
+          </td>
+          <td>${cat.display_order}</td>
+          <td>${cat.articles?.[0]?.count || 0}</td>
+          <td>
+            <div class="flex gap-2">
+              <button onclick="openEditCategoryModal('${cat.id}')" class="text-blue-600 hover:text-blue-700">
+                ✏️
+              </button>
+              <button onclick="openDeleteModal('${cat.id}')" class="text-red-600 hover:text-red-700">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+            categoriesTableContainer.classList.remove('hidden');
+
+            // Initialize drag-and-drop
+            initSortable();
+        }
+
+        // Initialize Sortable
+        function initSortable() {
+            if (sortable) {
+                sortable.destroy();
+            }
+
+            sortable = new Sortable(categoriesTableBody, {
+                animation: 150,
+                handle: 'td:first-child',
+                onEnd: async (evt) => {
+                    await updateDisplayOrder();
+                }
+            });
+        }
+
+        // Update display order after drag
+        async function updateDisplayOrder() {
+            const rows = categoriesTableBody.querySelectorAll('tr');
+            const updates = [];
+
+            rows.forEach((row, index) => {
+                const id = row.dataset.id;
+                updates.push({
+                    id,
+                    display_order: index + 1
+                });
+            });
+
+            try {
+                for (const update of updates) {
+                    await supabaseClient
+                        .from('categories')
+                        .update({ display_order: update.display_order })
+                        .eq('id', update.id);
+                }
+
+                window.authUtils.showSuccess('סדר התצוגה עודכן');
+                await loadCategories();
+
+            } catch (error) {
+                console.error('Error updating order:', error);
+                window.authUtils.showError('שגיאה בעדכון סדר התצוגה');
+            }
+        }
+
+        // Inline editing
+        function editInline(element, categoryId, field) {
+            const currentValue = element.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.className = 'form-input py-1 px-2';
+
+            input.addEventListener('blur', async () => {
+                const newValue = input.value.trim();
+                if (newValue && newValue !== currentValue) {
+                    await updateCategory(categoryId, { [field]: newValue });
+                }
+                element.textContent = newValue || currentValue;
+            });
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+
+            element.textContent = '';
+            element.appendChild(input);
+            input.focus();
+            input.select();
+        }
+
+        // Update category
+        async function updateCategory(id, data) {
+            try {
+                const { error } = await supabaseClient
+                    .from('categories')
+                    .update(data)
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                window.authUtils.showSuccess('הקטגוריה עודכנה');
+                await loadCategories();
+
+            } catch (error) {
+                console.error('Error updating category:', error);
+                window.authUtils.showError('שגיאה בעדכון הקטגוריה');
+            }
+        }
+
+        // Open new category modal
+        function openNewCategoryModal() {
+            editingCategoryId = null;
+            document.getElementById('modalTitle').textContent = 'קטגוריה חדשה';
+            categoryName.value = '';
+            categorySlug.value = '';
+            categorySlug.dataset.manuallyEdited = '';
+            document.getElementById('nameError').classList.add('hidden');
+            document.getElementById('slugError').classList.add('hidden');
+            categoryModal.classList.remove('hidden');
+        }
+
+        // Open edit category modal
+        function openEditCategoryModal(id) {
+            const category = categories.find(c => c.id === id);
+            if (!category) return;
+
+            editingCategoryId = id;
+            document.getElementById('modalTitle').textContent = 'עריכת קטגוריה';
+            categoryName.value = category.name;
+            categorySlug.value = category.slug;
+            categorySlug.dataset.manuallyEdited = 'true';
+            categoryModal.classList.remove('hidden');
+        }
+
+        // Close category modal
+        function closeCategoryModal() {
+            categoryModal.classList.add('hidden');
+            editingCategoryId = null;
+        }
+
+        // Save category
+        async function saveCategory() {
+            const name = categoryName.value.trim();
+            const slug = categorySlug.value.trim();
+
+            // Validation
+            if (!name) {
+                document.getElementById('nameError').textContent = 'שם הקטגוריה הוא שדה חובה';
+                document.getElementById('nameError').classList.remove('hidden');
+                return;
+            }
+
+            if (!slug) {
+                document.getElementById('slugError').textContent = 'Slug הוא שדה חובה';
+                document.getElementById('slugError').classList.remove('hidden');
+                return;
+            }
+
+            // Show loading
+            const saveBtn = categoryForm.querySelector('button[type="submit"]');
+            saveBtn.disabled = true;
+            document.getElementById('saveBtnText').classList.add('hidden');
+            document.getElementById('saveSpinner').classList.remove('hidden');
+
+            try {
+                if (editingCategoryId) {
+                    // Update existing
+                    const { error } = await supabaseClient
+                        .from('categories')
+                        .update({ name, slug })
+                        .eq('id', editingCategoryId);
+
+                    if (error) throw error;
+
+                    window.authUtils.showSuccess('הקטגוריה עודכנה');
+                } else {
+                    // Create new
+                    const maxOrder = categories.length > 0
+                        ? Math.max(...categories.map(c => c.display_order))
+                        : 0;
+
+                    const { error } = await supabaseClient
+                        .from('categories')
+                        .insert([{
+                            name,
+                            slug,
+                            display_order: maxOrder + 1,
+                            created_at: new Date().toISOString()
+                        }]);
+
+                    if (error) throw error;
+
+                    window.authUtils.showSuccess('הקטגוריה נוצרה');
+                }
+
+                closeCategoryModal();
+                await loadCategories();
+
+            } catch (error) {
+                console.error('Error saving category:', error);
+                window.authUtils.showError('שגיאה בשמירת הקטגוריה');
+            } finally {
+                saveBtn.disabled = false;
+                document.getElementById('saveBtnText').classList.remove('hidden');
+                document.getElementById('saveSpinner').classList.add('hidden');
+            }
+        }
+
+        // Open delete modal
+        async function openDeleteModal(id) {
+            categoryToDelete = id;
+            const category = categories.find(c => c.id === id);
+
+            if (category) {
+                const articleCount = category.articles?.[0]?.count || 0;
+
+                if (articleCount > 0) {
+                    document.getElementById('deleteWarning').classList.remove('hidden');
+                } else {
+                    document.getElementById('deleteWarning').classList.add('hidden');
+                }
+            }
+
+            deleteModal.classList.remove('hidden');
+        }
+
+        // Close delete modal
+        function closeDeleteModal() {
+            categoryToDelete = null;
+            deleteModal.classList.add('hidden');
+        }
+
+        // Confirm delete
+        async function confirmDelete() {
+            if (!categoryToDelete) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('categories')
+                    .delete()
+                    .eq('id', categoryToDelete);
+
+                if (error) throw error;
+
+                window.authUtils.showSuccess('הקטגוריה נמחקה');
+                closeDeleteModal();
+                await loadCategories();
+
+            } catch (error) {
+                console.error('Error deleting category:', error);
+                window.authUtils.showError('שגיאה במחיקת הקטגוריה');
+            }
+        }
+
+        // Close modals on outside click
+        categoryModal.addEventListener('click', (e) => {
+            if (e.target === categoryModal) {
+                closeCategoryModal();
+            }
+        });
+
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+
+        // Initialize
+        loadCategories();
+    </script>
+</body>
+
+</html>

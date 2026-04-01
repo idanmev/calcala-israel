@@ -1,0 +1,316 @@
+/* ==============================
+   Calcala-News Custom Styles
+   Beyond Tailwind utilities
+   ============================== */
+
+
+/* --- Hide scrollbar on hot-updates panel --- */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* --- Modal overlay & content transitions --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 6px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* --- Mobile menu drawer --- */
+.mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 45;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    background: #fff;
+    z-index: 46;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+
+.mobile-menu-drawer.active {
+    transform: translateX(0);
+}
+
+/* --- Bottom sticky bar entrance --- */
+@keyframes slide-in-from-bottom {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in-bottom {
+    animation: slide-in-from-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* --- Newsletter success toast --- */
+.newsletter-toast {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.newsletter-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Quiz modal progress bar --- */
+.quiz-progress-bar {
+    height: 4px;
+    background: #E2E8F0;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(to left, #F97316, #EC4899);
+    border-radius: 9999px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Body scroll lock --- */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* --- Market data flash animation --- */
+@keyframes flash-green {
+
+    0%,
+    100% {
+        background: transparent;
+    }
+
+    50% {
+        background: rgba(16, 185, 129, 0.1);
+    }
+}
+
+@keyframes flash-red {
+
+    0%,
+    100% {
+        background: transparent;
+    }
+
+    50% {
+        background: rgba(239, 68, 68, 0.1);
+    }
+}
+
+.flash-up {
+    animation: flash-green 0.6s ease;
+}
+
+.flash-down {
+    animation: flash-red 0.6s ease;
+}
+
+/* Article body prose styles */
+.prose {
+    max-width: 65ch;
+    color: #374151;
+    line-height: 1.75;
+}
+
+.prose h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    line-height: 1.3333333;
+}
+
+.prose h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 1.6em;
+    margin-bottom: 0.6em;
+    line-height: 1.6;
+}
+
+.prose p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+}
+
+.prose img {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    border-radius: 0.375rem;
+}
+
+.prose ul,
+.prose ol {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-right: 1.625em;
+    list-style-type: disc;
+}
+
+.prose li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.prose a {
+    color: #2563eb;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.prose a:hover {
+    color: #1d4ed8;
+}
+
+.prose strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+.prose blockquote {
+    font-weight: 500;
+    font-style: italic;
+    color: #111827;
+    border-right-width: 0.25rem;
+    border-right-color: #2563eb;
+    quotes: "“" "”" "‘" "’";
+    margin-top: 1.6em;
+    margin-bottom: 1.6em;
+    padding-right: 1em;
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+
+    /* Prevent horizontal scroll */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Hero article responsive */
+    #hero-article .relative {
+        height: 280px !important;
+        /* Reduce hero height on mobile */
+    }
+
+    /* Article grid - single column on mobile */
+    #articles-grid .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Quiz modal - full screen on mobile */
+    #quiz-modal>div {
+        max-width: 100% !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    /* Entry hook buttons - stack on mobile if too cramped */
+    #article-inline-cta .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Market widget - allow horizontal scroll */
+    #market-data-widget {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Ticker - smaller text on mobile */
+    #ticker-content {
+        font-size: 0.875rem !important;
+    }
+
+    /* Bottom sticky bar - reduce height */
+    .fixed.bottom-0 {
+        padding: 0.75rem 1rem !important;
+    }
+
+    /* Article body - better readability */
+    #article-body {
+        font-size: 1.125rem !important;
+        line-height: 1.75 !important;
+    }
+
+    /* Related articles - single column */
+    #related-articles {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Admin sidebar - hide on mobile, show hamburger */
+    aside.fixed {
+        transform: translateX(100%);
+        transition: transform 0.3s;
+    }
+
+    aside.fixed.mobile-open {
+        transform: translateX(0);
+    }
+}
