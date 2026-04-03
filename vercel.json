@@ -1,5 +1,9 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs"
+  "outputDirectory": ".",
+  "framework": null,
+  "rewrites": [
+    { "source": "/article/:slug", "destination": "/article.html" },
+    { "source": "/category/:slug", "destination": "/category.html" }
+  ]
 }
