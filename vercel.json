@@ -13,6 +13,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/finance/:symbol",
+      "destination": "https://query1.finance.yahoo.com/v8/finance/chart/:symbol"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     },

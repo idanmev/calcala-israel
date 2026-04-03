@@ -70,13 +70,16 @@
         async function fetchSymbolData(symbol) {
             try {
                 // Add cache buster and range params to get latest data
-                let targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d&_=${Date.now()}`;
-
-                // For local development, use a CORS proxy if needed
-                // WARNING: corsproxy.io is for dev only. In production, use a Supabase edge function proxy.
-                let url = targetUrl;
+                const queryParams = `?interval=1m&range=1d&_=${Date.now()}`;
+                
+                let url;
+                // For local development, use a CORS proxy since local serve doesn't handle rewrites
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}${queryParams}`;
                     url = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                } else {
+                    // In production (Vercel), we use the rewrite rule configured in vercel.json
+                    url = `/api/finance/${symbol}${queryParams}`;
                 }
 
                 const response = await fetch(url);
