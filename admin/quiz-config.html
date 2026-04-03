@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ספריית חידונים - Calcala-News Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
   <link rel="stylesheet" href="/admin/css/admin-styles.css">
   <style>
     /* Drag and drop visual feedback */
@@ -21,6 +21,7 @@
       border: 2px dashed #3b82f6;
     }
   </style>
+    <link rel="stylesheet" href="../css/tailwind-build.css" />
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -88,8 +89,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/admin/js/supabase-client.js"></script>
-  <script src="/admin/js/auth.js"></script>
+  <script defer src="/admin/js/supabase-client.js"></script>
+  <script defer src="/admin/js/auth.js"></script>
   <script>
     checkAuth();
     let quizzes = [];

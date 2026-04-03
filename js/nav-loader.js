@@ -84,7 +84,7 @@
             const a = document.createElement('a');
             a.setAttribute('data-nav-link', '');
             a.setAttribute('data-category-slug', cat.slug);
-            a.href = `category.html?slug=${encodeURIComponent(cat.slug)}`;
+            a.href = `/category/${encodeURIComponent(cat.slug)}`;
             a.className = 'h-full flex items-center px-3 text-sm font-medium text-text-main border-b-2 border-transparent hover:border-accent/50 hover:text-primary transition-colors';
 
             if (cat.slug === activeSlug) {
@@ -124,7 +124,7 @@
             const a = document.createElement('a');
             a.setAttribute('data-mobile-link', '');
             a.setAttribute('data-category-slug', cat.slug);
-            a.href = `category.html?slug=${encodeURIComponent(cat.slug)}`;
+            a.href = `/category/${encodeURIComponent(cat.slug)}`;
             a.className = 'flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-text-main hover:bg-slate-50 rounded-sm transition-colors';
 
             if (cat.slug === activeSlug) {

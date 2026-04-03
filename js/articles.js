@@ -91,7 +91,12 @@ async function renderHeroArticle() {
 }
 
 function updateHeroUI(container, article) {
-    const imgUrl = _esc(article.featured_image_url || '/images/placeholder.jpg');
+    const rawImgUrl = article.featured_image_url || '/images/placeholder.jpg';
+    const imgUrl = _esc(
+        window.getOptimizedImageUrl
+            ? window.getOptimizedImageUrl(rawImgUrl, { w: 1200, f: 'auto', q: 80 })
+            : rawImgUrl
+    );
     const catName = _esc(article.categories?.name || 'כללי');
     const dateStr = formatHebrewDate(article.publish_date);
     const title = _esc(article.title);
@@ -112,7 +117,7 @@ function updateHeroUI(container, article) {
       </div>
     `;
     container.style.cursor = 'pointer';
-    container.onclick = () => window.location.href = `/article?slug=${slug}`;
+    container.onclick = () => window.location.href = `/article/${slug}`;
 }
 
 // Render grid articles
@@ -168,15 +173,20 @@ async function renderGridArticles() {
         gridContainer.appendChild(gridWrapper);
 
         // Render each article
+        const _img = (url, w) => window.getOptimizedImageUrl
+            ? window.getOptimizedImageUrl(url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600', { w, f: 'auto', q: 80 })
+            : (url || `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`);
+
         articlesToShow.forEach(article => {
             const articleEl = document.createElement('article');
             articleEl.className = 'bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
             articleEl.innerHTML = `
-        <a href="/article?slug=${encodeURIComponent(article.slug)}" class="block">
-          <img src="${_esc(article.featured_image_url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400')}" 
+        <a href="/article/${encodeURIComponent(article.slug)}" class="block">
+          <img src="${_esc(_img(article.featured_image_url, 600))}" 
                alt="${_esc(article.title)}" 
                class="w-full h-48 object-cover"
-               onerror="this.src='https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400'">
+               loading="lazy"
+               onerror="this.src='https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600'">
           <div class="p-5">
             <div class="flex items-center gap-3 mb-2 text-sm">
               <span class="text-red-600 font-bold">${_esc(article.categories?.name || 'כללי')}</span>
@@ -250,7 +260,7 @@ async function renderMostReadWidget() {
         // Render each article
         articles.forEach((article, index) => {
             const itemEl = document.createElement('a');
-            itemEl.href = `/article?slug=${article.slug}`;
+            itemEl.href = `/article/${article.slug}`;
             itemEl.className = 'flex items-start gap-4 hover:bg-gray-50 p-2 transition-colors group';
             itemEl.innerHTML = `
         <span class="text-3xl font-bold text-gray-200 leading-none group-hover:text-red-100 transition-colors">${index + 1}</span>

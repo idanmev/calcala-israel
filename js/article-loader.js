@@ -13,7 +13,14 @@ window.currentArticleCategory = null;
 
 // Get slug from URL
 function getSlug() {
-    return new URLSearchParams(window.location.search).get('slug');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('slug')) return params.get('slug');
+    
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if (pathParts.length >= 2 && pathParts[0] === 'article') {
+        return decodeURIComponent(pathParts[pathParts.length - 1]);
+    }
+    return null;
 }
 
 // Format Hebrew date
@@ -59,7 +66,7 @@ async function loadSidebarMostRead() {
         if (!container) return;
 
         container.innerHTML = data.map((article, index) => `
-      <a href="/article?slug=${encodeURIComponent(article.slug)}" 
+      <a href="/article/${encodeURIComponent(article.slug)}" 
          class="flex items-start gap-3 hover:bg-gray-50 p-2 rounded transition-colors">
         <span class="text-2xl font-bold text-gray-300 leading-none min-w-[24px]">${index + 1}</span>
         <div>
@@ -124,19 +131,25 @@ async function loadRelatedArticles(categoryId, currentSlug) {
             return;
         }
 
-        container.innerHTML = relatedArticles.map(article => `
-      <a href="/article?slug=${encodeURIComponent(article.slug)}" 
+        container.innerHTML = relatedArticles.map(article => {
+            const relImg = window.getOptimizedImageUrl
+                ? window.getOptimizedImageUrl(article.featured_image_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400', { w: 400, f: 'auto', q: 80 })
+                : (article.featured_image_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400');
+            return `
+      <a href="/article/${encodeURIComponent(article.slug)}" 
          class="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition-shadow block">
-        <img src="${_h(article.featured_image_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400')}" 
+        <img src="${_h(relImg)}" 
              alt="${_h(article.title)}" 
              class="w-full h-32 object-cover"
+             loading="lazy"
              onerror="this.src='https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400'">
         <div class="p-3">
           <p class="text-xs text-red-600 font-bold mb-1">${_h(article.categories?.name || 'כללי')}</p>
           <h4 class="text-sm font-bold leading-tight line-clamp-2">${_h(article.title)}</h4>
         </div>
       </a>
-    `).join('');
+    `;
+        }).join('');
     } catch (err) {
         console.error('Related articles error:', err);
     }
@@ -285,15 +298,18 @@ function renderSidebarQuizCta(quizConfig, categorySlug) {
     }
 
     const title = _h(quizConfig.display_name || quizConfig.entry_hook_title || 'בדוק זכאות');
-    const subtitle = _h(quizConfig.entry_hook_subtitle || 'בדוק כמה מגיע לך');
     const quizId = quizConfig.id;
 
     sidebarCta.innerHTML = `
-        <div class="bg-red-600 text-white text-center py-3 px-4">
-            <p class="font-bold text-lg">💰 ${title}</p>
-            <p class="text-sm opacity-90">${subtitle}</p>
+        <div class="bg-red-600 text-white text-center py-4 px-4">
+            <p class="font-bold text-lg leading-snug">💰 הבנק שלך אולי חייב לך כסף</p>
+            <p class="text-sm opacity-90 mt-0.5">בדוק תוך 60 שניות כמה מגיע לך בחזרה</p>
         </div>
         <div class="p-5">
+            <!-- Social proof -->
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:0.625rem;padding:0.5rem 0.75rem;margin-bottom:0.875rem;font-size:0.75rem;color:#92400e;text-align:center;">
+                🏆 <strong>14,000+ ישראלים</strong> כבר קיבלו את הכסף שלהם השנה
+            </div>
             ${quizConfig.button_a_label && quizConfig.button_b_label ? `
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_a_value || ''}', null, '${quizId}')"
@@ -307,11 +323,11 @@ function renderSidebarQuizCta(quizConfig, categorySlug) {
                 </div>
             ` : `
                 <button onclick="openQuizModal('${categorySlug || ''}', null, null, '${quizId}')"
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors">
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors mb-4">
                     ← בדוק זכאות עכשיו
                 </button>
             `}
-            <p class="text-xs text-gray-400 text-center mt-2">✓ ללא עלות ✓ ללא התחייבות</p>
+            <p class="text-xs text-gray-400 text-center">✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
         </div>
     `;
     sidebarCta.classList.remove('hidden');
@@ -350,9 +366,14 @@ function renderBlocksToHtml(blocks) {
                 const withBackground = block.data.withBackground ? 'bg-gray-50 p-4 rounded-lg' : '';
                 const stretched = block.data.stretched ? 'w-full object-cover' : 'max-w-full mx-auto rounded-lg shadow-sm object-contain';
 
+                const rawBlockImgUrl = block.data.file?.url || '';
+                const blockImgUrl = window.getOptimizedImageUrl
+                    ? window.getOptimizedImageUrl(rawBlockImgUrl, { w: 800, f: 'auto', q: 80 })
+                    : rawBlockImgUrl;
+
                 return `
                     <figure class="my-8 ${withBorder} ${withBackground}">
-                        <img src="${block.data.file.url}" alt="${block.data.caption || 'תמונה'}" class="${stretched}" loading="lazy" />
+                        <img src="${blockImgUrl}" alt="${block.data.caption || 'תמונה'}" class="${stretched}" loading="lazy" />
                         ${caption}
                     </figure>
                 `;
@@ -466,11 +487,22 @@ async function loadArticle() {
             meta.setAttribute('content', content);
         }
 
+        // Set canonical URL and OG URL
+        const canonicalUrl = `https://calcala-news.co.il/article/${encodeURIComponent(slug)}`;
+        
+        let linkCanonical = document.querySelector('link[rel="canonical"]');
+        if (!linkCanonical) {
+            linkCanonical = document.createElement('link');
+            linkCanonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(linkCanonical);
+        }
+        linkCanonical.setAttribute('href', canonicalUrl);
+
         // Set OG tags
-        setMetaTag('og:title', article.title);
+        setMetaTag('og:title', document.title);
         setMetaTag('og:description', article.meta_description || article.subtitle || article.title);
         setMetaTag('og:image', article.featured_image_url || 'https://calcala-news.co.il/images/default-share.jpg');
-        setMetaTag('og:url', window.location.href);
+        setMetaTag('og:url', canonicalUrl);
         setMetaTag('og:type', 'article');
         setMetaTag('og:site_name', 'כלכלה - חדשות');
 
@@ -507,8 +539,11 @@ async function loadArticle() {
         // 3. Featured image
         const imageEl = document.getElementById('article-featured-image');
         if (imageEl && article.featured_image_url) {
+            const featImg = window.getOptimizedImageUrl
+                ? window.getOptimizedImageUrl(article.featured_image_url, { w: 1200, f: 'auto', q: 85 })
+                : article.featured_image_url;
             imageEl.innerHTML = `
-        <img src="${_h(article.featured_image_url)}" 
+        <img src="${_h(featImg)}" 
              alt="${_h(article.title)}" 
              class="w-full h-96 object-cover rounded-lg shadow-md"
              onerror="this.parentElement.style.display='none'">
@@ -660,6 +695,56 @@ async function loadArticle() {
 
         // 12. View count (async, non-blocking)
         incrementViewCount(article.id);
+
+        // 12.5 Inject JSON-LD
+        const jsonLdScript = document.createElement('script');
+        jsonLdScript.type = 'application/ld+json';
+        
+        const catSlugLd = article.categories?.slug || '';
+        const catNameLd = article.categories?.name || 'כללי';
+        
+        jsonLdScript.text = JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                        {
+                            "@type": "ListItem",
+                            "position": 1,
+                            "name": "ראשי",
+                            "item": "https://calcala-news.co.il/"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 2,
+                            "name": catNameLd,
+                            "item": catSlugLd ? `https://calcala-news.co.il/category/${encodeURIComponent(catSlugLd)}` : undefined
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 3,
+                            "name": article.title,
+                            "item": canonicalUrl
+                        }
+                    ]
+                },
+                {
+                    "@type": "NewsArticle",
+                    "headline": article.title,
+                    "image": [
+                        article.featured_image_url || "https://calcala-news.co.il/images/og-default.jpg"
+                    ],
+                    "datePublished": article.publish_date,
+                    "dateModified": article.publish_date,
+                    "author": [{
+                        "@type": "Person",
+                        "name": article.author || "מערכת כלכלה-ניוז"
+                    }]
+                }
+            ]
+        });
+        document.head.appendChild(jsonLdScript);
 
         // 13. SHOW CONTENT, HIDE SKELETON
         document.getElementById('article-skeleton').style.display = 'none';

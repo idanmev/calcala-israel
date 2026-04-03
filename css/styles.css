@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ==============================
    Calcala-News Custom Styles
    Beyond Tailwind utilities
@@ -117,7 +121,7 @@
 
 /* --- Quiz modal progress bar --- */
 .quiz-progress-bar {
-    height: 4px;
+    height: 5px;
     background: #E2E8F0;
     border-radius: 9999px;
     overflow: hidden;
@@ -125,9 +129,153 @@
 
 .quiz-progress-fill {
     height: 100%;
-    background: linear-gradient(to left, #F97316, #EC4899);
+    background: linear-gradient(to left, #dc2626, #b91c1c);
     border-radius: 9999px;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   QUIZ MODAL — CRO-OPTIMISED REDESIGN
+   ========================================== */
+
+/* Desktop: centered card */
+#quiz-modal {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+#quiz-modal.hidden {
+    display: none !important;
+}
+
+/* The inner card */
+#quiz-modal > div {
+    border-radius: 1.25rem;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: quiz-modal-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes quiz-modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Option buttons — CRO polish */
+.quiz-option-btn {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.quiz-option-btn:active {
+    transform: scale(0.98);
+}
+
+.quiz-option-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(220, 38, 38, 0.06);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.quiz-option-btn:hover::after {
+    opacity: 1;
+}
+
+/* Pulse animation for primary CTA */
+@keyframes cta-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+    50%        { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
+
+.quiz-cta-pulse {
+    animation: cta-pulse 2s ease-in-out 1s infinite;
+}
+
+/* Trust badge row */
+.quiz-trust-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.72rem;
+    color: #6b7280;
+    flex-wrap: wrap;
+}
+
+.quiz-trust-row span {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    white-space: nowrap;
+}
+
+/* Headline hook bar */
+.quiz-hook-bar {
+    background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
+    padding: 1.1rem 1.5rem 0.9rem;
+    border-radius: 1.25rem 1.25rem 0 0;
+    text-align: center;
+    color: white;
+}
+
+.quiz-hook-bar .hook-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 9999px;
+    padding: 0.2rem 0.75rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+}
+
+.quiz-hook-bar .hook-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 0.1rem;
+}
+
+.quiz-hook-bar .hook-sub {
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+/* Step counter pill */
+.quiz-step-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 9999px;
+    padding: 0.2rem 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* Selected option styling */
+.quiz-option-btn.selected {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+    color: #b91c1c !important;
+    font-weight: 700;
 }
 
 /* --- Body scroll lock --- */
@@ -263,12 +411,35 @@ body.modal-open {
         grid-template-columns: 1fr !important;
     }
 
-    /* Quiz modal - full screen on mobile */
-    #quiz-modal>div {
+    /* Quiz modal — bottom sheet on mobile */
+    #quiz-modal {
+        align-items: flex-end !important;
+        padding: 0 !important;
+    }
+
+    #quiz-modal > div {
         max-width: 100% !important;
-        height: 100vh !important;
+        width: 100% !important;
+        max-height: 92vh !important;
+        height: auto !important;
         margin: 0 !important;
-        border-radius: 0 !important;
+        border-radius: 1.25rem 1.25rem 0 0 !important;
+        animation: quiz-sheet-up 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) forwards !important;
+    }
+
+    .quiz-hook-bar {
+        border-radius: 1.25rem 1.25rem 0 0 !important;
+    }
+
+    @keyframes quiz-sheet-up {
+        from {
+            opacity: 0;
+            transform: translateY(60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* Entry hook buttons - stack on mobile if too cramped */

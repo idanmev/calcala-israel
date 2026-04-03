@@ -1,0 +1,14 @@
+{
+  "name": "calcala-news",
+  "version": "1.0.0",
+  "description": "Calcala News",
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/styles.css -o ./css/tailwind-build.css --minify",
+    "build": "npm run build:css"
+  },
+  "devDependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/forms": "^0.5.9",
+    "tailwindcss": "^3.4.14"
+  }
+}

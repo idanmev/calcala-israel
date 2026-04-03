@@ -6,8 +6,20 @@
             "destination": "/index.html"
         },
         {
+            "source": "/article/**",
+            "destination": "/article.html"
+        },
+        {
             "source": "/article",
             "destination": "/article.html"
+        },
+        {
+            "source": "/category/**",
+            "destination": "/category.html"
+        },
+        {
+            "source": "/category",
+            "destination": "/category.html"
         },
         {
             "source": "/admin",

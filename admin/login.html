@@ -7,7 +7,7 @@
     <title>כניסה למערכת - Calcala-News</title>
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,6 +21,7 @@
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="../css/tailwind-build.css" />
 </head>
 
 <body class="bg-gray-50">
@@ -82,7 +83,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/supabase-client.js"></script>
+    <script defer src="js/supabase-client.js"></script>
     <script>
         // Login form handler
         document.getElementById('loginForm').addEventListener('submit', async (e) => {

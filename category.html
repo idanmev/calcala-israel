@@ -9,106 +9,15 @@
     <!-- Open Graph / Meta tags will be dynamically updated by JS -->
     <meta id="meta-description" name="description" content="כלכלה-ניוז - חדשות, השקעות ומגמות">
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#0F172A",
-                        "primary-light": "#1E293B",
-                        "background-light": "#F8FAFC",
-                        "background-dark": "#020617",
-                        "accent": "#F97316",
-                        "accent-secondary": "#EC4899",
-                        "success": "#10B981",
-                        "error": "#EF4444",
-                        "conversion-bg": "#FEFCE8",
-                        "text-main": "#334155",
-                        "text-muted": "#64748B",
-                        "border-color": "#E2E8F0",
-                    },
-                    fontFamily: {
-                        "heading": ["Heebo", "sans-serif"],
-                        "body": ["Assistant", "sans-serif"],
-                        "mono": ["Rubik", "sans-serif"],
-                    },
-                    boxShadow: {
-                        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                        'sticky': '0 -2px 10px rgba(0,0,0,0.05)',
-                    },
-                    borderRadius: {
-                        DEFAULT: "2px",
-                        "sm": "2px",
-                        "md": "4px",
-                        "lg": "4px",
-                        "full": "9999px",
-                    }
-                },
-            },
-        }
-    </script>
-    <style>
-        @keyframes ticker-slide {
-            0% {
-                transform: translateX(100%);
-            }
 
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-
-        .animate-ticker {
-            animation: ticker-slide 45s linear infinite;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        .mobile-menu-drawer {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            height: 100vh;
-            width: 80%;
-            max-width: 320px;
-            background-color: white;
-            z-index: 60;
-            transition: right 0.3s ease-in-out;
-            box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-
-        .mobile-menu-drawer.open {
-            right: 0;
-        }
-
-        .mobile-menu-overlay {
-            position: fixed;
-            inset: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 50;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .mobile-menu-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/tailwind-build.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
 </head>
 
 <body class="bg-background-light font-body text-text-main antialiased selection:bg-accent selection:text-white pb-16">
@@ -119,7 +28,7 @@
     <header class="bg-white border-b border-border-color sticky top-0 z-40 shadow-sm">
         <div class="max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
             <div class="flex items-center gap-8 h-full">
-                <a class="flex items-center gap-2 text-primary group" href="index.html">
+                <a class="flex items-center gap-2 text-primary group" href="/">
                     <div class="size-8 bg-primary text-white flex items-center justify-center rounded-sm">
                         <span class="material-symbols-outlined">candlestick_chart</span>
                     </div>
@@ -133,7 +42,7 @@
                 <nav class="hidden lg:flex items-center h-full gap-1" id="desktopNav">
                     <a data-nav-link
                         class="h-full flex items-center px-3 text-sm font-medium text-text-main border-b-2 border-transparent hover:border-accent/50 hover:text-primary transition-colors"
-                        href="index.html">ראשי</a>
+                        href="/">ראשי</a>
                     <!-- Category links loaded dynamically by nav-loader.js -->
                 </nav>
             </div>
@@ -160,7 +69,7 @@
         <div class="p-4">
             <nav class="flex flex-col gap-1">
                 <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-text-main hover:bg-slate-50 rounded-sm transition-colors"
-                    href="index.html">
+                    href="/">
                     <span class="material-symbols-outlined text-[18px]">home</span> ראשי
                 </a>
                 <!-- Category links loaded dynamically by nav-loader.js -->
@@ -176,7 +85,7 @@
         <div class="col-span-12 border-b border-border-color pb-4 flex items-center justify-between">
             <div class="flex flex-col gap-2">
                 <div class="flex items-center gap-2 text-xs text-text-muted font-medium">
-                    <a class="hover:text-accent" href="index.html">ראשי</a>
+                    <a class="hover:text-accent" href="/">ראשי</a>
                     <span class="material-symbols-outlined text-[10px] rotate-180">chevron_right</span>
                     <span class="text-primary font-bold" id="breadcrumb-name">טוען קטגוריה...</span>
                 </div>
@@ -304,25 +213,25 @@
                 <div class="md:col-span-2 flex flex-col md:flex-row gap-8 md:gap-16">
                     <div class="flex flex-col gap-3">
                         <h4 class="font-bold text-lg mb-2 text-slate-200 border-b border-slate-700 pb-2">ניווט מהיר</h4>
-                        <a href="index.html" class="text-slate-400 hover:text-white transition-colors text-sm">ראשי</a>
-                        <a href="category.html?slug=real-estate"
+                        <a href="/" class="text-slate-400 hover:text-white transition-colors text-sm">ראשי</a>
+                        <a href="/category?slug=real-estate"
                             class="text-slate-400 hover:text-white transition-colors text-sm">נדל"ן</a>
-                        <a href="category.html?slug=capital-market"
+                        <a href="/category?slug=capital-market"
                             class="text-slate-400 hover:text-white transition-colors text-sm">שוק ההון</a>
-                        <a href="category.html?slug=crypto"
+                        <a href="/category?slug=crypto"
                             class="text-slate-400 hover:text-white transition-colors text-sm">קריפטו</a>
                     </div>
                     <div class="flex flex-col gap-3">
                         <h4 class="font-bold text-lg mb-2 text-slate-200 border-b border-slate-700 pb-2">מידע משפטי</h4>
-                        <a href="about.html" class="text-slate-400 hover:text-white transition-colors text-sm">אודות
+                        <a href="/about" class="text-slate-400 hover:text-white transition-colors text-sm">אודות
                             המערכת</a>
-                        <a href="terms.html" class="text-slate-400 hover:text-white transition-colors text-sm">תקנון
+                        <a href="/terms" class="text-slate-400 hover:text-white transition-colors text-sm">תקנון
                             האתר</a>
-                        <a href="privacy.html" class="text-slate-400 hover:text-white transition-colors text-sm">מדיניות
+                        <a href="/privacy" class="text-slate-400 hover:text-white transition-colors text-sm">מדיניות
                             פרטיות</a>
-                        <a href="accessibility.html"
+                        <a href="/accessibility"
                             class="text-slate-400 hover:text-white transition-colors text-sm">הצהרת נגישות</a>
-                        <a href="usage.html" class="text-slate-400 hover:text-white transition-colors text-sm">תנאי
+                        <a href="/usage" class="text-slate-400 hover:text-white transition-colors text-sm">תנאי
                             שימוש</a>
                     </div>
                 </div>
@@ -363,19 +272,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Security utilities -->
-    <script src="js/sanitize.js"></script>
+    <script src="/js/sanitize.js"></script>
+    <script src="/js/image-optimizer.js"></script>
 
     <!-- Shared JS -->
-    <script src="js/main.js"></script>
-    <script src="js/nav-loader.js"></script>
-    <script src="js/modal.js"></script>
+    <script defer src="/js/main.js"></script>
+    <script defer src="/js/nav-loader.js"></script>
+    <script defer src="/js/modal.js"></script>
 
     <!-- Category Page specific logical JS -->
-    <script src="js/category-loader.js"></script>
+    <script defer src="/js/category-loader.js"></script>
 
     <!-- Legal Compliance: Cookie Consent & Accessibility Widget -->
-    <script src="js/cookie-consent.js"></script>
-    <script src="js/accessibility-widget.js"></script>
+    <script defer src="/js/cookie-consent.js"></script>
+    <script defer src="/js/accessibility-widget.js"></script>
 </body>
 
 </html>

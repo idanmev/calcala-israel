@@ -8,8 +8,7 @@
     <meta name="description"
         content="בצעד מפתיע, שר האוצר חשף תוכנית תקציב המפעילה החזרים אוטומטיים לאזרחים. כל הפרטים כאן." />
 
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,49 +17,11 @@
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
 
-    <!-- Tailwind Config -->
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#0F172A",
-                        "primary-light": "#1E293B",
-                        "background-light": "#F8FAFC",
-                        "background-dark": "#020617",
-                        "accent": "#F97316",
-                        "accent-secondary": "#EC4899",
-                        "success": "#10B981",
-                        "error": "#EF4444",
-                        "conversion-bg": "#FEFCE8",
-                        "text-main": "#334155",
-                        "text-muted": "#64748B",
-                        "border-color": "#E2E8F0",
-                    },
-                    fontFamily: {
-                        "heading": ["Heebo", "sans-serif"],
-                        "body": ["Assistant", "sans-serif"],
-                        "mono": ["Rubik", "sans-serif"],
-                    },
-                    boxShadow: {
-                        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-                        'sticky': '0 -2px 10px rgba(0,0,0,0.05)',
-                    },
-                    borderRadius: {
-                        DEFAULT: "2px",
-                        "sm": "2px",
-                        "md": "4px",
-                        "lg": "4px",
-                        "full": "9999px",
-                    }
-                },
-            },
-        }
-    </script>
+        
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="/css/tailwind-build.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
 </head>
 
 <body dir="rtl" class="bg-gray-50 font-heebo">
@@ -71,7 +32,7 @@
     <header class="bg-white border-b border-border-color sticky top-0 z-40 shadow-sm">
         <div class="max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
             <div class="flex items-center gap-8 h-full">
-                <a class="flex items-center gap-2 text-primary group" href="index.html">
+                <a class="flex items-center gap-2 text-primary group" href="/">
                     <div class="size-8 bg-primary text-white flex items-center justify-center rounded-sm">
                         <span class="material-symbols-outlined">candlestick_chart</span>
                     </div>
@@ -83,7 +44,7 @@
                 </a>
                 <nav class="hidden lg:flex items-center h-full gap-1" id="desktopNav">
                     <a class="h-full flex items-center px-3 text-sm font-medium text-text-main border-b-2 border-transparent hover:border-accent/50 hover:text-primary transition-colors"
-                        href="index.html">ראשי</a>
+                        href="/">ראשי</a>
                     <!-- Category links loaded dynamically by nav-loader.js -->
                 </nav>
             </div>
@@ -111,7 +72,7 @@
         <div class="p-4">
             <nav class="flex flex-col gap-1">
                 <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-text-main hover:bg-slate-50 rounded-sm transition-colors"
-                    href="index.html">
+                    href="/">
                     <span class="material-symbols-outlined text-[18px]">home</span> ראשי
                 </a>
                 <!-- Category links loaded dynamically by nav-loader.js -->
@@ -181,12 +142,13 @@
 
                     <!-- BOTTOM CTA BLOCK (full width, end of article) -->
                     <div class="bg-gradient-to-r from-red-700 to-red-600 rounded-xl p-8 text-center text-white mb-12">
-                        <h3 class="text-2xl font-bold mb-2">קראת עד הסוף?</h3>
-                        <p class="text-lg mb-1 opacity-90">סימן שהנושא הזה רלוונטי עבורך.</p>
-                        <p class="text-base mb-6 opacity-80">בדוק עכשיו אם מגיע לך החזר מס — לוקח 60 שניות.</p>
+                        <h3 class="text-2xl font-bold mb-2">קראת עד כאן — עכשיו תוכל לפעול</h3>
+                        <p class="text-base mb-1 opacity-90">המספרים שראית במאמר הזה? הם לא תיאורטיים.</p>
+                        <p class="text-base mb-6 opacity-80">בדיקה חינמית, 60 שניות, ללא התחייבות.</p>
                         <button onclick="openQuizModal()"
+                            id="article-bottom-cta-btn"
                             class="bg-white text-red-700 font-bold py-4 px-10 rounded-lg text-xl hover:bg-gray-100 transition-colors shadow-lg">
-                            ← בדוק את זכאותך בחינם
+                            ← חשב את החסכון שלי
                         </button>
                         <p class="text-sm mt-4 opacity-70">✓ ללא עלות ✓ ללא התחייבות ✓ תוצאה מיידית</p>
                     </div>
@@ -278,7 +240,7 @@
                 class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 border-b border-gray-800 pb-8">
                 <!-- Branding -->
                 <a class="flex items-center gap-2 text-white group grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all"
-                    href="index.html">
+                    href="/">
                     <div class="size-8 bg-white text-gray-900 flex items-center justify-center rounded-sm">
                         <span class="material-symbols-outlined">candlestick_chart</span>
                     </div>
@@ -291,11 +253,11 @@
 
                 <!-- Policy Links -->
                 <nav class="flex flex-wrap justify-center gap-x-6 gap-y-3 font-medium">
-                    <a href="privacy.html" class="hover:text-white transition-colors">מדיניות פרטיות</a>
-                    <a href="terms.html" class="hover:text-white transition-colors">תקנון</a>
-                    <a href="about.html" class="hover:text-white transition-colors">אודות</a>
-                    <a href="usage.html" class="hover:text-white transition-colors">תנאי שימוש</a>
-                    <a href="accessibility.html" class="hover:text-white transition-colors">הצהרת נגישות</a>
+                    <a href="/privacy" class="hover:text-white transition-colors">מדיניות פרטיות</a>
+                    <a href="/terms" class="hover:text-white transition-colors">תקנון</a>
+                    <a href="/about" class="hover:text-white transition-colors">אודות</a>
+                    <a href="/usage" class="hover:text-white transition-colors">תנאי שימוש</a>
+                    <a href="/accessibility" class="hover:text-white transition-colors">הצהרת נגישות</a>
                 </nav>
             </div>
 
@@ -315,21 +277,12 @@
 
 
     <!-- QUIZ MODAL -->
-    <div id="quiz-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-60 p-4"
-        dir="rtl">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-screen overflow-y-auto relative">
-
-            <!-- Close button -->
-            <button onclick="closeQuizModal()"
-                class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 text-2xl font-bold z-10">
-                ✕
-            </button>
-
+    <div id="quiz-modal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60" dir="rtl">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto relative overflow-hidden" style="max-height:90vh;overflow-y:auto;">
             <!-- Modal content (populated by modal.js) -->
-            <div id="quiz-modal-content" class="p-8">
+            <div id="quiz-modal-content">
                 <!-- JavaScript populates this -->
             </div>
-
         </div>
     </div>
 
@@ -341,19 +294,20 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 
     <!-- Security: Sanitization utilities (must load before app scripts) -->
-    <script src="js/sanitize.js"></script>
+    <script src="/js/sanitize.js"></script>
+    <script src="/js/image-optimizer.js"></script>
 
-    <script src="js/main.js"></script>
-    <script src="js/nav-loader.js"></script>
-    <script src="js/modal.js"></script>
-    <script src="js/tracking.js"></script>
+    <script defer src="/js/main.js"></script>
+    <script defer src="/js/nav-loader.js"></script>
+    <script defer src="/js/modal.js"></script>
+    <script defer src="/js/tracking.js"></script>
 
     <!-- Dynamic Article Loader -->
-    <script src="/js/article-loader.js"></script>
+    <script defer src="/js/article-loader.js"></script>
 
     <!-- Legal Compliance: Cookie Consent & Accessibility Widget -->
-    <script src="js/cookie-consent.js"></script>
-    <script src="js/accessibility-widget.js"></script>
+    <script defer src="/js/cookie-consent.js"></script>
+    <script defer src="/js/accessibility-widget.js"></script>
 </body>
 
 </html>

@@ -48,7 +48,13 @@ async function loadCategoryData() {
 
         // 1. Get slug from URL
         const urlParams = new URLSearchParams(window.location.search);
-        const slug = urlParams.get('slug');
+        let slug = urlParams.get('slug');
+        if (!slug) {
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            if (pathParts.length >= 2 && pathParts[0] === 'category') {
+                slug = decodeURIComponent(pathParts[pathParts.length - 1]);
+            }
+        }
 
         if (!slug) {
             window.location.href = '/';
@@ -78,7 +84,36 @@ async function loadCategoryData() {
 
         currentCategory = categoryData;
         document.title = `כלכלה-ניוז: ${categoryData.name} - חדשות, השקעות ומגמות`;
-        document.getElementById('meta-description').content = `כל הכתבות והעדכונים בנושא ${categoryData.name} מבית כלכלה-ניוז.`;
+        
+        let metaDesc = document.getElementById('meta-description') || document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+            metaDesc.content = `כל הכתבות והעדכונים בנושא ${categoryData.name} מבית כלכלה-ניוז.`;
+        }
+
+        const canonicalUrl = `https://calcala-news.co.il/category/${encodeURIComponent(slug)}`;
+        
+        let linkCanonical = document.querySelector('link[rel="canonical"]');
+        if (!linkCanonical) {
+            linkCanonical = document.createElement('link');
+            linkCanonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(linkCanonical);
+        }
+        linkCanonical.setAttribute('href', canonicalUrl);
+
+        function setMetaTag(property, content) {
+            let meta = document.querySelector(`meta[property="${property}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.setAttribute('property', property);
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+        }
+
+        setMetaTag('og:title', document.title);
+        setMetaTag('og:description', `כל הכתבות והעדכונים בנושא ${categoryData.name} מבית כלכלה-ניוז.`);
+        setMetaTag('og:url', canonicalUrl);
+        setMetaTag('og:type', 'website');
 
         document.getElementById('category-title').textContent = categoryData.name;
         document.getElementById('breadcrumb-name').textContent = categoryData.name;
@@ -113,6 +148,29 @@ async function loadCategoryData() {
 
         // 6. Fetch Most Read for Widget
         renderCategoryMostRead();
+
+        // 7. Inject JSON-LD
+        const jsonLdScript = document.createElement('script');
+        jsonLdScript.type = 'application/ld+json';
+        jsonLdScript.text = JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "ראשי",
+                    "item": "https://calcala-news.co.il/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": categoryData.name,
+                    "item": `https://calcala-news.co.il/category/${encodeURIComponent(slug)}`
+                }
+            ]
+        });
+        document.head.appendChild(jsonLdScript);
 
     } catch (error) {
         console.error('Fatal error loading category page:', error);
@@ -150,13 +208,18 @@ function renderArticles() {
 
 function createLeadArticleHTML(article) {
     const slug = encodeURIComponent(article.slug);
-    const imgUrl = _esc(article.featured_image_url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800');
+    const rawImg = article.featured_image_url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800';
+    const imgUrl = _esc(
+        window.getOptimizedImageUrl
+            ? window.getOptimizedImageUrl(rawImg, { w: 800, f: 'auto', q: 82 })
+            : rawImg
+    );
     const title = _esc(article.title);
     const dateStr = formatHebrewDate(article.publish_date);
     const authorName = _esc(article.author || 'מערכת כלכלה-ניוז');
 
     return `
-    <article class="flex gap-4 group cursor-pointer border-b border-border-color pb-6 mb-6" onclick="window.location.href='/article.html?slug=${slug}'">
+    <article class="flex gap-4 group cursor-pointer border-b border-border-color pb-6 mb-6" onclick="window.location.href='/article/${slug}'">
         <div class="w-[200px] sm:w-[320px] aspect-[16/10] rounded-sm overflow-hidden relative bg-slate-100 shrink-0 border border-slate-200">
             <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}"/>
         </div>
@@ -176,15 +239,20 @@ function createLeadArticleHTML(article) {
 
 function createListArticleHTML(article) {
     const slug = encodeURIComponent(article.slug);
-    const imgUrl = _esc(article.featured_image_url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400');
+    const rawImg = article.featured_image_url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400';
+    const imgUrl = _esc(
+        window.getOptimizedImageUrl
+            ? window.getOptimizedImageUrl(rawImg, { w: 400, f: 'auto', q: 80 })
+            : rawImg
+    );
     const title = _esc(article.title);
     const dateStr = formatHebrewDate(article.publish_date);
     const authorName = _esc(article.author || 'מערכת כלכלה-ניוז');
 
     return `
-    <article class="flex gap-4 group cursor-pointer border-b border-border-color pb-4 mb-4" onclick="window.location.href='/article.html?slug=${slug}'">
+    <article class="flex gap-4 group cursor-pointer border-b border-border-color pb-4 mb-4" onclick="window.location.href='/article/${slug}'">
         <div class="w-[140px] sm:w-[200px] aspect-[16/10] rounded-sm overflow-hidden relative bg-slate-100 shrink-0 border border-slate-100">
-            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}"/>
+            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}" loading="lazy"/>
         </div>
         <div class="flex-1 flex flex-col justify-center gap-1">
             <h3 class="font-heading font-bold text-base md:text-lg leading-snug text-primary group-hover:text-accent transition-colors">
@@ -254,7 +322,7 @@ async function renderCategoryMostRead() {
 
         articles.forEach((article, index) => {
             const itemEl = document.createElement('a');
-            itemEl.href = `/article.html?slug=${encodeURIComponent(article.slug)}`;
+            itemEl.href = `/article/${encodeURIComponent(article.slug)}`;
             itemEl.className = 'flex gap-3 items-start p-4 border-b border-slate-100 group hover:bg-slate-50 transition-colors';
             itemEl.innerHTML = `
                 <span class="text-2xl font-heading font-bold text-accent/20 group-hover:text-accent transition-colors leading-none -mt-1">${index + 1}</span>
