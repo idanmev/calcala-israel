@@ -100,6 +100,15 @@ async function loadCategoryData() {
         }
         linkCanonical.setAttribute('href', canonicalUrl);
 
+        let linkHreflang = document.querySelector('link[hreflang="he-IL"]');
+        if (!linkHreflang) {
+            linkHreflang = document.createElement('link');
+            linkHreflang.setAttribute('rel', 'alternate');
+            linkHreflang.setAttribute('hreflang', 'he-IL');
+            document.head.appendChild(linkHreflang);
+        }
+        linkHreflang.setAttribute('href', canonicalUrl);
+
         function setMetaTag(property, content) {
             let meta = document.querySelector(`meta[property="${property}"]`);
             if (!meta) {
@@ -221,7 +230,7 @@ function createLeadArticleHTML(article) {
     return `
     <article class="flex gap-4 group cursor-pointer border-b border-border-color pb-6 mb-6" onclick="window.location.href='/article/${slug}'">
         <div class="w-[200px] sm:w-[320px] aspect-[16/10] rounded-sm overflow-hidden relative bg-slate-100 shrink-0 border border-slate-200">
-            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}"/>
+            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}" width="800" height="500" fetchpriority="high"/>
         </div>
         <div class="flex-1 flex flex-col justify-center gap-1">
             <h2 class="font-heading font-extrabold text-xl md:text-2xl leading-tight text-primary group-hover:text-accent transition-colors">
@@ -252,7 +261,7 @@ function createListArticleHTML(article) {
     return `
     <article class="flex gap-4 group cursor-pointer border-b border-border-color pb-4 mb-4" onclick="window.location.href='/article/${slug}'">
         <div class="w-[140px] sm:w-[200px] aspect-[16/10] rounded-sm overflow-hidden relative bg-slate-100 shrink-0 border border-slate-100">
-            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}" loading="lazy"/>
+            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${imgUrl}" alt="${title}" width="400" height="250" loading="lazy"/>
         </div>
         <div class="flex-1 flex flex-col justify-center gap-1">
             <h3 class="font-heading font-bold text-base md:text-lg leading-snug text-primary group-hover:text-accent transition-colors">

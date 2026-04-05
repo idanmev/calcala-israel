@@ -397,13 +397,15 @@ function updateTickerDisplay() {
         headlines.push(tickerHeadlines[index]);
     }
 
-    const html = headlines.map(item => {
+    const html = headlines.map((item, i) => {
         const timeAgo = getTimeAgo(item.pub_date);
         const esc = (s) => window.CalcalaSanitize ? window.CalcalaSanitize.escapeHtml(s) : String(s || '');
         const safeLink = (item.link && /^https?:\/\//i.test(item.link)) ? esc(item.link) : '#';
+        // Show only 2 items on mobile, up to 4 on desktop
+        const displayClass = i >= 2 ? 'hidden lg:block' : 'block';
         return `
             <a href="${safeLink}" target="_blank" rel="noopener noreferrer" 
-               class="block p-4 border-b border-border-color hover:bg-slate-50 cursor-pointer group transition-colors">
+               class="${displayClass} p-4 border-b border-border-color hover:bg-slate-50 cursor-pointer group transition-colors">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-error text-[10px]">●</span>
                     <span class="text-text-muted text-[10px] font-bold tracking-wide">${timeAgo}</span>

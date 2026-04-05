@@ -1,7 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./**/*.html",
+    "./*.html",
+    "./admin/**/*.html",
     "./js/**/*.js"
   ],
   darkMode: "class",
@@ -41,6 +42,5 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/forms'),
-    require('@tailwindcss/container-queries'),
   ],
 }

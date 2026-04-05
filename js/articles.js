@@ -104,7 +104,8 @@ function updateHeroUI(container, article) {
     const slug = encodeURIComponent(article.slug);
 
     container.innerHTML = `
-      <div class="relative h-full min-h-[384px] bg-cover bg-center" style="background-image: url('${imgUrl}');">
+      <div class="relative h-full min-h-[384px] overflow-hidden">
+        <img src="${imgUrl}" alt="${title}" class="absolute inset-0 w-full h-full object-cover" width="1200" height="675" fetchpriority="high" />
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
         <div class="absolute bottom-0 right-0 p-8 text-white">
           <div class="flex items-center gap-4 mb-3">
@@ -185,6 +186,7 @@ async function renderGridArticles() {
           <img src="${_esc(_img(article.featured_image_url, 600))}" 
                alt="${_esc(article.title)}" 
                class="w-full h-48 object-cover"
+               width="600" height="192"
                loading="lazy"
                onerror="this.src='https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600'">
           <div class="p-5">

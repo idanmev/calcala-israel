@@ -3,7 +3,17 @@
 // Unique variable names to avoid conflicts with other scripts
 const ART_SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
 const ART_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
-const supabaseArt = window.supabase.createClient(ART_SUPABASE_URL, ART_SUPABASE_KEY);
+let supabaseArt = null;
+
+// Initialize Supabase client safely (may load async)
+function initSupabaseArt() {
+    if (supabaseArt) return true;
+    if (window.supabase) {
+        supabaseArt = window.supabase.createClient(ART_SUPABASE_URL, ART_SUPABASE_KEY);
+        return true;
+    }
+    return false;
+}
 
 // Shortcut for escapeHtml
 const _h = (s) => window.CalcalaSanitize ? window.CalcalaSanitize.escapeHtml(s) : String(s || '');
@@ -37,7 +47,7 @@ function estimateReadTime(text) {
     return `${minutes} דקות קריאה`;
 }
 
-// Update reading progress bar
+// Update reading progress bar (GPU-composited via transform:scaleX)
 function initReadingProgress() {
     const progressBar = document.getElementById('reading-progress');
     if (!progressBar) return;
@@ -45,8 +55,8 @@ function initReadingProgress() {
     window.addEventListener('scroll', () => {
         const scrollTop = window.scrollY;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-        progressBar.style.width = Math.min(progress, 100) + '%';
+        const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
+        progressBar.style.transform = `scaleX(${progress})`;
     });
 }
 
@@ -141,6 +151,7 @@ async function loadRelatedArticles(categoryId, currentSlug) {
         <img src="${_h(relImg)}" 
              alt="${_h(article.title)}" 
              class="w-full h-32 object-cover"
+             width="400" height="128"
              loading="lazy"
              onerror="this.src='https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400'">
         <div class="p-3">
@@ -498,6 +509,16 @@ async function loadArticle() {
         }
         linkCanonical.setAttribute('href', canonicalUrl);
 
+        // Set hreflang
+        let linkHreflang = document.querySelector('link[hreflang="he-IL"]');
+        if (!linkHreflang) {
+            linkHreflang = document.createElement('link');
+            linkHreflang.setAttribute('rel', 'alternate');
+            linkHreflang.setAttribute('hreflang', 'he-IL');
+            document.head.appendChild(linkHreflang);
+        }
+        linkHreflang.setAttribute('href', canonicalUrl);
+
         // Set OG tags
         setMetaTag('og:title', document.title);
         setMetaTag('og:description', article.meta_description || article.subtitle || article.title);
@@ -546,6 +567,8 @@ async function loadArticle() {
         <img src="${_h(featImg)}" 
              alt="${_h(article.title)}" 
              class="w-full h-96 object-cover rounded-lg shadow-md"
+             width="1200" height="384"
+             fetchpriority="high"
              onerror="this.parentElement.style.display='none'">
       `;
         } else if (imageEl) {
@@ -739,7 +762,8 @@ async function loadArticle() {
                     "dateModified": article.publish_date,
                     "author": [{
                         "@type": "Person",
-                        "name": article.author || "מערכת כלכלה-ניוז"
+                        "name": article.author || "מערכת כלכלה-ניוז",
+                        "url": article.author ? `https://calcala-news.co.il/author/${encodeURIComponent(article.author.replace(/\\s+/g, '-'))}` : "https://calcala-news.co.il/about"
                     }]
                 }
             ]
@@ -765,8 +789,35 @@ async function loadArticle() {
     }
 }
 
+// Wait for Supabase (async) then load article
+function startArticleLoading() {
+    if (initSupabaseArt()) {
+        loadArticle();
+    } else {
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            if (initSupabaseArt()) {
+                clearInterval(interval);
+                loadArticle();
+            } else if (attempts > 50) {
+                clearInterval(interval);
+                console.error('Failed to load Supabase library after 5 seconds');
+                const skeleton = document.getElementById('article-skeleton');
+                if (skeleton) {
+                    skeleton.innerHTML = `
+                        <div class="text-center py-20">
+                            <p class="text-xl text-gray-600">שגיאה בטעינת הדף</p>
+                            <a href="/" class="text-blue-600 underline mt-4 inline-block">חזרה לדף הבית</a>
+                        </div>`;
+                }
+            }
+        }, 100);
+    }
+}
+
 // Start when DOM is ready
-document.addEventListener('DOMContentLoaded', loadArticle);
+document.addEventListener('DOMContentLoaded', startArticleLoading);
 
 // Fallback if modal function not defined by other scripts
 if (typeof openQuizModal === 'undefined') {

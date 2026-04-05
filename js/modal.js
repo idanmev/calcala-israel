@@ -252,7 +252,7 @@ function renderQuestionStep(question, stepIndex, totalSteps) {
         <div class="quiz-step-pill">שאלה ${stepIndex + 1} מתוך ${answered}</div>
         <div style="display:flex;gap:0.3rem;align-items:center;">${dots}</div>
       </div>
-      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${progressPercent}%"></div></div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="transform:scaleX(${progressPercent / 100})"></div></div>
     </div>
 
     <!-- Question -->
@@ -475,7 +475,7 @@ function renderLeadForm() {
         <div class="quiz-step-pill">שלב אחרון 🎯</div>
         <span style="font-size:0.75rem;color:#6b7280;">95% הושלם</span>
       </div>
-      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:95%"></div></div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="transform:scaleX(0.95)"></div></div>
     </div>
 
     <div style="padding:1.1rem 1.5rem;">

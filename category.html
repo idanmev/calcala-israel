@@ -4,17 +4,28 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <!-- Canonical & Hreflang dynamically injected by JS -->
+
     <title>כלכלה-ניוז - קטגוריה</title>
 
     <!-- Open Graph / Meta tags will be dynamically updated by JS -->
     <meta id="meta-description" name="description" content="כלכלה-ניוז - חדשות, השקעות ומגמות">
 
-    
+    <!-- Google Fonts — non-blocking load -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preconnect CDN domains -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://ik.imagekit.io" crossorigin />
+    <link rel="preconnect" href="https://gtuxstslzsiuinxjvfdj.supabase.co" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+            rel="stylesheet" />
+    </noscript>
 
     <link rel="stylesheet" href="/css/tailwind-build.css" />
     <link rel="stylesheet" href="/css/styles.css" />
@@ -268,12 +279,12 @@
     <!-- ============================== -->
     <!-- SCRIPTS                        -->
     <!-- ============================== -->
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase JS Library (async — app scripts wait for it) -->
+    <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Security utilities -->
-    <script src="/js/sanitize.js"></script>
-    <script src="/js/image-optimizer.js"></script>
+    <script defer src="/js/sanitize.js"></script>
+    <script defer src="/js/image-optimizer.js"></script>
 
     <!-- Shared JS -->
     <script defer src="/js/main.js"></script>

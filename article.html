@@ -4,18 +4,29 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <!-- Canonical & Hreflang dynamically injected by JS -->
+
     <title>משרד האוצר חושף את מתווה החזרי המס החדש — כלכלה-ניוז</title>
     <meta name="description"
         content="בצעד מפתיע, שר האוצר חשף תוכנית תקציב המפעילה החזרים אוטומטיים לאזרחים. כל הפרטים כאן." />
 
         
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts — non-blocking load -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preconnect CDN domains -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://ik.imagekit.io" crossorigin />
+    <link rel="preconnect" href="https://gtuxstslzsiuinxjvfdj.supabase.co" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+            rel="stylesheet" />
+    </noscript>
 
         
 
@@ -271,9 +282,9 @@
         </div>
     </footer>
 
-    <!-- READING PROGRESS BAR -->
-    <div id="reading-progress" class="fixed top-0 left-0 h-1 bg-red-600 z-50 transition-all duration-100"
-        style="width: 0%"></div>
+    <!-- READING PROGRESS BAR (GPU-composited via transform:scaleX) -->
+    <div id="reading-progress" class="fixed top-0 left-0 w-full h-1 bg-red-600 z-50"
+        style="transform:scaleX(0);transform-origin:right"></div>
 
 
     <!-- QUIZ MODAL -->
@@ -287,15 +298,15 @@
     </div>
 
     <!-- Scripts -->
-    <!-- Supabase JS Library (if not already included) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase JS Library (async — app scripts wait for it) -->
+    <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Security: DOMPurify for article body HTML sanitization -->
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <!-- Security: DOMPurify for article body HTML sanitization (async) -->
+    <script async src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 
-    <!-- Security: Sanitization utilities (must load before app scripts) -->
-    <script src="/js/sanitize.js"></script>
-    <script src="/js/image-optimizer.js"></script>
+    <!-- Security: Sanitization utilities -->
+    <script defer src="/js/sanitize.js"></script>
+    <script defer src="/js/image-optimizer.js"></script>
 
     <script defer src="/js/main.js"></script>
     <script defer src="/js/nav-loader.js"></script>
@@ -308,6 +319,9 @@
     <!-- Legal Compliance: Cookie Consent & Accessibility Widget -->
     <script defer src="/js/cookie-consent.js"></script>
     <script defer src="/js/accessibility-widget.js"></script>
+
+    <!-- Exit Intent Popup — launches article-specific quiz modal -->
+    <script defer src="/js/exit-intent-popup.js"></script>
 </body>
 
 </html>

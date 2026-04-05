@@ -2,21 +2,43 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".",
   "framework": null,
+  "headers": [
+    {
+      "source": "/css/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    }
+  ],
   "rewrites": [
+    { "source": "/sitemap.xml",      "destination": "/api/sitemap" },
+    { "source": "/news-sitemap.xml", "destination": "/api/news-sitemap" },
     {
       "source": "/api/finance/:symbol",
       "destination": "https://query1.finance.yahoo.com/v8/finance/chart/:symbol"
     },
-    { "source": "/article/:slug", "destination": "/article.html" },
-    { "source": "/article", "destination": "/article.html" },
-    { "source": "/category/:slug", "destination": "/category.html" },
-    { "source": "/category", "destination": "/category.html" },
-    { "source": "/admin", "destination": "/admin/dashboard.html" },
-    { "source": "/admin/dashboard", "destination": "/admin/dashboard.html" },
-    { "source": "/admin/login", "destination": "/admin/login.html" },
-    { "source": "/admin/article-edit", "destination": "/admin/article-edit.html" },
-    { "source": "/admin/categories", "destination": "/admin/categories.html" },
-    { "source": "/admin/quiz-config", "destination": "/admin/quiz-config.html" },
-    { "source": "/admin/leads", "destination": "/admin/leads.html" }
+    { "source": "/article/:slug",        "destination": "/article.html" },
+    { "source": "/article",              "destination": "/article.html" },
+    { "source": "/category/:slug",       "destination": "/category.html" },
+    { "source": "/category",             "destination": "/category.html" },
+    { "source": "/admin",                "destination": "/admin/dashboard.html" },
+    { "source": "/admin/dashboard",      "destination": "/admin/dashboard.html" },
+    { "source": "/admin/login",          "destination": "/admin/login.html" },
+    { "source": "/admin/article-edit",   "destination": "/admin/article-edit.html" },
+    { "source": "/admin/categories",     "destination": "/admin/categories.html" },
+    { "source": "/admin/quiz-config",    "destination": "/admin/quiz-config.html" },
+    { "source": "/admin/leads",          "destination": "/admin/leads.html" }
   ]
 }

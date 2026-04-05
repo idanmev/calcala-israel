@@ -4,6 +4,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <!-- Canonical & Hreflang -->
+    <link rel="canonical" href="https://calcala-news.co.il/" />
+    <link rel="alternate" hreflang="he-IL" href="https://calcala-news.co.il/" />
+
     <title>כלכלה - חדשות | כל מה שצריך לדעת על מיסים, ביטוח ופנסיה</title>
     <meta name="description"
         content="כלכלה-ניוז: חדשות כלכליות, שוק ההון, נדל״ן, קריפטו ומיסוי — כל העדכונים הפיננסיים מישראל בזמן אמת." />
@@ -26,12 +30,21 @@
 
         
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts — non-blocking load -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preconnect CDN domains -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://ik.imagekit.io" crossorigin />
+    <link rel="preconnect" href="https://gtuxstslzsiuinxjvfdj.supabase.co" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+            rel="stylesheet" />
+    </noscript>
 
         
 
@@ -150,7 +163,7 @@
             <!-- Hero Article -->
             <a id="hero-article" class="lg:col-span-8 relative block overflow-hidden bg-gray-900">
                 <!-- Content will be dynamically loaded by articles.js -->
-                <div class="relative h-96 bg-gray-800 flex items-center justify-center">
+                <div class="relative bg-gray-800 flex items-center justify-center" style="aspect-ratio:16/9;min-height:280px;max-height:24rem;">
                     <div class="text-white text-center">
                         <div class="animate-pulse">
                             <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,12 +376,12 @@
     <!-- ============================== -->
     <!-- SCRIPTS                        -->
     <!-- ============================== -->
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase JS Library (async — app scripts wait for it) -->
+    <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Security: Sanitization utilities (must load before app scripts) -->
-    <script src="/js/sanitize.js"></script>
-    <script src="/js/image-optimizer.js"></script>
+    <!-- Security: Sanitization utilities -->
+    <script defer src="/js/sanitize.js"></script>
+    <script defer src="/js/image-optimizer.js"></script>
 
     <script defer src="/js/main.js"></script>
     <script defer src="/js/nav-loader.js"></script>

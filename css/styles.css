@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 /* ==============================
+   Font fallback metrics for CLS reduction
+   Minimises layout shift when web fonts load
+   ============================== */
+@layer base {
+  body {
+    font-display: swap;
+  }
+}
+
+/* ==============================
    Calcala-News Custom Styles
    Beyond Tailwind utilities
    ============================== */
@@ -84,6 +94,7 @@
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
+    will-change: transform;
 }
 
 .mobile-menu-drawer.active {
@@ -131,7 +142,8 @@
     height: 100%;
     background: linear-gradient(to left, #dc2626, #b91c1c);
     border-radius: 9999px;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: right;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ==========================================
