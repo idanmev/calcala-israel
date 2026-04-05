@@ -51,15 +51,19 @@
         if (url.startsWith(SUPABASE_STORAGE_BASE)) {
             // Strip the base, keep the path (bucket/filename)
             const relativePath = url.slice(SUPABASE_STORAGE_BASE.length);
-            const ikBase = IMAGEKIT_ENDPOINT + relativePath;
-            return trString ? `${ikBase}?${trString}` : ikBase;
+            // Append transform string into the path
+            const ikPath = trString ? `${trString}/${relativePath}` : relativePath;
+            return IMAGEKIT_ENDPOINT + ikPath;
         }
 
         // === Already an ImageKit URL: just append/replace transformations ===
         if (url.startsWith(IMAGEKIT_ENDPOINT)) {
-            // Strip existing query params and add new ones
-            const [baseUrl] = url.split('?');
-            return trString ? `${baseUrl}?${trString}` : baseUrl;
+            // Strip existing query params
+            const [baseIkUrl] = url.split('?');
+            // If it already has a tr: in the path, we should ideally replace it, but for simplicity
+            // let's try appending as a query param correctly this time using tr= (ImageKit query param syntax is tr=x,y,z)
+            const queryTrString = trParts.length > 0 ? `tr=${trParts.join(',')}` : '';
+            return queryTrString ? `${baseIkUrl}?${queryTrString}` : baseIkUrl;
         }
 
         // === Unsplash / Other external URLs: pass through as-is ===

@@ -33,10 +33,18 @@
     <!-- Google Fonts — non-blocking load -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Preconnect CDN domains -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preconnect" href="https://ik.imagekit.io" crossorigin />
-    <link rel="preconnect" href="https://gtuxstslzsiuinxjvfdj.supabase.co" crossorigin />
+    
+    <!-- LCP Pre-fetch for Hero Article -->
+    <script>
+        window.__HERO_FETCH__ = fetch('https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1/articles?select=*,categories%28name,slug%29&status=eq.published&is_featured=eq.true&order=publish_date.desc&limit=1', {
+            headers: {
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM',
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM'
+            }
+        }).then(res => res.json()).catch(err => { console.error('Hero prefetch error', err); return null; });
+    </script>
+
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'" />

@@ -44,19 +44,39 @@ function formatHebrewDate(dateString) {
 async function renderHeroArticle() {
     console.log('Articles JS: Rendering hero article...');
     try {
-        if (!supabaseArticles) return;
+        let heroData = null;
 
-        const { data, error } = await supabaseArticles
-            .from('articles')
-            .select('*, categories(name, slug)')
-            .eq('status', 'published')
-            .eq('is_featured', true)
-            .order('publish_date', { ascending: false })
-            .limit(1);
+        // Fast-path: use LCP pre-fetch if available
+        if (window.__HERO_FETCH__) {
+            console.log('Articles JS: Using LCP pre-fetch data');
+            try {
+                const prefetchResult = await window.__HERO_FETCH__;
+                if (prefetchResult && prefetchResult.length > 0) {
+                    heroData = prefetchResult;
+                }
+                // Clear so we don't accidentally reuse it later if re-rendering
+                window.__HERO_FETCH__ = null;
+            } catch (err) {
+                console.warn('Hero prefetch failed, falling back to Supabase SDK', err);
+            }
+        }
 
-        if (error) throw error;
+        // Fallback: fetch via Supabase SDK if pre-fetch wasn't available or failed
+        if (!heroData) {
+            if (!supabaseArticles) return;
+            const { data, error } = await supabaseArticles
+                .from('articles')
+                .select('*, categories(name, slug)')
+                .eq('status', 'published')
+                .eq('is_featured', true)
+                .order('publish_date', { ascending: false })
+                .limit(1);
 
-        const article = data && data.length > 0 ? data[0] : null;
+            if (error) throw error;
+            heroData = data;
+        }
+
+        const article = heroData && heroData.length > 0 ? heroData[0] : null;
         const heroContainer = document.getElementById('hero-article');
         if (!heroContainer) return;
 

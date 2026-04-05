@@ -22,6 +22,14 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "calcala-news.co.il" }],
+      "destination": "https://www.calcala-news.co.il/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml",      "destination": "/api/sitemap" },
     { "source": "/news-sitemap.xml", "destination": "/api/news-sitemap" },
