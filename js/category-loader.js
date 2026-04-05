@@ -325,7 +325,7 @@ async function renderCategoryMostRead() {
         widgetContainer.innerHTML = '';
 
         if (!articles || articles.length === 0) {
-            widgetContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">אין נתונים מספיקים לשבוע זה</p>';
+            widgetContainer.innerHTML = '<p class="text-xs text-gray-600 text-center py-4">אין נתונים מספיקים לשבוע זה</p>';
             return;
         }
 
@@ -394,7 +394,7 @@ async function loadCategoryQuizCta(categorySlug) {
                             בדוק זכאות עכשיו <span class="material-symbols-outlined text-[14px] rotate-180 inline-block align-middle">arrow_forward</span>
                         </button>
                     `}
-                    <p class="text-[11px] text-gray-500 text-center mt-3 font-bold">✓ תוצאה מיידית ✓ בדיקה חינם ללא התחייבות</p>
+                    <p class="text-[11px] text-gray-600 text-center mt-3 font-bold">✓ תוצאה מיידית ✓ בדיקה חינם ללא התחייבות</p>
                 </div>
             `;
             sidebarCta.classList.remove('hidden');

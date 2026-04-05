@@ -35,15 +35,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://ik.imagekit.io" crossorigin />
     
-    <!-- LCP Pre-fetch for Hero Article -->
+    
+    <!-- SSG Preload Flag -->
     <script>
-        window.__HERO_FETCH__ = fetch('https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1/articles?select=*,categories%28name,slug%29&status=eq.published&is_featured=eq.true&order=publish_date.desc&limit=1', {
-            headers: {
-                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM'
-            }
-        }).then(res => res.json()).catch(err => { console.error('Hero prefetch error', err); return null; });
+        window.__PRELOADED_ARTICLES__ = true;
     </script>
+    
+    
 
     <link
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;600;700&family=Rubik:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -209,19 +207,49 @@
 
         <!-- ===== MARKET NEWS (6 cols) ===== -->
         <div id="articles-grid" class="col-span-12 lg:col-span-9">
-            <h2 class="text-2xl font-bold mb-6 border-b-2 border-red-600 pb-2">חדשות השוק</h2>
-            <!-- Loading placeholder -->
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-gray-100 animate-pulse h-64 rounded"></div>
-                <div class="bg-gray-100 animate-pulse h-64 rounded"></div>
-                <div class="bg-gray-100 animate-pulse h-64 rounded"></div>
-                <div class="bg-gray-100 animate-pulse h-64 rounded"></div>
-                <div class="bg-gray-100 animate-pulse h-64 rounded"></div>
-                <div class="bg-gray-100 animate-pulse h-64 rounded"></div>
-            </div>
-            <p class="text-center text-gray-500 mt-6">טוען מאמרים...</p>
-        </div>
+<h2 class="text-2xl font-bold mb-6 border-b-2 border-red-600 pb-2 flex items-center">חדשות השוק</h2>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
+        <a href="/article/mychzvr-mshknta-2026-ayk-lntzl-at-htyytzbvt-hrybyt-lchyskvn--420295" class="bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block group rounded-lg">
+          <picture>
+            <source media="(max-width: 640px)" srcset="https://ik.imagekit.io/yryz02mxg/tr:w-400,f-auto,q-80/public/article-images/article-1772507685006-vfewzd.png">
+            <img src="https://ik.imagekit.io/yryz02mxg/tr:w-600,f-auto,q-80/public/article-images/article-1772507685006-vfewzd.png" 
+                 alt="מיחזור משכנתא 2026: איך לנצל את התייצבות הריבית לחיסכון של עשרות אלפי שקלים" 
+                 class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                 width="600" height="192"
+                 loading="lazy">
+          </picture>
+          <div class="p-5">
+            <div class="flex items-center gap-3 mb-2 text-sm relative z-10">
+              <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">משכנתאות ונדל&quot;ן</span>
+              <span class="text-gray-500 font-medium">2 במרץ 2026</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2 group-hover:text-red-600 transition-colors line-clamp-2 leading-tight">מיחזור משכנתא 2026: איך לנצל את התייצבות הריבית לחיסכון של עשרות אלפי שקלים</h3>
+            
+          </div>
+        </a>
+            
+        <a href="/article/chyskvn-lkl-yld-2026-hksp-shhmdynh-mpkydh-lyld-shlkm-vrvb-hh-159871" class="bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block group rounded-lg">
+          <picture>
+            <source media="(max-width: 640px)" srcset="https://ik.imagekit.io/yryz02mxg/tr:w-400,f-auto,q-80/public/article-images/article-1772509904243-yq6j3l.png">
+            <img src="https://ik.imagekit.io/yryz02mxg/tr:w-600,f-auto,q-80/public/article-images/article-1772509904243-yq6j3l.png" 
+                 alt="חיסכון לכל ילד 2026: הכסף שהמדינה מפקידה לילד שלכם - ורוב ההורים לא יודעים איך להכפיל אותו" 
+                 class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                 width="600" height="192"
+                 loading="lazy">
+          </picture>
+          <div class="p-5">
+            <div class="flex items-center gap-3 mb-2 text-sm relative z-10">
+              <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">השקעות וניהול כסף</span>
+              <span class="text-gray-500 font-medium">21 בינואר 2026</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2 group-hover:text-red-600 transition-colors line-clamp-2 leading-tight">חיסכון לכל ילד 2026: הכסף שהמדינה מפקידה לילד שלכם - ורוב ההורים לא יודעים איך להכפיל אותו</h3>
+            
+          </div>
+        </a>
+            
+</div>
+</div>
         <!-- ===== COMMENTARY (3 cols) ===== -->
 
 

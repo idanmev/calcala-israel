@@ -42,6 +42,10 @@ function formatHebrewDate(dateString) {
 
 // Render hero article
 async function renderHeroArticle() {
+    if (window.__PRELOADED_ARTICLES__) {
+        console.log('Articles JS: SSG preloaded, skipping hero render');
+        return;
+    }
     console.log('Articles JS: Rendering hero article...');
     try {
         let heroData = null;
@@ -93,7 +97,7 @@ async function renderHeroArticle() {
             if (latestError || !latestData || latestData.length === 0) {
                 heroContainer.innerHTML = `
                     <div class="relative h-full min-h-[384px] bg-gray-900 flex items-center justify-center">
-                        <p class="text-gray-500">טרם פורסמו מאמרים</p>
+                        <p class="text-gray-600">טרם פורסמו מאמרים</p>
                     </div>
                 `;
                 return;
@@ -143,6 +147,10 @@ function updateHeroUI(container, article) {
 
 // Render grid articles
 async function renderGridArticles() {
+    if (window.__PRELOADED_ARTICLES__) {
+        console.log('Articles JS: SSG preloaded, skipping grid render');
+        return;
+    }
     try {
         const { data, error } = await supabaseArticles
             .from('articles')
@@ -212,7 +220,7 @@ async function renderGridArticles() {
           <div class="p-5">
             <div class="flex items-center gap-3 mb-2 text-sm">
               <span class="text-red-600 font-bold">${_esc(article.categories?.name || 'כללי')}</span>
-              <span class="text-gray-500">${formatHebrewDate(article.publish_date)}</span>
+              <span class="text-gray-600">${formatHebrewDate(article.publish_date)}</span>
             </div>
             <h3 class="text-xl font-bold mb-2 hover:text-red-600 transition-colors line-clamp-2">${_esc(article.title)}</h3>
             ${article.subtitle ? `<p class="text-gray-600 text-sm line-clamp-2">${_esc(article.subtitle)}</p>` : ''}
@@ -275,7 +283,7 @@ async function renderMostReadWidget() {
         listContainer.innerHTML = '';
 
         if (!articles || articles.length === 0) {
-            listContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">אין נתונים עדיין</p>';
+            listContainer.innerHTML = '<p class="text-xs text-gray-600 text-center py-4">אין נתונים עדיין</p>';
             return;
         }
 
@@ -290,7 +298,7 @@ async function renderMostReadWidget() {
           <h4 class="text-sm font-bold leading-tight group-hover:text-red-600 transition-colors line-clamp-2">
             ${_esc(article.title)}
           </h4>
-          <span class="text-xs text-gray-500 mt-1 block">${formatHebrewDate(article.publish_date)}</span>
+          <span class="text-xs text-gray-600 mt-1 block">${formatHebrewDate(article.publish_date)}</span>
         </div>
       `;
             listContainer.appendChild(itemEl);

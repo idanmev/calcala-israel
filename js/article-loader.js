@@ -88,7 +88,7 @@ async function loadSidebarMostRead() {
         <span class="text-2xl font-bold text-gray-300 leading-none min-w-[24px]">${index + 1}</span>
         <div>
           <p class="text-sm font-bold text-gray-800 leading-tight line-clamp-2">${_h(article.title)}</p>
-          <p class="text-xs text-gray-500 mt-1">${formatDateHebrew(article.publish_date)}</p>
+          <p class="text-xs text-gray-600 mt-1">${formatDateHebrew(article.publish_date)}</p>
         </div>
       </a>
     `).join('');
@@ -233,7 +233,7 @@ async function renderEntryHook(categorySlug) {
                 class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors shadow-lg">
           ← בדוק עכשיו בחינם
         </button>
-        <p class="text-xs text-gray-500 mt-2">✓ בחינם ✓ ללא התחייבות</p>
+        <p class="text-xs text-gray-600 mt-2">✓ בחינם ✓ ללא התחייבות</p>
       `;
             ctaEl.classList.remove('hidden');
             return;
@@ -253,7 +253,7 @@ async function renderEntryHook(categorySlug) {
           ${config.button_b_label}
         </button>
       </div>
-      <p class="text-xs text-gray-500 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+      <p class="text-xs text-gray-600 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
     `;
         ctaEl.classList.remove('hidden');
 
@@ -299,7 +299,7 @@ function renderEntryHookFromConfig(config, categorySlug) {
         ${config.button_b_label}
       </button>
     </div>
-    <p class="text-xs text-gray-500 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+    <p class="text-xs text-gray-600 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
   `;
     ctaEl.classList.remove('hidden');
 }
@@ -345,7 +345,7 @@ function renderSidebarQuizCta(quizConfig, categorySlug) {
                     ← בדוק זכאות עכשיו
                 </button>
             `}
-            <p class="text-xs text-gray-500 text-center">✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+            <p class="text-xs text-gray-600 text-center">✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
         </div>
     `;
     sidebarCta.classList.remove('hidden');
@@ -379,7 +379,7 @@ function renderBlocksToHtml(blocks) {
                 }).join('');
                 return `<${listTag} class="${listClass}">${items}</${listTag}>`;
             case 'image':
-                const caption = block.data.caption ? `<figcaption class="text-center text-sm text-gray-500 mt-2">${block.data.caption}</figcaption>` : '';
+                const caption = block.data.caption ? `<figcaption class="text-center text-sm text-gray-600 mt-2">${block.data.caption}</figcaption>` : '';
                 const withBorder = block.data.withBorder ? 'border border-gray-200 p-2 rounded-lg' : '';
                 const withBackground = block.data.withBackground ? 'bg-gray-50 p-4 rounded-lg' : '';
                 const stretched = block.data.stretched ? 'w-full object-cover' : 'max-w-full mx-auto rounded-lg shadow-sm object-contain';
@@ -397,7 +397,7 @@ function renderBlocksToHtml(blocks) {
                 `;
             case 'quote':
                 const alignmentClass = block.data.alignment === 'center' ? 'text-center' : 'text-right';
-                const quoteCaption = block.data.caption ? `<cite class="block text-sm text-gray-500 mt-3 font-bold not-italic">- ${block.data.caption}</cite>` : '';
+                const quoteCaption = block.data.caption ? `<cite class="block text-sm text-gray-600 mt-3 font-bold not-italic">- ${block.data.caption}</cite>` : '';
                 return `
                     <blockquote class="border-r-4 border-red-600 pr-6 pl-4 my-8 bg-red-50 py-6 rounded-l-xl ${alignmentClass}">
                         <p class="text-xl md:text-2xl italic text-gray-800 font-medium leading-relaxed">"${block.data.text}"</p>
@@ -411,7 +411,7 @@ function renderBlocksToHtml(blocks) {
                         <div class="relative overflow-hidden pt-[56.25%] rounded-lg shadow-sm bg-gray-100">
                             <iframe src="${embedUrl}" class="absolute top-0 left-0 w-full h-full border-0" allowfullscreen></iframe>
                         </div>
-                        ${block.data.caption ? `<p class="text-center text-sm text-gray-500 mt-2">${block.data.caption}</p>` : ''}
+                        ${block.data.caption ? `<p class="text-center text-sm text-gray-600 mt-2">${block.data.caption}</p>` : ''}
                     </div>
                 `;
             case 'raw':
@@ -789,7 +789,7 @@ async function loadArticle() {
             skeleton.innerHTML = `
                 <div class="text-center py-20">
                     <p class="text-xl text-gray-600">שגיאה בטעינת המאמר</p>
-                    <p class="text-sm text-gray-500 mt-2">${error.message || ''}</p>
+                    <p class="text-sm text-gray-600 mt-2">${error.message || ''}</p>
                     <a href="/" class="text-blue-600 underline mt-4 inline-block">חזרה לדף הבית</a>
                 </div>`;
         }
