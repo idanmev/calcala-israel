@@ -3,8 +3,8 @@ const path = require('path');
 
 const SUPABASE_API = 'https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
-const SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/';
-const IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/yryz02mxg/';
+const SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/public/';
+const IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
 
 function getOptimizedUrl(url, w) {
     if (!url) return `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`;
@@ -144,7 +144,7 @@ async function build() {
 
     // Inject Hero Container (Replacing entire `<a id="hero-article">...</a>`)
     indexHtml = indexHtml.replace(
-        /<a href="#" id="hero-article"[\s\S]*?<\/a>/,
+        /<a[^>]*id="hero-article"[^>]*>[\s\S]*?<\/a>/,
         heroHtml.trim()
     );
 
