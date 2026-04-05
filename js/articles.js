@@ -136,7 +136,7 @@ function updateHeroUI(container, article) {
             <span class="bg-red-600 px-3 py-1 text-sm font-bold">${catName}</span>
             <span class="text-sm text-gray-300">${dateStr}</span>
           </div>
-          <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 leading-tight text-white">${title}</h1>
+          <h1 class="text-lg md:text-2xl lg:text-3xl font-bold mb-3 leading-snug text-white">${title}</h1>
           ${subtitle}
         </div>
       </div>
@@ -231,7 +231,7 @@ async function renderGridArticles() {
               <span class="text-red-600 font-bold">${_esc(article.categories?.name || 'כללי')}</span>
               <span class="text-gray-600">${formatHebrewDate(article.publish_date)}</span>
             </div>
-            <h3 class="text-xl font-bold mb-2 hover:text-red-600 transition-colors line-clamp-2">${_esc(article.title)}</h3>
+            <h3 class="text-lg font-bold mb-2 hover:text-red-600 transition-colors leading-snug">${_esc(article.title)}</h3>
             ${article.subtitle ? `<p class="text-gray-600 text-sm line-clamp-2">${_esc(article.subtitle)}</p>` : ''}
           </div>
         </a>
