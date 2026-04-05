@@ -205,29 +205,37 @@
     let maxScrollY        = 0;
     let triggeredOnce     = false;
     let passedHalfway     = false;
+    let ticking           = false;
 
     function onScroll() {
       if (triggeredOnce) return;
+      
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY   = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const depth     = docHeight > 0 ? scrollY / docHeight : 0;
 
-      const scrollY   = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const depth     = docHeight > 0 ? scrollY / docHeight : 0;
+          // Track maximum scroll depth
+          if (scrollY > maxScrollY) {
+            maxScrollY = scrollY;
+          }
 
-      // Track maximum scroll depth
-      if (scrollY > maxScrollY) {
-        maxScrollY = scrollY;
-      }
+          // Once user has scrolled past 50% of the page, arm the trigger
+          if (depth >= 0.5) {
+            passedHalfway = true;
+          }
 
-      // Once user has scrolled past 50% of the page, arm the trigger
-      if (depth >= 0.5) {
-        passedHalfway = true;
-      }
-
-      // Fire when: armed + now scrolling back up by >100px
-      if (passedHalfway && (maxScrollY - scrollY) > 100) {
-        triggeredOnce = true;
-        window.removeEventListener('scroll', onScroll, { passive: true });
-        showPopup();
+          // Fire when: armed + now scrolling back up by >100px
+          if (passedHalfway && (maxScrollY - scrollY) > 100) {
+            triggeredOnce = true;
+            window.removeEventListener('scroll', onScroll, { passive: true });
+            showPopup();
+          }
+          
+          ticking = false;
+        });
+        ticking = true;
       }
     }
 

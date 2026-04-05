@@ -52,11 +52,18 @@ function initReadingProgress() {
     const progressBar = document.getElementById('reading-progress');
     if (!progressBar) return;
 
+    let ticking = false;
     window.addEventListener('scroll', () => {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
-        progressBar.style.transform = `scaleX(${progress})`;
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
+                progressBar.style.transform = `scaleX(${progress})`;
+                ticking = false;
+            });
+            ticking = true;
+        }
     });
 }
 
@@ -81,7 +88,7 @@ async function loadSidebarMostRead() {
         <span class="text-2xl font-bold text-gray-300 leading-none min-w-[24px]">${index + 1}</span>
         <div>
           <p class="text-sm font-bold text-gray-800 leading-tight line-clamp-2">${_h(article.title)}</p>
-          <p class="text-xs text-gray-400 mt-1">${formatDateHebrew(article.publish_date)}</p>
+          <p class="text-xs text-gray-500 mt-1">${formatDateHebrew(article.publish_date)}</p>
         </div>
       </a>
     `).join('');
@@ -226,7 +233,7 @@ async function renderEntryHook(categorySlug) {
                 class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors shadow-lg">
           ← בדוק עכשיו בחינם
         </button>
-        <p class="text-xs text-gray-400 mt-2">✓ בחינם ✓ ללא התחייבות</p>
+        <p class="text-xs text-gray-500 mt-2">✓ בחינם ✓ ללא התחייבות</p>
       `;
             ctaEl.classList.remove('hidden');
             return;
@@ -246,7 +253,7 @@ async function renderEntryHook(categorySlug) {
           ${config.button_b_label}
         </button>
       </div>
-      <p class="text-xs text-gray-400 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+      <p class="text-xs text-gray-500 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
     `;
         ctaEl.classList.remove('hidden');
 
@@ -292,7 +299,7 @@ function renderEntryHookFromConfig(config, categorySlug) {
         ${config.button_b_label}
       </button>
     </div>
-    <p class="text-xs text-gray-400 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+    <p class="text-xs text-gray-500 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
   `;
     ctaEl.classList.remove('hidden');
 }
@@ -338,7 +345,7 @@ function renderSidebarQuizCta(quizConfig, categorySlug) {
                     ← בדוק זכאות עכשיו
                 </button>
             `}
-            <p class="text-xs text-gray-400 text-center">✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+            <p class="text-xs text-gray-500 text-center">✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
         </div>
     `;
     sidebarCta.classList.remove('hidden');
@@ -782,7 +789,7 @@ async function loadArticle() {
             skeleton.innerHTML = `
                 <div class="text-center py-20">
                     <p class="text-xl text-gray-600">שגיאה בטעינת המאמר</p>
-                    <p class="text-sm text-gray-400 mt-2">${error.message || ''}</p>
+                    <p class="text-sm text-gray-500 mt-2">${error.message || ''}</p>
                     <a href="/" class="text-blue-600 underline mt-4 inline-block">חזרה לדף הבית</a>
                 </div>`;
         }
