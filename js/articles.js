@@ -136,7 +136,7 @@ function updateHeroUI(container, article) {
             <span class="bg-red-600 px-3 py-1 text-sm font-bold">${catName}</span>
             <span class="text-sm text-gray-300">${dateStr}</span>
           </div>
-          <h1 class="text-lg md:text-2xl lg:text-3xl font-bold mb-3 leading-snug text-white">${title}</h1>
+          <h1 class="text-xl md:text-2xl lg:text-3xl font-bold mb-3 leading-snug text-white">${title}</h1>
           ${subtitle}
         </div>
       </div>
