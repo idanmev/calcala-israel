@@ -36,7 +36,7 @@
         if (url.startsWith('data:') || url.startsWith('blob:') || url.includes('.svg')) return url;
 
         // Merge defaults
-        const options = Object.assign({ f: 'auto', q: 80 }, opts);
+        const options = Object.assign({ f: 'auto', q: 100 }, opts);
 
         // Build transformation string
         const trParts = [];
@@ -56,14 +56,18 @@
             return IMAGEKIT_ENDPOINT + ikPath;
         }
 
-        // === Already an ImageKit URL: just append/replace transformations ===
+        // === Already an ImageKit URL: strip existing tr: segment then rebuild ===
         if (url.startsWith(IMAGEKIT_ENDPOINT)) {
-            // Strip existing query params
-            const [baseIkUrl] = url.split('?');
-            // If it already has a tr: in the path, we should ideally replace it, but for simplicity
-            // let's try appending as a query param correctly this time using tr= (ImageKit query param syntax is tr=x,y,z)
-            const queryTrString = trParts.length > 0 ? `tr=${trParts.join(',')}` : '';
-            return queryTrString ? `${baseIkUrl}?${queryTrString}` : baseIkUrl;
+            // Remove any existing tr:... path segment (e.g. "tr:w-600,f-auto,q-90/")
+            let cleanUrl = url.replace(/\/tr:[^/]+\//, '/');
+            // Also strip any existing ?tr= query params
+            cleanUrl = cleanUrl.split('?')[0];
+            if (trString) {
+                // Insert the new tr: segment right after the endpoint base
+                const relativePath = cleanUrl.slice(IMAGEKIT_ENDPOINT.length);
+                return IMAGEKIT_ENDPOINT + trString + '/' + relativePath;
+            }
+            return cleanUrl;
         }
 
         // === Unsplash / Other external URLs: pass through as-is ===

@@ -3,14 +3,9 @@
 @tailwind utilities;
 
 /* ==============================
-   Font fallback metrics for CLS reduction
-   Minimises layout shift when web fonts load
+   Calcala-News Custom Styles
+   (Tailwind utilities come from tailwind-build.css)
    ============================== */
-@layer base {
-  body {
-    font-display: swap;
-  }
-}
 
 /* ==============================
    Calcala-News Custom Styles

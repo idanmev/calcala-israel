@@ -118,7 +118,7 @@ function updateHeroUI(container, article) {
     const rawImgUrl = article.featured_image_url || '/images/placeholder.jpg';
     const imgUrl = _esc(
         window.getOptimizedImageUrl
-            ? window.getOptimizedImageUrl(rawImgUrl, { w: 1200, f: 'auto', q: 80 })
+            ? window.getOptimizedImageUrl(rawImgUrl, { w: 1200, f: 'auto', q: 100 })
             : rawImgUrl
     );
     const catName = _esc(article.categories?.name || 'כללי');
@@ -136,7 +136,7 @@ function updateHeroUI(container, article) {
             <span class="bg-red-600 px-3 py-1 text-sm font-bold">${catName}</span>
             <span class="text-sm text-gray-300">${dateStr}</span>
           </div>
-          <h1 class="text-4xl font-bold mb-3 leading-tight text-white">${title}</h1>
+          <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 leading-tight text-white">${title}</h1>
           ${subtitle}
         </div>
       </div>
@@ -203,20 +203,29 @@ async function renderGridArticles() {
 
         // Render each article
         const _img = (url, w) => window.getOptimizedImageUrl
-            ? window.getOptimizedImageUrl(url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600', { w, f: 'auto', q: 80 })
+            ? window.getOptimizedImageUrl(url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800', { w, f: 'auto', q: 100 })
             : (url || `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`);
 
         articlesToShow.forEach(article => {
             const articleEl = document.createElement('article');
-            articleEl.className = 'bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
+            articleEl.className = 'bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer rounded-lg';
+            
+            const img400 = _img(article.featured_image_url, 400);
+            const img600 = _img(article.featured_image_url, 600);
+            const img800 = _img(article.featured_image_url, 800);
+            const img1200 = _img(article.featured_image_url, 1200);
+
             articleEl.innerHTML = `
         <a href="/article/${encodeURIComponent(article.slug)}" class="block">
-          <img src="${_esc(_img(article.featured_image_url, 600))}" 
-               alt="${_esc(article.title)}" 
-               class="w-full h-48 object-cover"
-               width="600" height="192"
-               loading="lazy"
-               onerror="this.src='https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600'">
+          <picture>
+            <source media="(max-width: 640px)" srcset="${_esc(img400)} 400w, ${_esc(img800)} 800w, ${_esc(img1200)} 1200w" sizes="100vw">
+            <img src="${_esc(img600)}" 
+                 srcset="${_esc(img600)} 600w, ${_esc(img800)} 800w, ${_esc(img1200)} 1200w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                 alt="${_esc(article.title)}" 
+                 class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                 width="600" height="192"
+                 loading="lazy">
+          </picture>
           <div class="p-5">
             <div class="flex items-center gap-3 mb-2 text-sm">
               <span class="text-red-600 font-bold">${_esc(article.categories?.name || 'כללי')}</span>

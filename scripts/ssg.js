@@ -8,7 +8,7 @@ const IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
 
 function getOptimizedUrl(url, w) {
     if (!url) return `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`;
-    const trString = `tr:w-${w},f-auto,q-80`;
+    const trString = `tr:w-${w},f-auto,q-90`;
     if (url.startsWith(SUPABASE_STORAGE_BASE)) {
         const relativePath = url.slice(SUPABASE_STORAGE_BASE.length);
         return IMAGEKIT_ENDPOINT + `${trString}/${relativePath}`;
@@ -72,12 +72,13 @@ async function build() {
         const img400 = getOptimizedUrl(heroArticle.featured_image_url, 400);
         const img800 = getOptimizedUrl(heroArticle.featured_image_url, 800);
         const img1200 = getOptimizedUrl(heroArticle.featured_image_url, 1200);
+        const img1600 = getOptimizedUrl(heroArticle.featured_image_url, 1600);
 
         heroHtml = `
       <a href="/article/${slug}" id="hero-article" class="lg:col-span-8 block relative h-full min-h-[384px] bg-slate-900 rounded-sm overflow-hidden group" style="cursor: pointer;">
         <picture>
-            <source media="(max-width: 640px)" srcset="${img400}">
-            <source media="(max-width: 1024px)" srcset="${img800}">
+            <source media="(max-width: 640px)" srcset="${img400} 400w, ${img800} 800w, ${img1200} 1200w" sizes="100vw">
+            <source media="(max-width: 1024px)" srcset="${img1200} 1200w, ${img1600} 1600w" sizes="100vw">
             <img src="${img1200}" alt="${title}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" width="1200" height="675" fetchpriority="high" />
         </picture>
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
@@ -86,7 +87,7 @@ async function build() {
             <span class="bg-red-600 px-3 py-1 text-sm font-bold rounded-sm shadow-md">${catName}</span>
             <span class="text-sm text-gray-300 font-medium">${dateStr}</span>
           </div>
-          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 leading-tight text-white drop-shadow-md transition-colors">${title}</h1>
+          <h1 class="text-3xl md:text-4xl font-bold mb-3 leading-tight text-white drop-shadow-md transition-colors">${title}</h1>
           ${subtitle}
         </div>
       </a>
@@ -99,11 +100,14 @@ async function build() {
         gridHtml = gridData.map(article => {
             const img400 = getOptimizedUrl(article.featured_image_url, 400);
             const img600 = getOptimizedUrl(article.featured_image_url, 600);
+            const img800 = getOptimizedUrl(article.featured_image_url, 800);
+            const img1200 = getOptimizedUrl(article.featured_image_url, 1200);
             return `
         <a href="/article/${encodeURIComponent(article.slug)}" class="bg-white border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block group rounded-lg">
           <picture>
-            <source media="(max-width: 640px)" srcset="${img400}">
+            <source media="(max-width: 640px)" srcset="${img400} 400w, ${img800} 800w, ${img1200} 1200w" sizes="100vw">
             <img src="${img600}" 
+                 srcset="${img600} 600w, ${img800} 800w, ${img1200} 1200w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                  alt="${esc(article.title)}" 
                  class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                  width="600" height="192"

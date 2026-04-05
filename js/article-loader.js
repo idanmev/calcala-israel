@@ -149,18 +149,22 @@ async function loadRelatedArticles(categoryId, currentSlug) {
         }
 
         container.innerHTML = relatedArticles.map(article => {
-            const relImg = window.getOptimizedImageUrl
-                ? window.getOptimizedImageUrl(article.featured_image_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400', { w: 400, f: 'auto', q: 80 })
+            const _img = (w) => window.getOptimizedImageUrl
+                ? window.getOptimizedImageUrl(article.featured_image_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400', { w, f: 'auto', q: 90 })
                 : (article.featured_image_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400');
+                
             return `
       <a href="/article/${encodeURIComponent(article.slug)}" 
          class="bg-white rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition-shadow block">
-        <img src="${_h(relImg)}" 
-             alt="${_h(article.title)}" 
-             class="w-full h-32 object-cover"
-             width="400" height="128"
-             loading="lazy"
-             onerror="this.src='https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400'">
+        <picture>
+            <source media="(max-width: 640px)" srcset="${_h(_img(400))} 400w, ${_h(_img(800))} 800w" sizes="100vw">
+            <img src="${_h(_img(600))}" 
+                 srcset="${_h(_img(600))} 600w, ${_h(_img(800))} 800w" sizes="(max-width: 1024px) 50vw, 33vw"
+                 alt="${_h(article.title)}" 
+                 class="w-full h-32 object-cover"
+                 width="400" height="128"
+                 loading="lazy">
+        </picture>
         <div class="p-3">
           <p class="text-xs text-red-600 font-bold mb-1">${_h(article.categories?.name || 'כללי')}</p>
           <h4 class="text-sm font-bold leading-tight line-clamp-2">${_h(article.title)}</h4>
@@ -386,7 +390,7 @@ function renderBlocksToHtml(blocks) {
 
                 const rawBlockImgUrl = block.data.file?.url || '';
                 const blockImgUrl = window.getOptimizedImageUrl
-                    ? window.getOptimizedImageUrl(rawBlockImgUrl, { w: 800, f: 'auto', q: 80 })
+                    ? window.getOptimizedImageUrl(rawBlockImgUrl, { w: 1000, f: 'auto', q: 90 })
                     : rawBlockImgUrl;
 
                 return `
@@ -567,16 +571,21 @@ async function loadArticle() {
         // 3. Featured image
         const imageEl = document.getElementById('article-featured-image');
         if (imageEl && article.featured_image_url) {
-            const featImg = window.getOptimizedImageUrl
-                ? window.getOptimizedImageUrl(article.featured_image_url, { w: 1200, f: 'auto', q: 85 })
+            const _img = (w) => window.getOptimizedImageUrl
+                ? window.getOptimizedImageUrl(article.featured_image_url, { w, f: 'auto', q: 90 })
                 : article.featured_image_url;
+                
             imageEl.innerHTML = `
-        <img src="${_h(featImg)}" 
-             alt="${_h(article.title)}" 
-             class="w-full h-96 object-cover rounded-lg shadow-md"
-             width="1200" height="384"
-             fetchpriority="high"
-             onerror="this.parentElement.style.display='none'">
+        <picture>
+            <source media="(max-width: 640px)" srcset="${_h(_img(400))} 400w, ${_h(_img(800))} 800w, ${_h(_img(1200))} 1200w" sizes="100vw">
+            <img src="${_h(_img(1200))}" 
+                 srcset="${_h(_img(1200))} 1200w"
+                 alt="${_h(article.title)}" 
+                 class="w-full h-auto max-h-[600px] object-cover rounded-lg shadow-md"
+                 width="1200" height="675"
+                 fetchpriority="high"
+                 onerror="this.closest('picture').style.display='none'">
+        </picture>
       `;
         } else if (imageEl) {
             imageEl.style.display = 'none';
