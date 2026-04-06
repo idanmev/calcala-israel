@@ -12,15 +12,17 @@ async function checkAuth() {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 
         if (error || !session) {
-            // No valid session, redirect to login
-            window.location.href = '/admin/login.html';
+            // No valid session — redirect to login immediately (body stays hidden)
+            window.location.replace('/admin/login');
             return false;
         }
 
+        // Auth OK — reveal the page
+        document.body.style.visibility = 'visible';
         return true;
     } catch (error) {
         console.error('Auth check error:', error);
-        window.location.href = '/admin/login.html';
+        window.location.replace('/admin/login');
         return false;
     }
 }

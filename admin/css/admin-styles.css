@@ -24,6 +24,7 @@ body {
     background-color: var(--admin-bg);
     color: var(--admin-text);
     direction: rtl;
+    visibility: hidden; /* hidden until auth check completes */
 }
 
 /* Layout */
@@ -448,7 +449,15 @@ body {
     animation: fade-out 0.3s ease;
 }
 
-/* Mobile Responsive */
+/* Responsive Table vs Card Views */
+/* Desktop: show table, hide mobile cards */
+.admin-table {
+    display: block;
+}
+.admin-table-mobile {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .admin-sidebar {
         transform: translateX(100%);
@@ -466,43 +475,36 @@ body {
         padding: 1rem;
     }
 
-    /* Convert tables to cards on mobile */
-    .admin-table-mobile {
+    /* Mobile: hide table, show cards */
+    .admin-table {
         display: none;
     }
+    .admin-table-mobile {
+        display: block;
+    }
 
-    @media (max-width: 768px) {
-        .admin-table {
-            display: none;
-        }
+    .table-card {
+        background-color: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-        .admin-table-mobile {
-            display: block;
-        }
+    .table-card-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--admin-border);
+    }
 
-        .table-card {
-            background-color: white;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+    .table-card-row:last-child {
+        border-bottom: none;
+    }
 
-        .table-card-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--admin-border);
-        }
-
-        .table-card-row:last-child {
-            border-bottom: none;
-        }
-
-        .table-card-label {
-            font-weight: 600;
-            color: var(--admin-text-light);
-        }
+    .table-card-label {
+        font-weight: 600;
+        color: var(--admin-text-light);
     }
 }
 

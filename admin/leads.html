@@ -179,11 +179,18 @@
             </select>
           </td>
           <td class="px-6 py-4">
-            <a href="https://wa.me/972${lead.phone.replace(/^0/, '').replace(/-/g, '')}" 
-               target="_blank"
-               class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">
-              💬 וואטסאפ
-            </a>
+            <div class="flex gap-2 items-center">
+              <a href="https://wa.me/972${lead.phone.replace(/^0/, '').replace(/-/g, '')}" 
+                 target="_blank"
+                 class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">
+                💬 וואטסאפ
+              </a>
+              <button onclick="deleteLead('${lead.id}')"
+                      class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm font-bold"
+                      title="מחק ליד">
+                🗑️
+              </button>
+            </div>
           </td>
         </tr>
       `).join('');
@@ -200,6 +207,17 @@
 
         async function updateLeadStatus(id, status) {
             await supabaseClient.from('leads').update({ status }).eq('id', id);
+        }
+
+        async function deleteLead(id) {
+            if (!confirm('האם למחוק את הליד הזה? פעולה זו אינה הפיכה.')) return;
+            const { error } = await supabaseClient.from('leads').delete().eq('id', id);
+            if (error) {
+                alert('שגיאה במחיקת הליד: ' + error.message);
+            } else {
+                allLeads = allLeads.filter(l => l.id !== id);
+                filterLeads();
+            }
         }
 
         function exportLeads() {
