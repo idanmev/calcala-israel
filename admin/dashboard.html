@@ -198,9 +198,10 @@
     </div>
 
     <!-- Scripts -->
-    <script defer src="/js/sanitize.js"></script>
-    <script defer src="/admin/js/supabase-client.js"></script>
-    <script defer src="/admin/js/auth.js"></script>
+    <script src="/js/sanitize.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/admin/js/supabase-client.js"></script>
+    <script src="/admin/js/auth.js"></script>
     <script>
         // Check authentication
         // Escape utility
@@ -470,7 +471,13 @@
         });
 
         // Initialize
-        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadArticles(); });
+        document.addEventListener('DOMContentLoaded', () => {
+            window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadArticles(); });
+        });
+        // Also run immediately if DOM already loaded
+        if (document.readyState !== 'loading') {
+            window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadArticles(); });
+        }
     </script>
 </body>
 

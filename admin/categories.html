@@ -212,8 +212,9 @@
     </div>
 
     <!-- Scripts -->
-    <script defer src="/admin/js/supabase-client.js"></script>
-    <script defer src="/admin/js/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/admin/js/supabase-client.js"></script>
+    <script src="/admin/js/auth.js"></script>
     <script>
         // Check authentication
         // State
@@ -583,7 +584,11 @@
         });
 
         // Initialize
-        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadCategories(); });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadCategories(); }));
+        } else {
+            window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadCategories(); });
+        }
     </script>
 </body>
 

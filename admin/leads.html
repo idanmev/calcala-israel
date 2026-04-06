@@ -116,8 +116,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="/admin/js/supabase-client.js"></script>
-    <script defer src="/admin/js/auth.js"></script>
+    <script src="/admin/js/supabase-client.js"></script>
+    <script src="/admin/js/auth.js"></script>
     <script>
         let allLeads = [];
 
@@ -230,7 +230,11 @@
         // Also add Leads link to admin sidebar in dashboard.html, article-edit.html, categories.html
         // Add: <a href="/admin/leads.html">לידים 🎯</a> to the sidebar menu
 
-        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadLeads(); });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadLeads(); }));
+        } else {
+            window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadLeads(); });
+        }
     </script>
 </body>
 

@@ -787,6 +787,9 @@ async function restoreAutoSave() {
 
 // Initialize
 (async () => {
+    const isAuth = await window.authUtils.checkAuth();
+    if (!isAuth) return; // checkAuth already redirects to login
+
     await loadCategories();
     await loadQuizOptions();
     await loadTags();
