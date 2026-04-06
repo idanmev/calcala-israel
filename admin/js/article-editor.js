@@ -17,8 +17,6 @@ if (typeof RawTool === 'undefined' && typeof RawHTML !== 'undefined') {
 }
 
 // Check authentication
-window.authUtils.checkAuth();
-
 // Get article ID from URL
 const urlParams = new URLSearchParams(window.location.search);
 const articleId = urlParams.get('id');

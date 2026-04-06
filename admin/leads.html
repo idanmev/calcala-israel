@@ -19,22 +19,22 @@
         <div id="admin-sidebar">
             <aside class="fixed right-0 top-16 bottom-0 w-64 bg-white border-l border-gray-200 overflow-y-auto">
                 <nav class="p-4 space-y-1">
-                    <a href="dashboard"
+                    <a href="/admin/dashboard"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm transition-colors">
                         <span class="text-lg">📰</span>
                         מאמרים
                     </a>
-                    <a href="categories"
+                    <a href="/admin/categories"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm transition-colors">
                         <span class="text-lg">🏷️</span>
                         קטגוריות
                     </a>
-                    <a href="leads"
+                    <a href="/admin/leads"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold text-sm transition-colors">
                         <span class="text-lg">🎯</span>
                         לידים
                     </a>
-                    <a href="quiz-config"
+                    <a href="/admin/quiz-config"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 text-sm transition-colors">
                         <span class="text-lg">❓</span>
                         חידוני זכאות
@@ -119,7 +119,6 @@
     <script defer src="/admin/js/supabase-client.js"></script>
     <script defer src="/admin/js/auth.js"></script>
     <script>
-        checkAuth();
         let allLeads = [];
 
         async function loadLeads() {
@@ -231,7 +230,7 @@
         // Also add Leads link to admin sidebar in dashboard.html, article-edit.html, categories.html
         // Add: <a href="/admin/leads.html">לידים 🎯</a> to the sidebar menu
 
-        loadLeads();
+        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadLeads(); });
     </script>
 </body>
 

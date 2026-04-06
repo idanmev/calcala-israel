@@ -17,7 +17,7 @@
         rel="stylesheet">
 
     <!-- Admin Styles -->
-    <link rel="stylesheet" href="css/admin-styles.css">
+    <link rel="stylesheet" href="/admin/css/admin-styles.css">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -34,25 +34,25 @@
             </div>
 
             <nav class="sidebar-menu">
-                <a href="dashboard" class="sidebar-menu-item active">
+                <a href="/admin/dashboard" class="sidebar-menu-item active">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     מאמרים
                 </a>
-                <a href="categories" class="sidebar-menu-item">
+                <a href="/admin/categories" class="sidebar-menu-item">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     קטגוריות
                 </a>
-                <a href="leads" class="sidebar-menu-item">
+                <a href="/admin/leads" class="sidebar-menu-item">
                     <span class="w-6 h-6 flex items-center justify-center text-lg">🎯</span>
                     לידים
                 </a>
-                <a href="quiz-config" class="sidebar-menu-item">
+                <a href="/admin/quiz-config" class="sidebar-menu-item">
                     <span class="w-6 h-6 flex items-center justify-center text-lg">❓</span>
                     חידוני זכאות
                 </a>
@@ -103,7 +103,7 @@
                 <!-- Page Header -->
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold text-gray-900">ניהול מאמרים</h1>
-                    <a href="article-edit?id=new" class="btn btn-primary">
+                    <a href="/admin/article-edit?id=new" class="btn btn-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -169,7 +169,7 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900">אין מאמרים</h3>
                     <p class="mt-1 text-sm text-gray-500">התחל על ידי יצירת מאמר חדש</p>
                     <div class="mt-6">
-                        <a href="article-edit?id=new" class="btn btn-primary">
+                        <a href="/admin/article-edit?id=new" class="btn btn-primary">
                             מאמר חדש
                         </a>
                     </div>
@@ -199,12 +199,10 @@
 
     <!-- Scripts -->
     <script defer src="/js/sanitize.js"></script>
-    <script defer src="js/supabase-client.js"></script>
-    <script defer src="js/auth.js"></script>
+    <script defer src="/admin/js/supabase-client.js"></script>
+    <script defer src="/admin/js/auth.js"></script>
     <script>
         // Check authentication
-        window.authUtils.checkAuth();
-
         // Escape utility
         const _d = (s) => window.CalcalaSanitize ? window.CalcalaSanitize.escapeHtml(s) : String(s || '');
 
@@ -299,7 +297,7 @@
           <td>${article.view_count || 0}</td>
           <td>
             <div class="flex gap-2">
-              <a href="article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600 hover:text-blue-700">
+              <a href="/admin/article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600 hover:text-blue-700">
                 ✏️
               </a>
               <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600 hover:text-red-700">
@@ -334,7 +332,7 @@
           <div class="table-card-row">
             <span class="table-card-label">פעולות</span>
             <div class="flex gap-3">
-              <a href="article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600">ערוך</a>
+              <a href="/admin/article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600">ערוך</a>
               <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600">מחק</button>
             </div>
           </div>
@@ -446,7 +444,7 @@
 
                 window.authUtils.showSuccess('המאמר נמחק בהצלחה');
                 closeDeleteModal();
-                loadArticles();
+                window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadArticles(); });
 
             } catch (error) {
                 console.error('Error deleting article:', error);
@@ -472,7 +470,7 @@
         });
 
         // Initialize
-        loadArticles();
+        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadArticles(); });
     </script>
 </body>
 

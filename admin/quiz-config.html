@@ -92,7 +92,6 @@
   <script defer src="/admin/js/supabase-client.js"></script>
   <script defer src="/admin/js/auth.js"></script>
   <script>
-    checkAuth();
     let quizzes = [];
     let editingQuiz = null;
 
@@ -427,7 +426,7 @@
         alert('שגיאה בשמירה: ' + error.message);
       } else {
         closeEditModal();
-        loadQuizzes();
+        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadQuizzes(); });
         alert('✅ נשמר בהצלחה!');
       }
     }
@@ -443,16 +442,16 @@
       if (error) {
         alert('שגיאה בשכפול');
       } else {
-        loadQuizzes();
+        window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadQuizzes(); });
       }
     }
 
     async function toggleQuizActive(quizId, currentState) {
       await supabaseClient.from('quiz_configs').update({ is_active: !currentState }).eq('id', quizId);
-      loadQuizzes();
+      window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadQuizzes(); });
     }
 
-    loadQuizzes();
+    window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadQuizzes(); });
   </script>
 </body>
 
