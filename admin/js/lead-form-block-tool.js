@@ -119,7 +119,7 @@ class LeadFormBlock {
         const phoneWrap = document.createElement('div');
         phoneWrap.style.cssText = 'margin-bottom:16px;';
         phoneWrap.innerHTML = '<label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:3px;">טלפון</label>' +
-            '<div style="border-bottom:2px solid #dc2626; padding-bottom:6px;"></div>';
+            '<div style="border-bottom:2px solid #dc2626; padding-bottom:6px;"><input type="tel" disabled maxlength="10" style="width:100%; border:none; background:transparent; font-size:12px; outline:none; direction:rtl;" placeholder="05XXXXXXXX"></div>';
 
         // Consent checkbox (visual, pre-checked)
         const consentRow = document.createElement('div');

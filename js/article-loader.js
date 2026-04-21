@@ -453,7 +453,7 @@ function renderBlocksToHtml(blocks) {
                                 <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">טלפון</label>
                                 <input type="tel" id="${formId}-phone"
                                     style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:5px 0; font-size:14px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
-                                    autocomplete="tel" required />
+                                    autocomplete="tel" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required />
                             </div>
                             <div style="display:flex; align-items:center; gap:6px; padding-bottom:4px; flex-shrink:0;">
                                 <input type="checkbox" id="${checkId}" checked style="width:14px; height:14px; accent-color:#dc2626; cursor:pointer; flex-shrink:0;" />
