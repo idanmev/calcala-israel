@@ -432,42 +432,43 @@ function renderBlocksToHtml(blocks) {
                         </div>
                     </div>
                 `;
-            case 'leadForm':
+            case 'leadForm': {
                 const title = _h(block.data.title || 'התעניינתם?');
                 const subtitle = _h(block.data.subtitle || 'השאירו פרטים ויענו לכם על כל השאלות.');
                 const btnText = _h(block.data.buttonText || 'שלח פרטים');
                 const formId = 'inline-lead-' + Math.random().toString(36).substr(2, 9);
                 return `
-                    <div class="article-inline-lead my-10 max-w-2xl mx-auto rounded-xl shadow-lg border border-gray-100 overflow-hidden font-sans">
-                        <div class="bg-gradient-to-r from-red-600 to-red-800 text-white py-6 px-6 text-center">
-                            <h3 class="text-2xl font-bold mb-2">${title}</h3>
-                            <p class="text-white/90 text-sm">${subtitle}</p>
+                    <div class="article-inline-lead my-6 mx-auto rounded-xl border border-red-200 overflow-hidden font-sans" style="max-width:480px; background:#fff9f9;">
+                        <div style="background:#c0392b; padding:12px 18px; text-align:center;">
+                            <h3 style="color:#fff; font-size:16px; font-weight:700; margin:0 0 2px;">${title}</h3>
+                            <p style="color:rgba(255,255,255,0.85); font-size:12px; margin:0;">${subtitle}</p>
                         </div>
-                        <div class="bg-white p-6 md:p-8">
-                            <form id="${formId}" class="inline-article-lead-form space-y-4">
-                                <div>
-                                    <label for="${formId}-name" class="block text-sm font-bold text-gray-700 mb-1.5">שם מלא</label>
-                                    <input type="text" id="${formId}-name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors shadow-sm" autocomplete="name" required />
+                        <div style="padding:14px 18px;">
+                            <form id="${formId}" class="inline-article-lead-form">
+                                <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+                                    <input type="text" id="${formId}-name" placeholder="שם מלא"
+                                        style="flex:1; min-width:120px; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; font-size:13px; font-family:inherit; direction:rtl; outline:none;"
+                                        autocomplete="name" required />
+                                    <input type="tel" id="${formId}-phone" placeholder="05X-XXXXXXX"
+                                        style="flex:1; min-width:130px; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; font-size:13px; font-family:inherit; direction:rtl; outline:none;"
+                                        autocomplete="tel" required />
                                 </div>
-                                <div>
-                                    <label for="${formId}-phone" class="block text-sm font-bold text-gray-700 mb-1.5">מספר טלפון</label>
-                                    <input type="tel" id="${formId}-phone" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors shadow-sm" placeholder="05X-XXXXXXX" autocomplete="tel" required />
-                                </div>
-                                <div class="inline-lead-error bg-red-50 text-red-700 p-3 rounded-lg text-sm font-bold" style="display:none;"></div>
-                                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg mt-2 transition-all shadow-md flex items-center justify-center gap-2 hover:-translate-y-0.5">
-                                    <span class="inline-lead-btn-text text-lg">${btnText}</span>
-                                    <span class="inline-lead-spinner animate-spin w-5 h-5 border-2 border-white border-b-transparent rounded-full" style="display:none;"></span>
+                                <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-bottom:6px;"></div>
+                                <button type="submit" style="width:100%; background:#c0392b; color:#fff; font-size:14px; font-weight:700; padding:9px; border:none; border-radius:6px; cursor:pointer; font-family:inherit;">
+                                    <span class="inline-lead-btn-text">${btnText}</span>
+                                    <span class="inline-lead-spinner" style="display:none;">...</span>
                                 </button>
-                                <p class="text-xs text-gray-500 text-center mt-3 font-medium">🔒 הפרטים מאובטחים ולא יועברו לצד שלישי</p>
+                                <p style="text-align:center; font-size:11px; color:#9ca3af; margin:6px 0 0;">🔒 הפרטים מאובטחים ולא יועברו לצד שלישי</p>
                             </form>
-                            <div class="inline-lead-success text-center py-8" style="display:none;">
-                                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-green-200">✓</div>
-                                <h4 class="text-xl font-bold text-gray-900 mb-2">תודה! קיבלנו את פרטיכם</h4>
-                                <p class="text-gray-600">גורם מקצועי יחזור אליכם בהקדם.</p>
+                            <div class="inline-lead-success" style="display:none; text-align:center; padding:12px 0;">
+                                <div style="font-size:28px; margin-bottom:4px;">✅</div>
+                                <p style="font-weight:700; color:#166534; margin:0 0 2px;">תודה! קיבלנו את פרטיכם</p>
+                                <p style="font-size:12px; color:#6b7280; margin:0;">גורם מקצועי יחזור אליכם בהקדם.</p>
                             </div>
                         </div>
                     </div>
                 `;
+            }
             case 'delimiter':
                 return '<hr class="my-10 border-t-2 border-gray-200" />';
             default:
