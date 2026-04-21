@@ -494,7 +494,7 @@ async function loadArticle() {
             .from('articles')
             .select('*, disclaimer, categories(id, name, slug)')
             .eq('slug', slug)
-            .eq('status', 'published')
+            .in('status', ['published', 'hidden'])
             .single();
 
         if (error || !article) {
