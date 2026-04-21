@@ -48,6 +48,10 @@
         {
             "source": "/admin/leads",
             "destination": "/admin/leads.html"
+        },
+        {
+            "source": "/admin/lead-forms",
+            "destination": "/admin/lead-forms.html"
         }
     ]
 }
