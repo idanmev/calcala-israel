@@ -439,35 +439,34 @@ function renderBlocksToHtml(blocks) {
                 const formId = 'inline-lead-' + Math.random().toString(36).substr(2, 9);
                 const checkId = formId + '-consent';
                 return `
-                    <div class="article-inline-lead my-8" style="background:#f5f5f5; border-radius:12px; padding:28px 24px; direction:rtl; max-width:520px; margin-left:auto; margin-right:auto;">
-                        <p style="font-size:17px; font-weight:600; color:#1a1a1a; margin:0 0 20px; text-align:right;">${title}</p>
-                        ${subtitle ? '<p style="font-size:14px; color:#6b7280; margin:-12px 0 16px; text-align:right;">' + subtitle + '</p>' : ''}
-                        <form id="${formId}" class="inline-article-lead-form">
-                            <div style="margin-bottom:18px;">
-                                <label style="display:block; text-align:right; font-size:14px; color:#1a1a1a; margin-bottom:4px;">שם מלא</label>
+                    <div class="article-inline-lead my-5" style="background:#f5f5f5; border-radius:10px; padding:16px 20px; direction:rtl; width:100%;">
+                        <p style="font-size:15px; font-weight:600; color:#1a1a1a; margin:0 0 10px; text-align:right;">${title}</p>
+                        ${subtitle ? '<p style="font-size:13px; color:#6b7280; margin:-6px 0 10px; text-align:right;">' + subtitle + '</p>' : ''}
+                        <form id="${formId}" class="inline-article-lead-form" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:140px;">
+                                <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">שם מלא</label>
                                 <input type="text" id="${formId}-name"
-                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:8px 0; font-size:15px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
+                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:5px 0; font-size:14px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
                                     autocomplete="name" required />
                             </div>
-                            <div style="margin-bottom:20px;">
-                                <label style="display:block; text-align:right; font-size:14px; color:#1a1a1a; margin-bottom:4px;">טלפון</label>
+                            <div style="flex:1; min-width:140px;">
+                                <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">טלפון</label>
                                 <input type="tel" id="${formId}-phone"
-                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:8px 0; font-size:15px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
+                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:5px 0; font-size:14px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
                                     autocomplete="tel" required />
                             </div>
-                            <div style="display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:20px;">
-                                <input type="checkbox" id="${checkId}" checked style="width:16px; height:16px; accent-color:#dc2626; cursor:pointer; flex-shrink:0;" />
-                                <label for="${checkId}" style="font-size:14px; color:#1a1a1a; cursor:pointer;">אני מאשר קבלת דיוור</label>
+                            <div style="display:flex; align-items:center; gap:6px; padding-bottom:4px; flex-shrink:0;">
+                                <input type="checkbox" id="${checkId}" checked style="width:14px; height:14px; accent-color:#dc2626; cursor:pointer; flex-shrink:0;" />
+                                <label for="${checkId}" style="font-size:12px; color:#1a1a1a; cursor:pointer; white-space:nowrap;">אני מאשר קבלת דיוור</label>
                             </div>
-                            <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:13px; margin-bottom:10px; text-align:center;"></div>
-                            <button type="submit"
-                                style="width:100%; background:#dc2626; color:#fff; font-size:17px; font-weight:700; padding:14px; border:none; border-radius:50px; cursor:pointer; font-family:inherit; transition:background 0.2s;">
+                            <button type="submit" style="background:#dc2626; color:#fff; font-size:14px; font-weight:700; padding:9px 28px; border:none; border-radius:50px; cursor:pointer; font-family:inherit; flex-shrink:0; white-space:nowrap;">
                                 <span class="inline-lead-btn-text">${btnText}</span>
                                 <span class="inline-lead-spinner" style="display:none;">...</span>
                             </button>
                         </form>
-                        <div class="inline-lead-success" style="display:none; text-align:center; padding:16px 0;">
-                            <p style="font-size:16px; font-weight:700; color:#166534; margin:0;">✓ תודה! נחזור אליך בהקדם.</p>
+                        <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-top:6px; text-align:right;"></div>
+                        <div class="inline-lead-success" style="display:none; text-align:center; padding:8px 0;">
+                            <p style="font-size:15px; font-weight:700; color:#166534; margin:0;">✓ תודה! נחזור אליך בהקדם.</p>
                         </div>
                     </div>
                 `;
