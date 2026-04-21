@@ -609,6 +609,12 @@ async function saveArticle(isPublish = false) {
         return;
     }
 
+    // If clicking the Publish button, force status to published and sync the toggle UI
+    if (isPublish) {
+        statusToggle.checked = true;
+        statusLabel.textContent = 'פורסם';
+    }
+
     // Show loading
     publishBtn.disabled = true;
     publishBtnText.classList.add('hidden');
@@ -628,7 +634,7 @@ async function saveArticle(isPublish = false) {
             body: JSON.stringify(await editor.save()),
             meta_description: metaDescription.value.trim(),
             disclaimer: document.getElementById('disclaimer').value.trim() || null,
-            status: (isPublish && statusToggle.checked) ? 'published' : 'draft',
+            status: isPublish ? 'published' : 'draft',
             is_featured: document.getElementById('isFeatured').checked,
             featured_image_url: featuredImageUrl.value || null,
             publish_date: document.getElementById('publishDate').value || null,

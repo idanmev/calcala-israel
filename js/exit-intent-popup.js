@@ -59,9 +59,16 @@
     return !!sessionStorage.getItem('quiz_cta_clicked');
   }
 
+  /** True if the current article has no quiz assigned */
+  function hasNoQuiz() {
+    // window.currentArticleQuizId is set by article-loader.js only when a quiz is linked
+    return !window.currentArticleQuizId;
+  }
+
   /** Master suppression check */
   function shouldSuppress() {
     return !isArticlePage()
+      || hasNoQuiz()
       || hasShownThisSession()
       || hasConverted()
       || recentlyDismissed()
@@ -106,8 +113,8 @@
 
         <!-- White body -->
         <div class="exit-popup-body">
-          <button id="exit-popup-cta" class="exit-popup-cta-btn quiz-cta-pulse">
-            ← בדוק עכשיו
+          <button id="exit-popup-cta" class="exit-popup-cta-btn quiz-cta-pulse" data-quiz-id="${window.currentArticleQuizId || ''}">
+            ← בדוק עכשיו בחינם
           </button>
           <button id="exit-popup-dismiss" class="exit-popup-dismiss-link">
             לא תודה, לא מעניין אותי
