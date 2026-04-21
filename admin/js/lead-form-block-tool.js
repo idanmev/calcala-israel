@@ -1,7 +1,7 @@
 /**
  * Lead Form Block Tool for Editor.js
  * Renders a preview matching the real article form design.
- * Title/subtitle/button are editable inline. Template picker at the top.
+ * Title/button are editable inline. Template picker at the top.
  */
 class LeadFormBlock {
     static get toolbox() {
@@ -17,12 +17,10 @@ class LeadFormBlock {
         this.data = {
             templateId: data.templateId !== undefined ? data.templateId : null,
             title:      data.title      !== undefined ? data.title      : 'למידע נוסף והרשמה:',
-            subtitle:   data.subtitle   !== undefined ? data.subtitle   : '',
             buttonText: data.buttonText !== undefined ? data.buttonText : 'שליחה'
         };
         this._templates = [];
         this._titleEl = null;
-        this._subtitleEl = null;
         this._btnEl = null;
     }
 
@@ -31,7 +29,7 @@ class LeadFormBlock {
             if (!window.supabaseClient) return;
             const { data } = await window.supabaseClient
                 .from('lead_form_templates')
-                .select('id, name, title, subtitle, button_text, is_default')
+                .select('id, name, title, button_text, is_default')
                 .order('created_at', { ascending: true });
             this._templates = data || [];
 
@@ -51,7 +49,6 @@ class LeadFormBlock {
 
         if (updateDom) {
             if (this._titleEl)    this._titleEl.textContent    = this.data.title;
-            if (this._subtitleEl) this._subtitleEl.textContent = this.data.subtitle;
             if (this._btnEl)      this._btnEl.textContent      = this.data.buttonText;
         }
     }
@@ -87,48 +84,52 @@ class LeadFormBlock {
 
         // ── Form preview (matches real article design) ──
         const formPreview = document.createElement('div');
-        formPreview.style.cssText = 'background:#f5f5f5; border-radius:12px; padding:22px 20px;';
+        formPreview.style.cssText = 'background:#f5f5f5; border-radius:10px; padding:20px;';
 
         // Title (editable)
         this._titleEl = document.createElement('div');
         this._titleEl.contentEditable = 'true';
         this._titleEl.textContent = this.data.title;
-        this._titleEl.style.cssText = 'font-size:15px; font-weight:600; color:#1a1a1a; margin-bottom:14px; text-align:right; outline:none; border-bottom:1px dashed transparent; cursor:text;';
+        this._titleEl.style.cssText = 'font-size:16px; font-weight:600; color:#1a1a1a; margin-bottom:16px; text-align:right; outline:none; border-bottom:1px dashed transparent; cursor:text;';
         this._titleEl.addEventListener('input', () => { this.data.title = this._titleEl.textContent; this.data.templateId = null; });
         this._titleEl.addEventListener('focus', () => this._titleEl.style.borderBottomColor = '#dc2626');
         this._titleEl.addEventListener('blur',  () => this._titleEl.style.borderBottomColor = 'transparent');
 
-
-        // Name field (visual only)
+        // Fields (visual only - stacked)
         const nameWrap = document.createElement('div');
         nameWrap.style.cssText = 'margin-bottom:14px;';
-        nameWrap.innerHTML = '<label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:3px;">שם מלא</label>' +
+        nameWrap.innerHTML = '<label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">שם מלא</label>' +
             '<div style="border-bottom:2px solid #dc2626; padding-bottom:6px;"></div>';
 
-        // Phone field (visual only)
         const phoneWrap = document.createElement('div');
-        phoneWrap.style.cssText = 'margin-bottom:16px;';
-        phoneWrap.innerHTML = '<label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:3px;">טלפון</label>' +
-            '<div style="border-bottom:2px solid #dc2626; padding-bottom:6px;"><input type="tel" disabled maxlength="10" style="width:100%; border:none; background:transparent; font-size:12px; outline:none; direction:rtl;" placeholder="05XXXXXXXX"></div>';
+        phoneWrap.style.cssText = 'margin-bottom:14px;';
+        phoneWrap.innerHTML = '<label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">מספר טלפון</label>' +
+            '<div style="border-bottom:2px solid #dc2626; padding-bottom:6px;"><input type="tel" disabled maxlength="10" style="width:100%; border:none; background:transparent; font-size:14px; outline:none; direction:rtl;" placeholder="05XXXXXXXX"></div>';
 
-        // Consent checkbox (visual, pre-checked)
-        const consentRow = document.createElement('div');
-        consentRow.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:14px;';
-        consentRow.innerHTML = '<input type="checkbox" checked disabled style="width:14px; height:14px; accent-color:#dc2626;" />' +
-            '<span style="font-size:12px; color:#1a1a1a;">אני מאשר קבלת דיוור</span>';
+        // Bottom row (Button right, Checkbox left)
+        const bottomRow = document.createElement('div');
+        bottomRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px;';
 
         // Button (editable text)
         this._btnEl = document.createElement('div');
         this._btnEl.contentEditable = 'true';
         this._btnEl.textContent = this.data.buttonText;
-        this._btnEl.style.cssText = 'width:100%; background:#dc2626; color:white; font-size:14px; font-weight:700; padding:11px; border-radius:50px; cursor:text; outline:none; text-align:center; box-sizing:border-box;';
+        this._btnEl.style.cssText = 'background:#dc2626; color:white; font-size:15px; font-weight:700; padding:10px 32px; border-radius:50px; cursor:text; outline:none; text-align:center; box-sizing:border-box; white-space:nowrap;';
         this._btnEl.addEventListener('input', () => { this.data.buttonText = this._btnEl.textContent; this.data.templateId = null; });
+
+        // Consent checkbox (visual)
+        const consentWrap = document.createElement('div');
+        consentWrap.style.cssText = 'display:flex; align-items:center; gap:6px;';
+        consentWrap.innerHTML = '<input type="checkbox" checked disabled style="width:16px; height:16px; accent-color:#dc2626;" />' +
+            '<span style="font-size:13px; color:#1a1a1a; white-space:nowrap;">אני מאשר קבלת דיוור</span>';
+
+        bottomRow.appendChild(this._btnEl);
+        bottomRow.appendChild(consentWrap);
 
         formPreview.appendChild(this._titleEl);
         formPreview.appendChild(nameWrap);
         formPreview.appendChild(phoneWrap);
-        formPreview.appendChild(consentRow);
-        formPreview.appendChild(this._btnEl);
+        formPreview.appendChild(bottomRow);
         wrapper.appendChild(formPreview);
 
         // ── Load templates async ──
@@ -143,7 +144,6 @@ class LeadFormBlock {
                 if (tpl) this._applyTemplate(tpl, true);
             });
             if (this._titleEl)    this._titleEl.textContent    = this.data.title;
-            if (this._subtitleEl) this._subtitleEl.textContent = this.data.subtitle;
             if (this._btnEl)      this._btnEl.textContent      = this.data.buttonText;
         });
 
@@ -153,8 +153,8 @@ class LeadFormBlock {
     save() {
         return {
             templateId: this.data.templateId,
-            title:      this._titleEl    ? this._titleEl.textContent.trim()    : this.data.title,
-            buttonText: this._btnEl      ? this._btnEl.textContent.trim()      : this.data.buttonText
+            title:      this._titleEl ? this._titleEl.textContent.trim() : this.data.title,
+            buttonText: this._btnEl   ? this._btnEl.textContent.trim()   : this.data.buttonText
         };
     }
 
@@ -163,7 +163,7 @@ class LeadFormBlock {
     }
 
     static get sanitize() {
-        return { templateId: false, title: false, subtitle: false, buttonText: false };
+        return { templateId: false, title: false, buttonText: false };
     }
 
     static get contentless() {

@@ -434,38 +434,39 @@ function renderBlocksToHtml(blocks) {
                 `;
             case 'leadForm': {
                 const title = _h(block.data.title || 'למידע נוסף והרשמה:');
-                const subtitle = _h(block.data.subtitle || '');
                 const btnText = _h(block.data.buttonText || 'שליחה');
                 const formId = 'inline-lead-' + Math.random().toString(36).substr(2, 9);
                 const checkId = formId + '-consent';
                 return `
-                    <div class="article-inline-lead my-5" style="background:#f5f5f5; border-radius:10px; padding:16px 20px; direction:rtl; width:100%;">
-                        <p style="font-size:15px; font-weight:600; color:#1a1a1a; margin:0 0 10px; text-align:right;">${title}</p>
-                        <form id="${formId}" class="inline-article-lead-form" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
-                            <div style="flex:1; min-width:140px;">
+                    <div class="article-inline-lead my-5" style="background:#f5f5f5; border-radius:10px; padding:20px; direction:rtl; width:100%; box-sizing:border-box;">
+                        <p style="font-size:16px; font-weight:600; color:#1a1a1a; margin:0 0 16px; text-align:right;">${title}</p>
+                        <form id="${formId}" class="inline-article-lead-form" style="display:flex; flex-direction:column; gap:14px;">
+                            <div>
                                 <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">שם מלא</label>
                                 <input type="text" id="${formId}-name"
-                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:5px 0; font-size:14px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
+                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:6px 0; font-size:15px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
                                     autocomplete="name" required />
                             </div>
-                            <div style="flex:1; min-width:140px;">
-                                <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">טלפון</label>
+                            <div>
+                                <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">מספר טלפון</label>
                                 <input type="tel" id="${formId}-phone"
-                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:5px 0; font-size:14px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
+                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:6px 0; font-size:15px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
                                     autocomplete="tel" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required />
                             </div>
-                            <div style="display:flex; align-items:center; gap:6px; padding-bottom:4px; flex-shrink:0;">
-                                <input type="checkbox" id="${checkId}" checked style="width:14px; height:14px; accent-color:#dc2626; cursor:pointer; flex-shrink:0;" />
-                                <label for="${checkId}" style="font-size:12px; color:#1a1a1a; cursor:pointer; white-space:nowrap;">אני מאשר קבלת דיוור</label>
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px;">
+                                <button type="submit" style="background:#dc2626; color:#fff; font-size:15px; font-weight:700; padding:10px 32px; border:none; border-radius:50px; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                                    <span class="inline-lead-btn-text">${btnText}</span>
+                                    <span class="inline-lead-spinner" style="display:none;">...</span>
+                                </button>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <input type="checkbox" id="${checkId}" checked style="width:16px; height:16px; accent-color:#dc2626; cursor:pointer;" />
+                                    <label for="${checkId}" style="font-size:13px; color:#1a1a1a; cursor:pointer; white-space:nowrap;">אני מאשר קבלת דיוור</label>
+                                </div>
                             </div>
-                            <button type="submit" style="background:#dc2626; color:#fff; font-size:14px; font-weight:700; padding:9px 28px; border:none; border-radius:50px; cursor:pointer; font-family:inherit; flex-shrink:0; white-space:nowrap;">
-                                <span class="inline-lead-btn-text">${btnText}</span>
-                                <span class="inline-lead-spinner" style="display:none;">...</span>
-                            </button>
                         </form>
-                        <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-top:6px; text-align:right;"></div>
-                        <div class="inline-lead-success" style="display:none; text-align:center; padding:8px 0;">
-                            <p style="font-size:15px; font-weight:700; color:#166534; margin:0;">✓ תודה! נחזור אליך בהקדם.</p>
+                        <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-top:8px; text-align:right;"></div>
+                        <div class="inline-lead-success" style="display:none; text-align:center; padding:10px 0;">
+                            <p style="font-size:16px; font-weight:700; color:#166534; margin:0;">✓ תודה! נחזור אליך בהקדם.</p>
                         </div>
                     </div>
                 `;
