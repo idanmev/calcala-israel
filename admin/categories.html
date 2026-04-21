@@ -438,6 +438,7 @@
             document.getElementById('nameError').classList.add('hidden');
             document.getElementById('slugError').classList.add('hidden');
             categoryModal.classList.remove('hidden');
+            categoryModal.classList.add('active');
         };
 
         function openEditCategoryModal(id) {
@@ -452,10 +453,12 @@
             document.getElementById('nameError').classList.add('hidden');
             document.getElementById('slugError').classList.add('hidden');
             categoryModal.classList.remove('hidden');
+            categoryModal.classList.add('active');
         }
 
         window.closeCategoryModal = function() {
             categoryModal.classList.add('hidden');
+            categoryModal.classList.remove('active');
             editingCategoryId = null;
         };
 
@@ -516,11 +519,13 @@
                 document.getElementById('deleteWarning').classList.toggle('hidden', articleCount === 0);
             }
             deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('active');
         }
 
         window.closeDeleteModal = function() {
             categoryToDelete = null;
             deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('active');
         };
 
         window.confirmDelete = async function() {
