@@ -441,7 +441,6 @@ function renderBlocksToHtml(blocks) {
                 return `
                     <div class="article-inline-lead my-5" style="background:#f5f5f5; border-radius:10px; padding:16px 20px; direction:rtl; width:100%;">
                         <p style="font-size:15px; font-weight:600; color:#1a1a1a; margin:0 0 10px; text-align:right;">${title}</p>
-                        ${subtitle ? '<p style="font-size:13px; color:#6b7280; margin:-6px 0 10px; text-align:right;">' + subtitle + '</p>' : ''}
                         <form id="${formId}" class="inline-article-lead-form" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
                             <div style="flex:1; min-width:140px;">
                                 <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">שם מלא</label>

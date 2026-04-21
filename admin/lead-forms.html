@@ -95,10 +95,6 @@
                 <input type="text" id="tplTitle" class="form-input" placeholder="התעניינתם?" required>
             </div>
             <div class="form-group">
-                <label class="form-label">כותרת משנה</label>
-                <textarea id="tplSubtitle" class="form-input" rows="2" placeholder="השאירו פרטים ויענו לכם על כל השאלות."></textarea>
-            </div>
-            <div class="form-group">
                 <label class="form-label">טקסט כפתור *</label>
                 <input type="text" id="tplButtonText" class="form-input" placeholder="שלח פרטים" required>
             </div>
@@ -108,13 +104,22 @@
             </div>
 
             <!-- Live preview -->
-            <div class="mt-4 article-inline-lead" style="border-right:3px solid #dc2626; padding:12px 14px 12px 0; text-align:right; background:white;">
-                <p class="font-bold text-gray-900 text-sm" id="previewTitle" style="margin:0 0 4px;">התעניינתם?</p>
-                <p class="text-xs text-gray-600 mb-2" id="previewSubtitle">השאירו פרטים ויענו לכם על כל השאלות.</p>
-                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                    <div style="flex:1; border:1px solid #e5e7eb; border-radius:4px; padding:6px 10px; font-size:11px; background:#f9fafb; color:#9ca3af;">שם מלא</div>
-                    <div style="flex:1; border:1px solid #e5e7eb; border-radius:4px; padding:6px 10px; font-size:11px; background:#f9fafb; color:#9ca3af;">מספר טלפון</div>
-                    <div class="bg-red-600 text-white text-xs font-bold px-4 py-1.5 rounded-md inline-block" id="previewBtn">שלח</div>
+            <div class="mt-4 article-inline-lead my-5" style="background:#f5f5f5; border-radius:10px; padding:16px 20px; direction:rtl; width:100%;">
+                <p style="font-size:15px; font-weight:600; color:#1a1a1a; margin:0 0 10px; text-align:right;" id="previewTitle">התעניינתם?</p>
+                <div style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:140px;">
+                        <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">שם מלא</label>
+                        <div style="width:100%; border-bottom:2px solid #dc2626; padding:5px 0;"></div>
+                    </div>
+                    <div style="flex:1; min-width:140px;">
+                        <label style="display:block; text-align:right; font-size:12px; color:#1a1a1a; margin-bottom:2px;">טלפון</label>
+                        <div style="width:100%; border-bottom:2px solid #dc2626; padding:5px 0;"></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; padding-bottom:4px; flex-shrink:0;">
+                        <input type="checkbox" checked disabled style="width:14px; height:14px; accent-color:#dc2626;">
+                        <span style="font-size:12px; color:#1a1a1a; white-space:nowrap;">אני מאשר קבלת דיוור</span>
+                    </div>
+                    <button type="button" class="bg-red-600 text-white text-sm font-bold px-7 py-2.5 rounded-full" id="previewBtn">שליחה</button>
                 </div>
             </div>
 
@@ -153,13 +158,12 @@ document.getElementById('hamburgerBtn').addEventListener('click', () => {
 });
 
 // Live preview wiring
-['tplTitle','tplSubtitle','tplButtonText'].forEach(id => {
+['tplTitle','tplButtonText'].forEach(id => {
     document.getElementById(id).addEventListener('input', updatePreview);
 });
 function updatePreview() {
     document.getElementById('previewTitle').textContent    = document.getElementById('tplTitle').value      || 'כותרת';
-    document.getElementById('previewSubtitle').textContent = document.getElementById('tplSubtitle').value   || '';
-    document.getElementById('previewBtn').textContent      = document.getElementById('tplButtonText').value || 'כפתור';
+    document.getElementById('previewBtn').textContent      = document.getElementById('tplButtonText').value || 'שליחה';
 }
 
 async function loadTemplates() {
@@ -190,13 +194,12 @@ function renderTemplates() {
         <div class="admin-card relative" style="border: 2px solid ${t.is_default ? '#16a34a' : '#e5e7eb'};">
             ${t.is_default ? '<span class="absolute top-3 left-3 bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">ברירת מחדל</span>' : ''}
             <h3 class="font-bold text-gray-900 text-base mb-3">${escHtml(t.name)}</h3>
-            <div class="p-3 rounded-lg text-right text-sm mb-4" style="border-right:3px solid #dc2626; padding-right:12px; background:#fff;">
-                <p class="font-bold text-gray-900 text-sm mb-1">${escHtml(t.title)}</p>
-                ${t.subtitle ? `<p class="text-gray-500 text-xs mb-2">${escHtml(t.subtitle)}</p>` : ''}
-                <div class="flex gap-1 items-center">
-                    <div class="flex-1 h-6 bg-gray-100 rounded border border-gray-200"></div>
-                    <div class="flex-1 h-6 bg-gray-100 rounded border border-gray-200"></div>
-                    <div class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded inline-block">${escHtml(t.button_text)}</div>
+            <div class="p-3 rounded-lg text-right text-sm mb-4" style="background:#f5f5f5; border-radius:10px; padding:12px 14px;">
+                <p class="font-bold text-gray-900 text-sm mb-2">${escHtml(t.title)}</p>
+                <div class="flex gap-2 items-end">
+                    <div class="flex-1 h-5 border-b-2 border-red-600"></div>
+                    <div class="flex-1 h-5 border-b-2 border-red-600"></div>
+                    <div class="bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">${escHtml(t.button_text)}</div>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -216,9 +219,8 @@ function openNewTemplateModal() {
     editingId = null;
     document.getElementById('modalTitle').textContent = 'תבנית חדשה';
     document.getElementById('tplName').value = '';
-    document.getElementById('tplTitle').value = 'התעניינתם?';
-    document.getElementById('tplSubtitle').value = 'השאירו פרטים ויענו לכם על כל השאלות.';
-    document.getElementById('tplButtonText').value = 'שלח פרטים';
+    document.getElementById('tplTitle').value = 'למידע נוסף והרשמה:';
+    document.getElementById('tplButtonText').value = 'שליחה';
     document.getElementById('tplIsDefault').checked = false;
     updatePreview();
     showModal('templateModal');
@@ -231,7 +233,6 @@ function openEditTemplateModal(id) {
     document.getElementById('modalTitle').textContent = 'עריכת תבנית';
     document.getElementById('tplName').value = t.name;
     document.getElementById('tplTitle').value = t.title;
-    document.getElementById('tplSubtitle').value = t.subtitle || '';
     document.getElementById('tplButtonText').value = t.button_text;
     document.getElementById('tplIsDefault').checked = t.is_default;
     updatePreview();
@@ -250,7 +251,6 @@ document.getElementById('templateForm').addEventListener('submit', async (e) => 
     const payload = {
         name:        document.getElementById('tplName').value.trim(),
         title:       document.getElementById('tplTitle').value.trim(),
-        subtitle:    document.getElementById('tplSubtitle').value.trim(),
         button_text: document.getElementById('tplButtonText').value.trim(),
         is_default:  document.getElementById('tplIsDefault').checked,
         updated_at:  new Date().toISOString()

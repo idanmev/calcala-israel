@@ -47,7 +47,6 @@ class LeadFormBlock {
     _applyTemplate(tpl, updateDom = true) {
         this.data.templateId = tpl.id;
         this.data.title      = tpl.title;
-        this.data.subtitle   = tpl.subtitle || '';
         this.data.buttonText = tpl.button_text;
 
         if (updateDom) {
@@ -99,15 +98,6 @@ class LeadFormBlock {
         this._titleEl.addEventListener('focus', () => this._titleEl.style.borderBottomColor = '#dc2626');
         this._titleEl.addEventListener('blur',  () => this._titleEl.style.borderBottomColor = 'transparent');
 
-        // Subtitle (editable)
-        this._subtitleEl = document.createElement('div');
-        this._subtitleEl.contentEditable = 'true';
-        this._subtitleEl.textContent = this.data.subtitle;
-        this._subtitleEl.style.cssText = 'font-size:12px; color:#6b7280; margin-bottom:12px; text-align:right; outline:none; border-bottom:1px dashed transparent; cursor:text;';
-        this._subtitleEl.setAttribute('data-placeholder', 'תת-כותרת (אופציונלי)');
-        this._subtitleEl.addEventListener('input', () => { this.data.subtitle = this._subtitleEl.textContent; this.data.templateId = null; });
-        this._subtitleEl.addEventListener('focus', () => this._subtitleEl.style.borderBottomColor = '#dc2626');
-        this._subtitleEl.addEventListener('blur',  () => this._subtitleEl.style.borderBottomColor = 'transparent');
 
         // Name field (visual only)
         const nameWrap = document.createElement('div');
@@ -135,7 +125,6 @@ class LeadFormBlock {
         this._btnEl.addEventListener('input', () => { this.data.buttonText = this._btnEl.textContent; this.data.templateId = null; });
 
         formPreview.appendChild(this._titleEl);
-        formPreview.appendChild(this._subtitleEl);
         formPreview.appendChild(nameWrap);
         formPreview.appendChild(phoneWrap);
         formPreview.appendChild(consentRow);
@@ -165,7 +154,6 @@ class LeadFormBlock {
         return {
             templateId: this.data.templateId,
             title:      this._titleEl    ? this._titleEl.textContent.trim()    : this.data.title,
-            subtitle:   this._subtitleEl ? this._subtitleEl.textContent.trim() : this.data.subtitle,
             buttonText: this._btnEl      ? this._btnEl.textContent.trim()      : this.data.buttonText
         };
     }
