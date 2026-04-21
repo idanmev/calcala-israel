@@ -132,7 +132,10 @@
 
                 if (error) {
                     console.error('Leads load error:', error);
-                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-red-500">שגיאה בטעינת הלידים: ${error.message}<br><small class="text-gray-400">ייתכן שחסרה מדיניות RLS לטבלת leads. הרץ את migration 07.</small></td></tr>`;
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-red-500">' +
+                        'שגיאה בטעינת הלידים: ' + error.message +
+                        '<br><small class="text-gray-400">ייתכן שחסרה מדיניות RLS לטבלת leads. הרץ את migration 07.</small>' +
+                        '</td></tr>';
                     return;
                 }
                 allLeads = data || [];
@@ -140,141 +143,129 @@
                 renderLeads(allLeads);
             } catch (err) {
                 console.error('Leads load exception:', err);
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-red-500">שגיאה לא צפויה: ${err.message}</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-red-500">שגיאה לא צפויה: ' + err.message + '</td></tr>';
             }
         }
 
         function updateStats(leads) {
             const today = new Date().toDateString();
             const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
             document.getElementById('stat-total').textContent = leads.length;
-            document.getElementById('stat-today').textContent =
-                leads.filter(l => new Date(l.created_at).toDateString() === today).length;
-            document.getElementById('stat-week').textContent =
-                leads.filter(l => new Date(l.created_at) > weekAgo).length;
-            document.getElementById('stat-qualified').textContent =
-                leads.filter(l => l.status === 'qualified').length;
+            document.getElementById('stat-today').textContent = leads.filter(l => new Date(l.created_at).toDateString() === today).length;
+            document.getElementById('stat-week').textContent = leads.filter(l => new Date(l.created_at) > weekAgo).length;
+            document.getElementById('stat-qualified').textContent = leads.filter(l => l.status === 'qualified').length;
+        }
+
+        function escH(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         function renderLeads(leads) {
             const tbody = document.getElementById('leads-table-body');
-            if (leads.length === 0) {
+            if (!leads || leads.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-gray-400">אין לידים עדיין</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = leads.map(lead => {
-              const url = lead.source_url || lead.article_url || lead.conversion_url || '';
-              let sourceCell = '<span class="text-gray-400">—</span>';
-              if (url) {
-                try {
-                  const path = new URL(url).pathname;
-                  const slug = path.split('/').filter(Boolean).pop() || path;
-                  sourceCell = `<a href="${url}" target="_blank" class="text-blue-600 hover:underline text-xs break-all" title="${url}">${slug}</a>`;
-                } catch {
-                  sourceCell = `<span class="text-gray-500 text-xs break-all">${url}</span>`;
+            tbody.innerHTML = leads.map(function(lead) {
+                var url = lead.source_url || lead.article_url || lead.conversion_url || '';
+                var sourceCell = '<span class="text-gray-400">&mdash;</span>';
+                if (url) {
+                    try {
+                        var path = new URL(url).pathname;
+                        var slug = path.split('/').filter(Boolean).pop() || path;
+                        sourceCell = '<a href="' + escH(url) + '" target="_blank" class="text-blue-600 hover:underline text-xs break-all" title="' + escH(url) + '">' + escH(slug) + '</a>';
+                    } catch(e) {
+                        sourceCell = '<span class="text-gray-500 text-xs break-all">' + escH(url) + '</span>';
+                    }
                 }
-              }
-              return `
-        <tr class="border-b border-gray-100 hover:bg-gray-50">
-          <td class="px-6 py-4 font-medium">${lead.name || '—'}</td>
-          <td class="px-6 py-4">
-            <a href="tel:${lead.phone}" class="text-blue-600 hover:underline font-mono">${lead.phone}</a>
-          </td>
-          <td class="px-6 py-4">
-            <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">${lead.vertical || '—'}</span>
-          </td>
-          <td class="px-6 py-4 text-sm max-w-[200px]">${sourceCell}</td>
-          <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
-            ${Object.entries(lead.answers || {}).map(([k, v]) => `<span class="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs m-0.5">${v}</span>`).join('')}
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-500">
-            ${new Date(lead.created_at).toLocaleDateString('he-IL')}
-          </td>
-          <td class="px-6 py-4">
-            <select onchange="updateLeadStatus('${lead.id}', this.value)"
-                    class="text-sm border border-gray-200 rounded px-2 py-1">
-              <option value="new" ${lead.status === 'new' ? 'selected' : ''}>חדש</option>
-              <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>יצרנו קשר</option>
-              <option value="qualified" ${lead.status === 'qualified' ? 'selected' : ''}>מוסמך</option>
-              <option value="rejected" ${lead.status === 'rejected' ? 'selected' : ''}>נדחה</option>
-            </select>
-          </td>
-          <td class="px-6 py-4">
-            <div class="flex gap-2 items-center">
-              <a href="https://wa.me/972${lead.phone.replace(/^0/, '').replace(/-/g, '')}" 
-                 target="_blank"
-                 class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">
-                💬 וואטסאפ
-              </a>
-              <button onclick="deleteLead('${lead.id}')"
-                      class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm font-bold"
-                      title="מחק ליד">
-                🗑️
-              </button>
-            </div>
-          </td>
-        </tr>
-        }).join('');
+
+                var answers = lead.answers || {};
+                var answersHtml = Object.values(answers).map(function(v) {
+                    return '<span class="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs m-0.5">' + escH(v) + '</span>';
+                }).join('');
+
+                var phoneClean = (lead.phone || '').replace(/^0/, '').replace(/-/g, '');
+                var dateStr = lead.created_at ? new Date(lead.created_at).toLocaleDateString('he-IL') : '—';
+
+                var statusOpts = ['new:חדש', 'contacted:יצרנו קשר', 'qualified:מוסמך', 'rejected:נדחה'];
+                var selectHtml = statusOpts.map(function(opt) {
+                    var parts = opt.split(':');
+                    var val = parts[0], label = parts[1];
+                    return '<option value="' + val + '"' + (lead.status === val ? ' selected' : '') + '>' + label + '</option>';
+                }).join('');
+
+                return '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+                    '<td class="px-6 py-4 font-medium">' + escH(lead.name || '—') + '</td>' +
+                    '<td class="px-6 py-4"><a href="tel:' + escH(lead.phone) + '" class="text-blue-600 hover:underline font-mono">' + escH(lead.phone) + '</a></td>' +
+                    '<td class="px-6 py-4"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">' + escH(lead.vertical || '—') + '</span></td>' +
+                    '<td class="px-6 py-4 text-sm max-w-[200px]">' + sourceCell + '</td>' +
+                    '<td class="px-6 py-4 text-sm text-gray-500 max-w-xs">' + answersHtml + '</td>' +
+                    '<td class="px-6 py-4 text-sm text-gray-500">' + dateStr + '</td>' +
+                    '<td class="px-6 py-4"><select onchange="updateLeadStatus(\'' + lead.id + '\', this.value)" class="text-sm border border-gray-200 rounded px-2 py-1">' + selectHtml + '</select></td>' +
+                    '<td class="px-6 py-4"><div class="flex gap-2 items-center">' +
+                        '<a href="https://wa.me/972' + phoneClean + '" target="_blank" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">💬 וואטסאפ</a>' +
+                        '<button onclick="deleteLead(\'' + lead.id + '\')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm font-bold" title="מחק ליד">🗑️</button>' +
+                    '</div></td>' +
+                '</tr>';
+            }).join('');
         }
 
         function filterLeads() {
-            const vertical = document.getElementById('vertical-filter').value;
-            const status = document.getElementById('status-filter').value;
-            let filtered = allLeads;
-            if (vertical) filtered = filtered.filter(l => l.vertical === vertical);
-            if (status) filtered = filtered.filter(l => l.status === status);
+            var vertical = document.getElementById('vertical-filter').value;
+            var status = document.getElementById('status-filter').value;
+            var filtered = allLeads;
+            if (vertical) filtered = filtered.filter(function(l) { return l.vertical === vertical; });
+            if (status)   filtered = filtered.filter(function(l) { return l.status === status; });
             renderLeads(filtered);
         }
 
         async function updateLeadStatus(id, status) {
-            await supabaseClient.from('leads').update({ status }).eq('id', id);
+            await supabaseClient.from('leads').update({ status: status }).eq('id', id);
         }
 
         async function deleteLead(id) {
             if (!confirm('האם למחוק את הליד הזה? פעולה זו אינה הפיכה.')) return;
-            const { error } = await supabaseClient.from('leads').delete().eq('id', id);
-            if (error) {
-                alert('שגיאה במחיקת הליד: ' + error.message);
+            var result = await supabaseClient.from('leads').delete().eq('id', id);
+            if (result.error) {
+                alert('שגיאה במחיקת הליד: ' + result.error.message);
             } else {
-                allLeads = allLeads.filter(l => l.id !== id);
+                allLeads = allLeads.filter(function(l) { return l.id !== id; });
                 filterLeads();
             }
         }
 
         function exportLeads() {
-            const vertical = document.getElementById('vertical-filter').value;
-            let leads = allLeads;
-            if (vertical) leads = leads.filter(l => l.vertical === vertical);
+            var vertical = document.getElementById('vertical-filter').value;
+            var leads = allLeads;
+            if (vertical) leads = leads.filter(function(l) { return l.vertical === vertical; });
 
-            const csv = [
-                ['שם', 'טלפון', 'דוא"ל', 'ורטיקל', 'תשובות', 'מקור', 'תאריך', 'סטטוס'],
-                ...leads.map(l => [
-                    l.name, l.phone, l.email || '',
-                    l.vertical,
-                    JSON.stringify(l.answers),
+            var rows = [['שם', 'טלפון', 'דואל', 'ורטיקל', 'תשובות', 'מקור', 'תאריך', 'סטטוס']];
+            leads.forEach(function(l) {
+                rows.push([
+                    l.name || '', l.phone || '', l.email || '',
+                    l.vertical || '',
+                    JSON.stringify(l.answers || {}),
                     l.source_url || '',
-                    new Date(l.created_at).toLocaleDateString('he-IL'),
-                    l.status
-                ])
-            ].map(row => row.join(',')).join('\n');
-
-            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+                    l.created_at ? new Date(l.created_at).toLocaleDateString('he-IL') : '',
+                    l.status || ''
+                ]);
+            });
+            var csv = rows.map(function(row) { return row.join(','); }).join('\n');
+            var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
-            a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = 'leads-' + new Date().toISOString().split('T')[0] + '.csv';
             a.click();
         }
 
-        // Also add Leads link to admin sidebar in dashboard.html, article-edit.html, categories.html
-        // Add: <a href="/admin/leads.html">לידים 🎯</a> to the sidebar menu
-
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadLeads(); }));
+            document.addEventListener('DOMContentLoaded', function() {
+                window.authUtils.checkAuth().then(function(isAuth) { if (isAuth) loadLeads(); });
+            });
         } else {
-            window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadLeads(); });
+            window.authUtils.checkAuth().then(function(isAuth) { if (isAuth) loadLeads(); });
         }
     </script>
 </body>
