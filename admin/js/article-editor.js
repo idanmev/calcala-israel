@@ -137,12 +137,27 @@ const tagsSelect = document.getElementById('tags');
 const selectedTagsContainer = document.getElementById('selectedTags');
 const metaDescription = document.getElementById('metaDescription');
 const charCounter = document.getElementById('charCounter');
-const statusToggle = document.getElementById('statusToggle');
-const statusLabel = document.getElementById('statusLabel');
 const publishBtn = document.getElementById('publishBtn');
 const publishBtnText = document.getElementById('publishBtnText');
 const publishSpinner = document.getElementById('publishSpinner');
 const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+
+// --- Status radio helpers ---
+function getSelectedStatus() {
+    const checked = document.querySelector('input[name="articleStatus"]:checked');
+    return checked ? checked.value : 'draft';
+}
+
+function setSelectedStatus(status) {
+    const radio = document.querySelector(`input[name="articleStatus"][value="${status}"]`);
+    if (radio) {
+        radio.checked = true;
+    } else {
+        // Fallback to draft if value not recognised
+        const fallback = document.getElementById('statusDraft');
+        if (fallback) fallback.checked = true;
+    }
+}
 
 // Hamburger menu toggle
 hamburgerBtn.addEventListener('click', () => {
@@ -214,11 +229,7 @@ metaDescription.addEventListener('input', () => {
     }
 });
 
-// Status toggle
-statusToggle.addEventListener('change', () => {
-    statusLabel.textContent = statusToggle.checked ? 'פורסם' : 'טיוטה';
-    publishBtnText.textContent = statusToggle.checked ? 'פרסם' : 'שמור טיוטה';
-});
+// No additional listener needed — radio buttons handle their own checked state
 
 // Tags selection
 tagsSelect.addEventListener('change', () => {
@@ -510,8 +521,7 @@ async function loadArticle() {
             await editor.clear();
         }
 
-        statusToggle.checked = data.status === 'published';
-        statusLabel.textContent = data.status === 'published' ? 'פורסם' : 'טיוטה';
+        setSelectedStatus(data.status || 'draft');
         document.getElementById('isFeatured').checked = data.is_featured || false;
 
         if (data.publish_date) {
@@ -613,10 +623,9 @@ async function saveArticle(isPublish = false) {
         return;
     }
 
-    // If clicking the Publish button, force status to published and sync the toggle UI
+    // If clicking the Publish button, force status to published
     if (isPublish) {
-        statusToggle.checked = true;
-        statusLabel.textContent = 'פורסם';
+        setSelectedStatus('published');
     }
 
     // Show loading
@@ -638,7 +647,7 @@ async function saveArticle(isPublish = false) {
             body: JSON.stringify(await editor.save()),
             meta_description: metaDescription.value.trim(),
             disclaimer: document.getElementById('disclaimer').value.trim() || null,
-            status: isPublish ? 'published' : 'draft',
+            status: getSelectedStatus(),
             is_featured: document.getElementById('isFeatured').checked,
             featured_image_url: featuredImageUrl.value || null,
             publish_date: document.getElementById('publishDate').value || null,
@@ -706,9 +715,8 @@ async function saveArticle(isPublish = false) {
             }
         }
 
-        window.authUtils.showSuccess(
-            articleData.status === 'published' ? 'המאמר פורסם בהצלחה' : 'המאמר נשמר כטיוטה'
-        );
+        const statusMessages = { published: 'המאמר פורסם בהצלחה', hidden: 'המאמר נשמר במצב מוסתר', draft: 'המאמר נשמר כטיוטה' };
+        window.authUtils.showSuccess(statusMessages[articleData.status] || 'נשמר בהצלחה');
 
         // Clear auto-save
         localStorage.removeItem('article-autosave');
@@ -731,8 +739,7 @@ async function saveArticle(isPublish = false) {
 
 // Save draft
 async function saveDraft() {
-    statusToggle.checked = false;
-    statusLabel.textContent = 'טיוטה';
+    setSelectedStatus('draft');
     await saveArticle(false);
 }
 

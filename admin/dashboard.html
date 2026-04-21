@@ -125,6 +125,7 @@
                             <select id="statusFilter" class="form-select">
                                 <option value="all">הכל</option>
                                 <option value="published">פורסם</option>
+                                <option value="hidden">מוסתר</option>
                                 <option value="draft">טיוטה</option>
                             </select>
                         </div>
@@ -285,19 +286,26 @@
             const pageArticles = filteredArticles.slice(startIndex, endIndex);
 
             // Render table (desktop)
-            articlesTableBody.innerHTML = pageArticles.map(article => `
+            articlesTableBody.innerHTML = pageArticles.map(article => {
+                const statusLabels = { published: 'פורסם', hidden: 'מוסתר', draft: 'טיוטה' };
+                const statusLabel = statusLabels[article.status] || article.status;
+                const copyBtn = article.status === 'hidden'
+                    ? `<button class="copy-link-btn" data-slug="${_d(article.slug)}" title="העתק קישור ישיר" style="background:none;border:none;cursor:pointer;font-size:1rem;">🔗</button>`
+                    : '';
+                return `
         <tr>
           <td class="font-medium">${_d(article.title)}</td>
           <td>${_d(article.categories?.name || 'ללא קטגוריה')}</td>
           <td>
             <span class="status-badge ${article.status}">
-              ${article.status === 'published' ? 'פורסם' : 'טיוטה'}
+              ${statusLabel}
             </span>
           </td>
           <td>${article.publish_date ? formatDate(article.publish_date) : '-'}</td>
           <td>${article.view_count || 0}</td>
           <td>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+              ${copyBtn}
               <a href="/admin/article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600 hover:text-blue-700">
                 ✏️
               </a>
@@ -307,10 +315,16 @@
             </div>
           </td>
         </tr>
-      `).join('');
+      `;
+            }).join('');
 
-            // Render cards (mobile)
-            articlesCardsContainer.innerHTML = pageArticles.map(article => `
+            articlesCardsContainer.innerHTML = pageArticles.map(article => {
+                const statusLabels = { published: 'פורסם', hidden: 'מוסתר', draft: 'טיוטה' };
+                const statusLabel = statusLabels[article.status] || article.status;
+                const copyBtnCard = article.status === 'hidden'
+                    ? `<button class="copy-link-btn" data-slug="${_d(article.slug)}" title="העתק קישור ישיר" style="background:none;border:none;cursor:pointer;font-size:1rem;">🔗 קישור</button>`
+                    : '';
+                return `
         <div class="table-card">
           <div class="table-card-row">
             <span class="table-card-label">כותרת</span>
@@ -323,7 +337,7 @@
           <div class="table-card-row">
             <span class="table-card-label">סטטוס</span>
             <span class="status-badge ${article.status}">
-              ${article.status === 'published' ? 'פורסם' : 'טיוטה'}
+              ${statusLabel}
             </span>
           </div>
           <div class="table-card-row">
@@ -332,13 +346,15 @@
           </div>
           <div class="table-card-row">
             <span class="table-card-label">פעולות</span>
-            <div class="flex gap-3">
+            <div class="flex gap-3 items-center">
+              ${copyBtnCard}
               <a href="/admin/article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600">ערוך</a>
               <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600">מחק</button>
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+            }).join('');
 
             articlesTableContainer.classList.remove('hidden');
             articlesCardsContainer.classList.remove('hidden');
@@ -346,6 +362,20 @@
             // Event delegation for delete buttons
             document.querySelectorAll('.delete-article-btn').forEach(btn => {
                 btn.addEventListener('click', () => openDeleteModal(btn.dataset.deleteId));
+            });
+
+            // Copy-link buttons for hidden articles
+            document.querySelectorAll('.copy-link-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const slug = btn.dataset.slug;
+                    const url = `${window.location.origin}/article/${encodeURIComponent(slug)}`;
+                    navigator.clipboard.writeText(url).then(() => {
+                        btn.textContent = '✅';
+                        setTimeout(() => { btn.textContent = '🔗'; }, 2000);
+                    }).catch(() => {
+                        prompt('העתק קישור:', url);
+                    });
+                });
             });
 
             renderPagination();

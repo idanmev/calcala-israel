@@ -266,6 +266,11 @@ body {
     color: #374151;
 }
 
+.status-badge.hidden {
+    background-color: #ede9fe;
+    color: #5b21b6;
+}
+
 /* Cards */
 .admin-card {
     background-color: white;
