@@ -54,6 +54,9 @@ body {
     flex: 1;
     margin-right: 260px;
     min-height: 100vh;
+    min-width: 0;
+    max-width: calc(100% - 260px);
+    overflow-x: hidden;
 }
 
 .admin-topbar {
@@ -70,8 +73,7 @@ body {
 
 .admin-content {
     padding: 2rem 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: 100%;
 }
 
 /* Sidebar Menu */
@@ -215,7 +217,8 @@ body {
     width: 100%;
     background-color: white;
     border-radius: 0.75rem;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -474,6 +477,7 @@ body {
 
     .admin-main {
         margin-right: 0;
+        max-width: 100%;
     }
 
     .admin-content {
