@@ -433,39 +433,28 @@ function renderBlocksToHtml(blocks) {
                     </div>
                 `;
             case 'leadForm': {
-                const title = _h(block.data.title || 'התעניינתם?');
-                const subtitle = _h(block.data.subtitle || 'השאירו פרטים ויענו לכם על כל השאלות.');
-                const btnText = _h(block.data.buttonText || 'שלח פרטים');
+                const title = _h(block.data.title || 'השאירו פרטים ונחזור אליכם');
+                const subtitle = _h(block.data.subtitle || '');
+                const btnText = _h(block.data.buttonText || 'שלח');
                 const formId = 'inline-lead-' + Math.random().toString(36).substr(2, 9);
                 return `
-                    <div class="article-inline-lead my-6 mx-auto rounded-xl border border-red-200 overflow-hidden font-sans" style="max-width:480px; background:#fff9f9;">
-                        <div style="background:#c0392b; padding:12px 18px; text-align:center;">
-                            <h3 style="color:#fff; font-size:16px; font-weight:700; margin:0 0 2px;">${title}</h3>
-                            <p style="color:rgba(255,255,255,0.85); font-size:12px; margin:0;">${subtitle}</p>
-                        </div>
-                        <div style="padding:14px 18px;">
-                            <form id="${formId}" class="inline-article-lead-form">
-                                <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-                                    <input type="text" id="${formId}-name" placeholder="שם מלא"
-                                        style="flex:1; min-width:120px; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; font-size:13px; font-family:inherit; direction:rtl; outline:none;"
-                                        autocomplete="name" required />
-                                    <input type="tel" id="${formId}-phone" placeholder="05X-XXXXXXX"
-                                        style="flex:1; min-width:130px; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; font-size:13px; font-family:inherit; direction:rtl; outline:none;"
-                                        autocomplete="tel" required />
-                                </div>
-                                <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-bottom:6px;"></div>
-                                <button type="submit" style="width:100%; background:#c0392b; color:#fff; font-size:14px; font-weight:700; padding:9px; border:none; border-radius:6px; cursor:pointer; font-family:inherit;">
-                                    <span class="inline-lead-btn-text">${btnText}</span>
-                                    <span class="inline-lead-spinner" style="display:none;">...</span>
-                                </button>
-                                <p style="text-align:center; font-size:11px; color:#9ca3af; margin:6px 0 0;">🔒 הפרטים מאובטחים ולא יועברו לצד שלישי</p>
-                            </form>
-                            <div class="inline-lead-success" style="display:none; text-align:center; padding:12px 0;">
-                                <div style="font-size:28px; margin-bottom:4px;">✅</div>
-                                <p style="font-weight:700; color:#166534; margin:0 0 2px;">תודה! קיבלנו את פרטיכם</p>
-                                <p style="font-size:12px; color:#6b7280; margin:0;">גורם מקצועי יחזור אליכם בהקדם.</p>
-                            </div>
-                        </div>
+                    <div class="article-inline-lead my-5" style="border-right:3px solid #dc2626; padding:14px 16px 14px 0; margin-right:0;">
+                        <p style="font-size:15px; font-weight:700; color:#1f2937; margin:0 0 4px; direction:rtl;">${title}</p>
+                        ${subtitle ? `<p style="font-size:13px; color:#6b7280; margin:0 0 10px; direction:rtl;">${subtitle}</p>` : ''}
+                        <form id="${formId}" class="inline-article-lead-form" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <input type="text" id="${formId}-name" placeholder="שם מלא"
+                                style="flex:1; min-width:110px; max-width:180px; border:1px solid #d1d5db; border-radius:6px; padding:7px 10px; font-size:13px; font-family:inherit; direction:rtl; outline:none; background:#fff;"
+                                autocomplete="name" required />
+                            <input type="tel" id="${formId}-phone" placeholder="מספר טלפון"
+                                style="flex:1; min-width:120px; max-width:180px; border:1px solid #d1d5db; border-radius:6px; padding:7px 10px; font-size:13px; font-family:inherit; direction:rtl; outline:none; background:#fff;"
+                                autocomplete="tel" required />
+                            <button type="submit" style="background:#dc2626; color:#fff; font-size:13px; font-weight:700; padding:7px 18px; border:none; border-radius:6px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">
+                                <span class="inline-lead-btn-text">${btnText}</span>
+                                <span class="inline-lead-spinner" style="display:none;">...</span>
+                            </button>
+                        </form>
+                        <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-top:4px;"></div>
+                        <div class="inline-lead-success" style="display:none; font-size:13px; color:#166534; margin-top:4px; font-weight:600;">✓ תודה! נחזור אליך בהקדם.</div>
                     </div>
                 `;
             }
@@ -915,7 +904,7 @@ function initInlineLeadForms(articleTitle, categoryName) {
             const btn = form.querySelector('button[type="submit"]');
             const btnText = form.querySelector('.inline-lead-btn-text');
             const spinner = form.querySelector('.inline-lead-spinner');
-            const errorEl = form.querySelector('.inline-lead-error');
+            const errorEl = formWrapper.querySelector('.inline-lead-error');
             const successEl = formWrapper.querySelector('.inline-lead-success');
 
             const name = nameInput.value.trim();

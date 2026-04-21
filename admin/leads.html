@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../css/tailwind-build.css" />
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100" style="visibility:hidden">
 
     <!-- Top bar (same as dashboard) -->
     <div id="admin-topbar"></div>
@@ -123,16 +123,25 @@
         let allLeads = [];
 
         async function loadLeads() {
-            const { data, error } = await supabaseClient
-                .from('leads')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const tbody = document.getElementById('leads-table-body');
+            try {
+                const { data, error } = await supabaseClient
+                    .from('leads')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            if (error) { console.error(error); return; }
-            allLeads = data;
-
-            updateStats(data);
-            renderLeads(data);
+                if (error) {
+                    console.error('Leads load error:', error);
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-red-500">שגיאה בטעינת הלידים: ${error.message}<br><small class="text-gray-400">ייתכן שחסרה מדיניות RLS לטבלת leads. הרץ את migration 07.</small></td></tr>`;
+                    return;
+                }
+                allLeads = data || [];
+                updateStats(allLeads);
+                renderLeads(allLeads);
+            } catch (err) {
+                console.error('Leads load exception:', err);
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-red-500">שגיאה לא צפויה: ${err.message}</td></tr>`;
+            }
         }
 
         function updateStats(leads) {
