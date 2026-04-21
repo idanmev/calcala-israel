@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תבניות טופס לידים - Calcala-News</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin/css/admin-styles.css">
+    <link rel="stylesheet" href="../css/tailwind-build.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-xl font-bold text-gray-900">Calcala-News</h1>
+            <p class="text-sm text-gray-500 mt-1">לוח בקרה</p>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="/admin/dashboard" class="sidebar-menu-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                מאמרים
+            </a>
+            <a href="/admin/categories" class="sidebar-menu-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                קטגוריות
+            </a>
+            <a href="/admin/leads" class="sidebar-menu-item">
+                <span class="w-6 h-6 flex items-center justify-center text-lg">🎯</span>
+                לידים
+            </a>
+            <a href="/admin/lead-forms" class="sidebar-menu-item active">
+                <span class="w-6 h-6 flex items-center justify-center text-lg">📋</span>
+                תבניות טופס
+            </a>
+            <a href="/admin/quiz-config" class="sidebar-menu-item">
+                <span class="w-6 h-6 flex items-center justify-center text-lg">❓</span>
+                חידוני זכאות
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="flex items-center gap-3">
+                <a href="/" target="_blank" class="btn btn-secondary text-sm">צפייה באתר החי</a>
+                <button onclick="window.authUtils.logout()" class="btn btn-ghost text-sm">התנתקות</button>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="hamburger-btn" id="hamburgerBtn"><span></span><span></span><span></span></button>
+                <h2 class="text-lg font-semibold text-gray-900">תבניות טופס לידים</h2>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="openNewTemplateModal()" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    תבנית חדשה
+                </button>
+                <h1 class="text-2xl font-bold text-gray-900">תבניות טופס לידים</h1>
+            </div>
+
+            <div class="admin-card mb-6 bg-blue-50 border border-blue-200">
+                <p class="text-sm text-blue-800">💡 תבניות אלו זמינות לבחירה בעורך המאמרים בעת הוספת טופס לידים. תבנית ברירת המחדל תטען אוטומטית.</p>
+            </div>
+
+            <div id="loadingState" class="flex justify-center items-center py-12"><div class="spinner"></div></div>
+
+            <div id="templatesGrid" class="hidden grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"></div>
+
+            <div id="emptyState" class="hidden text-center py-12">
+                <p class="text-gray-500">אין תבניות עדיין</p>
+                <button onclick="openNewTemplateModal()" class="btn btn-primary mt-4">צור תבנית ראשונה</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Template Modal -->
+<div id="templateModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width:560px">
+        <h3 class="modal-title" id="modalTitle">תבנית חדשה</h3>
+        <form id="templateForm" class="space-y-4">
+            <div class="form-group">
+                <label class="form-label">שם התבנית (לשימוש פנימי) *</label>
+                <input type="text" id="tplName" class="form-input" placeholder="לדוגמה: טופס מיסוי" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">כותרת *</label>
+                <input type="text" id="tplTitle" class="form-input" placeholder="התעניינתם?" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">כותרת משנה</label>
+                <textarea id="tplSubtitle" class="form-input" rows="2" placeholder="השאירו פרטים ויענו לכם על כל השאלות."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">טקסט כפתור *</label>
+                <input type="text" id="tplButtonText" class="form-input" placeholder="שלח פרטים" required>
+            </div>
+            <div class="form-group flex items-center gap-3">
+                <input type="checkbox" id="tplIsDefault" class="w-4 h-4">
+                <label for="tplIsDefault" class="form-label mb-0">הגדר כברירת מחדל</label>
+            </div>
+
+            <!-- Live preview -->
+            <div class="mt-2 p-4 rounded-xl text-center" style="background: linear-gradient(135deg,#fef2f2 0%,#fff7ed 100%); border: 2px dashed #ef4444;">
+                <p class="font-bold text-gray-900 text-base" id="previewTitle">התעניינתם?</p>
+                <p class="text-sm text-gray-600 mt-1" id="previewSubtitle">השאירו פרטים ויענו לכם על כל השאלות.</p>
+                <div class="mt-3 bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-lg inline-block" id="previewBtn">שלח פרטים</div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span id="saveBtnText">שמור</span>
+                    <div id="saveSpinner" class="hidden spinner" style="width:20px;height:20px;border-width:2px;"></div>
+                </button>
+                <button type="button" onclick="closeTemplateModal()" class="btn btn-secondary">ביטול</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3 class="modal-title">מחיקת תבנית</h3>
+        <p class="text-gray-600" id="deleteMessage">האם למחוק תבנית זו?</p>
+        <div class="modal-actions">
+            <button onclick="confirmDelete()" class="btn btn-danger">מחק</button>
+            <button onclick="closeDeleteModal()" class="btn btn-secondary">ביטול</button>
+        </div>
+    </div>
+</div>
+
+<script src="/admin/js/supabase-client.js"></script>
+<script src="/admin/js/auth.js"></script>
+<script>
+let templates = [];
+let editingId = null;
+let deletingId = null;
+
+document.getElementById('hamburgerBtn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('show-mobile');
+});
+
+// Live preview wiring
+['tplTitle','tplSubtitle','tplButtonText'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreview);
+});
+function updatePreview() {
+    document.getElementById('previewTitle').textContent    = document.getElementById('tplTitle').value      || 'כותרת';
+    document.getElementById('previewSubtitle').textContent = document.getElementById('tplSubtitle').value   || '';
+    document.getElementById('previewBtn').textContent      = document.getElementById('tplButtonText').value || 'כפתור';
+}
+
+async function loadTemplates() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('templatesGrid').classList.add('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+
+    const { data, error } = await supabaseClient
+        .from('lead_form_templates')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    document.getElementById('loadingState').classList.add('hidden');
+
+    if (error) { window.authUtils.showError('שגיאה בטעינת תבניות'); return; }
+    templates = data || [];
+
+    if (templates.length === 0) {
+        document.getElementById('emptyState').classList.remove('hidden');
+        return;
+    }
+    renderTemplates();
+}
+
+function renderTemplates() {
+    const grid = document.getElementById('templatesGrid');
+    grid.innerHTML = templates.map(t => `
+        <div class="admin-card relative" style="border: 2px solid ${t.is_default ? '#16a34a' : '#e5e7eb'};">
+            ${t.is_default ? '<span class="absolute top-3 left-3 bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">ברירת מחדל</span>' : ''}
+            <h3 class="font-bold text-gray-900 text-base mb-3">${escHtml(t.name)}</h3>
+            <div class="p-3 rounded-lg text-center text-sm mb-4" style="background:linear-gradient(135deg,#fef2f2 0%,#fff7ed 100%);border:1.5px dashed #ef4444;">
+                <p class="font-bold text-gray-900">${escHtml(t.title)}</p>
+                ${t.subtitle ? `<p class="text-gray-500 text-xs mt-1">${escHtml(t.subtitle)}</p>` : ''}
+                <div class="mt-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded inline-block">${escHtml(t.button_text)}</div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="openEditTemplateModal('${t.id}')" class="btn btn-secondary text-sm flex-1">✏️ ערוך</button>
+                ${!t.is_default ? `<button onclick="openDeleteModal('${t.id}')" class="btn text-sm px-3" style="background:#fee2e2;color:#b91c1c;">🗑️</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+    grid.classList.remove('hidden');
+}
+
+function escHtml(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openNewTemplateModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'תבנית חדשה';
+    document.getElementById('tplName').value = '';
+    document.getElementById('tplTitle').value = 'התעניינתם?';
+    document.getElementById('tplSubtitle').value = 'השאירו פרטים ויענו לכם על כל השאלות.';
+    document.getElementById('tplButtonText').value = 'שלח פרטים';
+    document.getElementById('tplIsDefault').checked = false;
+    updatePreview();
+    showModal('templateModal');
+}
+
+function openEditTemplateModal(id) {
+    const t = templates.find(x => x.id === id);
+    if (!t) return;
+    editingId = id;
+    document.getElementById('modalTitle').textContent = 'עריכת תבנית';
+    document.getElementById('tplName').value = t.name;
+    document.getElementById('tplTitle').value = t.title;
+    document.getElementById('tplSubtitle').value = t.subtitle || '';
+    document.getElementById('tplButtonText').value = t.button_text;
+    document.getElementById('tplIsDefault').checked = t.is_default;
+    updatePreview();
+    showModal('templateModal');
+}
+
+function closeTemplateModal() { hideModal('templateModal'); editingId = null; }
+
+document.getElementById('templateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = e.target.querySelector('button[type="submit"]');
+    saveBtn.disabled = true;
+    document.getElementById('saveBtnText').classList.add('hidden');
+    document.getElementById('saveSpinner').classList.remove('hidden');
+
+    const payload = {
+        name:        document.getElementById('tplName').value.trim(),
+        title:       document.getElementById('tplTitle').value.trim(),
+        subtitle:    document.getElementById('tplSubtitle').value.trim(),
+        button_text: document.getElementById('tplButtonText').value.trim(),
+        is_default:  document.getElementById('tplIsDefault').checked,
+        updated_at:  new Date().toISOString()
+    };
+
+    try {
+        let error;
+        if (editingId) {
+            ({ error } = await supabaseClient.from('lead_form_templates').update(payload).eq('id', editingId));
+        } else {
+            ({ error } = await supabaseClient.from('lead_form_templates').insert([{ ...payload, created_at: new Date().toISOString() }]));
+        }
+        if (error) throw error;
+        window.authUtils.showSuccess(editingId ? 'התבנית עודכנה' : 'התבנית נוצרה');
+        closeTemplateModal();
+        await loadTemplates();
+    } catch (err) {
+        window.authUtils.showError('שגיאה: ' + err.message);
+    } finally {
+        saveBtn.disabled = false;
+        document.getElementById('saveBtnText').classList.remove('hidden');
+        document.getElementById('saveSpinner').classList.add('hidden');
+    }
+});
+
+function openDeleteModal(id) { deletingId = id; showModal('deleteModal'); }
+function closeDeleteModal() { hideModal('deleteModal'); deletingId = null; }
+
+async function confirmDelete() {
+    if (!deletingId) return;
+    const { error } = await supabaseClient.from('lead_form_templates').delete().eq('id', deletingId);
+    if (error) { window.authUtils.showError('שגיאה במחיקה'); return; }
+    window.authUtils.showSuccess('התבנית נמחקה');
+    closeDeleteModal();
+    await loadTemplates();
+}
+
+function showModal(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('hidden');
+    el.classList.add('active');
+}
+function hideModal(id) {
+    const el = document.getElementById(id);
+    el.classList.add('hidden');
+    el.classList.remove('active');
+}
+
+document.getElementById('templateModal').addEventListener('click', e => { if (e.target === document.getElementById('templateModal')) closeTemplateModal(); });
+document.getElementById('deleteModal').addEventListener('click', e => { if (e.target === document.getElementById('deleteModal')) closeDeleteModal(); });
+
+async function init() {
+    const isAuth = await window.authUtils.checkAuth();
+    if (isAuth) await loadTemplates();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>

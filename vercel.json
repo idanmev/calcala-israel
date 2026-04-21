@@ -47,6 +47,7 @@
     { "source": "/admin/article-edit",   "destination": "/admin/article-edit.html" },
     { "source": "/admin/categories",     "destination": "/admin/categories.html" },
     { "source": "/admin/quiz-config",    "destination": "/admin/quiz-config.html" },
-    { "source": "/admin/leads",          "destination": "/admin/leads.html" }
+    { "source": "/admin/leads",          "destination": "/admin/leads.html" },
+    { "source": "/admin/lead-forms",     "destination": "/admin/lead-forms.html" }
   ]
 }

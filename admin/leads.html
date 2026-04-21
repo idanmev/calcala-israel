@@ -99,6 +99,7 @@
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">שם</th>
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">טלפון</th>
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">ורטיקל</th>
+                            <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">מקור מאמר</th>
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">תשובות</th>
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">תאריך</th>
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">סטטוס</th>
@@ -150,19 +151,32 @@
         function renderLeads(leads) {
             const tbody = document.getElementById('leads-table-body');
             if (leads.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-gray-400">אין לידים עדיין</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-gray-400">אין לידים עדיין</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = leads.map(lead => `
+            tbody.innerHTML = leads.map(lead => {
+              const url = lead.source_url || lead.article_url || lead.conversion_url || '';
+              let sourceCell = '<span class="text-gray-400">—</span>';
+              if (url) {
+                try {
+                  const path = new URL(url).pathname;
+                  const slug = path.split('/').filter(Boolean).pop() || path;
+                  sourceCell = `<a href="${url}" target="_blank" class="text-blue-600 hover:underline text-xs break-all" title="${url}">${slug}</a>`;
+                } catch {
+                  sourceCell = `<span class="text-gray-500 text-xs break-all">${url}</span>`;
+                }
+              }
+              return `
         <tr class="border-b border-gray-100 hover:bg-gray-50">
           <td class="px-6 py-4 font-medium">${lead.name || '—'}</td>
           <td class="px-6 py-4">
             <a href="tel:${lead.phone}" class="text-blue-600 hover:underline font-mono">${lead.phone}</a>
           </td>
           <td class="px-6 py-4">
-            <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">${lead.vertical}</span>
+            <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">${lead.vertical || '—'}</span>
           </td>
+          <td class="px-6 py-4 text-sm max-w-[200px]">${sourceCell}</td>
           <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
             ${Object.entries(lead.answers || {}).map(([k, v]) => `<span class="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs m-0.5">${v}</span>`).join('')}
           </td>
