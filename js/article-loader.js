@@ -433,28 +433,42 @@ function renderBlocksToHtml(blocks) {
                     </div>
                 `;
             case 'leadForm': {
-                const title = _h(block.data.title || 'השאירו פרטים ונחזור אליכם');
+                const title = _h(block.data.title || 'למידע נוסף והרשמה:');
                 const subtitle = _h(block.data.subtitle || '');
-                const btnText = _h(block.data.buttonText || 'שלח');
+                const btnText = _h(block.data.buttonText || 'שליחה');
                 const formId = 'inline-lead-' + Math.random().toString(36).substr(2, 9);
+                const checkId = formId + '-consent';
                 return `
-                    <div class="article-inline-lead my-5" style="border-right:3px solid #dc2626; padding:14px 16px 14px 0; margin-right:0;">
-                        <p style="font-size:15px; font-weight:700; color:#1f2937; margin:0 0 4px; direction:rtl;">${title}</p>
-                        ${subtitle ? `<p style="font-size:13px; color:#6b7280; margin:0 0 10px; direction:rtl;">${subtitle}</p>` : ''}
-                        <form id="${formId}" class="inline-article-lead-form" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                            <input type="text" id="${formId}-name" placeholder="שם מלא"
-                                style="flex:1; min-width:110px; max-width:180px; border:1px solid #d1d5db; border-radius:6px; padding:7px 10px; font-size:13px; font-family:inherit; direction:rtl; outline:none; background:#fff;"
-                                autocomplete="name" required />
-                            <input type="tel" id="${formId}-phone" placeholder="מספר טלפון"
-                                style="flex:1; min-width:120px; max-width:180px; border:1px solid #d1d5db; border-radius:6px; padding:7px 10px; font-size:13px; font-family:inherit; direction:rtl; outline:none; background:#fff;"
-                                autocomplete="tel" required />
-                            <button type="submit" style="background:#dc2626; color:#fff; font-size:13px; font-weight:700; padding:7px 18px; border:none; border-radius:6px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">
+                    <div class="article-inline-lead my-8" style="background:#f5f5f5; border-radius:12px; padding:28px 24px; direction:rtl; max-width:520px; margin-left:auto; margin-right:auto;">
+                        <p style="font-size:17px; font-weight:600; color:#1a1a1a; margin:0 0 20px; text-align:right;">${title}</p>
+                        ${subtitle ? '<p style="font-size:14px; color:#6b7280; margin:-12px 0 16px; text-align:right;">' + subtitle + '</p>' : ''}
+                        <form id="${formId}" class="inline-article-lead-form">
+                            <div style="margin-bottom:18px;">
+                                <label style="display:block; text-align:right; font-size:14px; color:#1a1a1a; margin-bottom:4px;">שם מלא</label>
+                                <input type="text" id="${formId}-name"
+                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:8px 0; font-size:15px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
+                                    autocomplete="name" required />
+                            </div>
+                            <div style="margin-bottom:20px;">
+                                <label style="display:block; text-align:right; font-size:14px; color:#1a1a1a; margin-bottom:4px;">טלפון</label>
+                                <input type="tel" id="${formId}-phone"
+                                    style="width:100%; border:none; border-bottom:2px solid #dc2626; background:transparent; padding:8px 0; font-size:15px; font-family:inherit; direction:rtl; outline:none; box-sizing:border-box;"
+                                    autocomplete="tel" required />
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:20px;">
+                                <input type="checkbox" id="${checkId}" checked style="width:16px; height:16px; accent-color:#dc2626; cursor:pointer; flex-shrink:0;" />
+                                <label for="${checkId}" style="font-size:14px; color:#1a1a1a; cursor:pointer;">אני מאשר קבלת דיוור</label>
+                            </div>
+                            <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:13px; margin-bottom:10px; text-align:center;"></div>
+                            <button type="submit"
+                                style="width:100%; background:#dc2626; color:#fff; font-size:17px; font-weight:700; padding:14px; border:none; border-radius:50px; cursor:pointer; font-family:inherit; transition:background 0.2s;">
                                 <span class="inline-lead-btn-text">${btnText}</span>
                                 <span class="inline-lead-spinner" style="display:none;">...</span>
                             </button>
                         </form>
-                        <div class="inline-lead-error" style="display:none; color:#dc2626; font-size:12px; margin-top:4px;"></div>
-                        <div class="inline-lead-success" style="display:none; font-size:13px; color:#166534; margin-top:4px; font-weight:600;">✓ תודה! נחזור אליך בהקדם.</div>
+                        <div class="inline-lead-success" style="display:none; text-align:center; padding:16px 0;">
+                            <p style="font-size:16px; font-weight:700; color:#166534; margin:0;">✓ תודה! נחזור אליך בהקדם.</p>
+                        </div>
                     </div>
                 `;
             }
