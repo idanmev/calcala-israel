@@ -172,11 +172,11 @@
             <form id="exit-lead-form" novalidate>
               <div class="exit-lead-field">
                 <label for="exit-lead-name" class="exit-lead-label">שם מלא</label>
-                <input type="text" id="exit-lead-name" class="exit-lead-input" placeholder="ישראל ישראלי" autocomplete="name" required />
+                <input type="text" id="exit-lead-name" class="exit-lead-input" autocomplete="name" required />
               </div>
               <div class="exit-lead-field">
                 <label for="exit-lead-phone" class="exit-lead-label">מספר טלפון</label>
-                <input type="tel" id="exit-lead-phone" class="exit-lead-input" placeholder="050-0000000" autocomplete="tel" required />
+                <input type="tel" id="exit-lead-phone" class="exit-lead-input" autocomplete="tel" required />
               </div>
               <div id="exit-lead-error" class="exit-lead-error" style="display:none;"></div>
               <button type="submit" id="exit-lead-submit" class="exit-popup-cta-btn" style="margin-top:0.5rem;">
@@ -216,14 +216,13 @@
 
       // Validation
       if (!name || !phone) {
-        errorEl.textContent = 'נא למלא שם ומספר טלפון';
-        errorEl.classList.remove('hidden');
+        errorEl.textContent = 'נא למלא שם מלא ומספר טלפון';
         errorEl.style.display = 'block';
         return;
       }
       const phoneClean = phone.replace(/[\s\-]/g, '');
-      if (!/^0\d{8,9}$/.test(phoneClean)) {
-        errorEl.textContent = 'נא להזין מספר טלפון תקין (לדוגמה: 0501234567)';
+      if (!/^05\d{8}$/.test(phoneClean)) {
+        errorEl.textContent = 'נא להזין מספר טלפון סלולרי תקין (לדוגמה: 0501234567)';
         errorEl.classList.remove('hidden');
         errorEl.style.display = 'block';
         return;
