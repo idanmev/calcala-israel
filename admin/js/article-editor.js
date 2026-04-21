@@ -244,7 +244,7 @@ tagsSelect.addEventListener('change', () => {
 // Form submission
 articleForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await saveArticle(true);
+    await saveArticle(false);
 });
 
 // Generate slug from title
@@ -621,11 +621,6 @@ async function saveArticle(isPublish = false) {
     if (!isValid) {
         window.authUtils.showError('יש למלא את כל השדות החובה');
         return;
-    }
-
-    // If clicking the Publish button, force status to published
-    if (isPublish) {
-        setSelectedStatus('published');
     }
 
     // Show loading
