@@ -1,0 +1,773 @@
+{
+  "exportFormatVersion": 2,
+  "exportTime": "2026-04-08 12:00:00",
+  "containerVersion": {
+    "path": "accounts/6348601668/containers/248712267/versions/0",
+    "accountId": "6348601668",
+    "containerId": "248712267",
+    "containerVersionId": "0",
+    "container": {
+      "path": "accounts/6348601668/containers/248712267",
+      "accountId": "6348601668",
+      "containerId": "248712267",
+      "name": "Calcala News",
+      "publicId": "GTM-WZGRLNZR",
+      "usageContext": ["WEB"],
+      "fingerprint": "1712345678901",
+      "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2"
+    },
+    "tag": [
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "1",
+        "name": "GA4 - Configuration",
+        "type": "googtag",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "tagId",
+            "value": "G-7G473KVJY6"
+          }
+        ],
+        "firingTriggerId": ["2147479553"],
+        "fingerprint": "1712345678902",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/1",
+        "consentSettings": {
+          "consentStatus": "NOT_SET"
+        }
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "2",
+        "name": "GA4 - Event - quiz_open",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "quiz_open"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_vertical}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["101"],
+        "fingerprint": "1712345678903",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/2",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "3",
+        "name": "GA4 - Event - quiz_step",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "quiz_step"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_step_index"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_step_index}}"}
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_question_id"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_question_id}}"}
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_answer"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_answer}}"}
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_vertical}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["102"],
+        "fingerprint": "1712345678904",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/3",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "4",
+        "name": "GA4 - Event - quiz_complete",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "quiz_complete"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_vertical}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["103"],
+        "fingerprint": "1712345678905",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/4",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "5",
+        "name": "GA4 - Event - lead_form_view",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "lead_form_view"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_vertical}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["104"],
+        "fingerprint": "1712345678906",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/5",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "6",
+        "name": "GA4 - Event - lead_submit_attempt",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "lead_submit_attempt"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_vertical}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["105"],
+        "fingerprint": "1712345678907",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601368/containers/248712267/workspaces/2/tags/6",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "7",
+        "name": "GA4 - Event - lead_success",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "lead_success"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - quiz_vertical}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["106"],
+        "fingerprint": "1712345678908",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/7",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "8",
+        "name": "GA4 - Event - scroll_depth",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "scroll_depth"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "scroll_threshold"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - scroll_threshold}}"}
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "page_path"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{Page Path}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["107"],
+        "fingerprint": "1712345678909",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/8",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "9",
+        "name": "GA4 - Event - time_on_site",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "time_on_site"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "seconds_elapsed"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - seconds_elapsed}}"}
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "page_path"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{Page Path}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["108"],
+        "fingerprint": "1712345678910",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/9",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "10",
+        "name": "GA4 - Event - cta_click",
+        "type": "gaawe",
+        "parameter": [
+          {
+            "type": "TAG_REFERENCE",
+            "key": "measurementIdOverride",
+            "value": "GA4 - Configuration"
+          },
+          {
+            "type": "TEMPLATE",
+            "key": "eventName",
+            "value": "cta_click"
+          },
+          {
+            "type": "LIST",
+            "key": "eventParameters",
+            "list": [
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "cta_label"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{dlv - cta_label}}"}
+                ]
+              },
+              {
+                "type": "MAP",
+                "map": [
+                  {"type": "TEMPLATE", "key": "name", "value": "page_path"},
+                  {"type": "TEMPLATE", "key": "value", "value": "{{Page Path}}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "firingTriggerId": ["109"],
+        "fingerprint": "1712345678911",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/10",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "11",
+        "name": "Hotjar - Base Code",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<script>\n    (function(h,o,t,j,a,r){\n        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};\n        h._hjSettings={hjid:'HOTJAR_SITE_ID_PLACEHOLDER',hjsv:6};\n        a=o.getElementsByTagName('head')[0];\n        r=o.createElement('script');r.async=1;\n        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;\n        a.appendChild(r);\n    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');\n<\/script>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["2147479553"],
+        "fingerprint": "1712345678912",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/11",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "12",
+        "name": "Facebook Pixel - Base Code",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<script>\n!function(f,b,e,v,n,t,s)\n{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\nn.callMethod.apply(n,arguments):n.queue.push(arguments)};\nif(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';\nn.queue=[];t=b.createElement(e);t.async=!0;\nt.src=v;s=b.getElementsByTagName(e)[0];\ns.parentNode.insertBefore(t,s)}(window, document,'script',\n'https://connect.facebook.net/en_US/fbevents.js');\nfbq('init', '2107029323394068');\nfbq('track', 'PageView');\n<\/script>\n<noscript><img height=\"1\" width=\"1\" style=\"display:none\"\nsrc=\"https://www.facebook.com/tr?id=2107029323394068&ev=PageView&noscript=1\"\n/><\/noscript>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["2147479553"],
+        "fingerprint": "1712345678913",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/12",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "13",
+        "name": "Facebook Pixel - Lead Event",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<script>\nif (typeof fbq !== 'undefined') {\n  fbq('track', 'Lead', {\n    content_category: '{{dlv - quiz_vertical}}'\n  });\n}\n<\/script>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["106"],
+        "fingerprint": "1712345678914",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/13",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "14",
+        "name": "Google Ads - Conversion - Lead",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<!-- Google Ads Conversion Tracking -->\n<!-- Update CONVERSION_ID and CONVERSION_LABEL with your Google Ads values -->\n<!-- Obtain from: Google Ads > Tools > Conversions > Create conversion action -->\n<script>\nif (typeof gtag !== 'undefined') {\n  gtag('event', 'conversion', {\n    'send_to': 'AW-GOOGLE_ADS_ID_PLACEHOLDER/CONVERSION_LABEL_PLACEHOLDER',\n    'value': 1.0,\n    'currency': 'ILS'\n  });\n}\n<\/script>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["106"],
+        "fingerprint": "1712345678915",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/14",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "tagId": "15",
+        "name": "Microsoft Clarity - Base Code",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<script type=\"text/javascript\">\n    (function(c,l,a,r,i,t,y){\n        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n        t=l.createElement(r);t.async=1;t.src=\"https://www.clarity.ms/tag/\"+i;\n        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n    })(window, document, \"clarity\", \"script\", \"w8bzd3dzby\");\n<\/script>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["2147479553"],
+        "fingerprint": "1712345678916",
+        "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2/tags/15",
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      }
+    ],
+    "trigger": [
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "101",
+        "name": "Custom Event - quiz_open",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "quiz_open"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679001"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "102",
+        "name": "Custom Event - quiz_step",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "quiz_step"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679002"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "103",
+        "name": "Custom Event - quiz_complete",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "quiz_complete"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679003"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "104",
+        "name": "Custom Event - lead_form_view",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "lead_form_view"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679004"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "105",
+        "name": "Custom Event - lead_submit_attempt",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "lead_submit_attempt"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679005"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "106",
+        "name": "Custom Event - lead_success",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "lead_success"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679006"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "107",
+        "name": "Custom Event - scroll_depth",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "scroll_depth"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679007"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "108",
+        "name": "Custom Event - time_on_site",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "time_on_site"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679008"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "triggerId": "109",
+        "name": "Custom Event - cta_click",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "cta_click"}
+            ]
+          }
+        ],
+        "fingerprint": "1712345679009"
+      }
+    ],
+    "variable": [
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "201",
+        "name": "dlv - quiz_vertical",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "quiz_vertical"}
+        ],
+        "fingerprint": "1712345679101"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "202",
+        "name": "dlv - quiz_step_index",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "quiz_step_index"}
+        ],
+        "fingerprint": "1712345679102"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "203",
+        "name": "dlv - quiz_question_id",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "quiz_question_id"}
+        ],
+        "fingerprint": "1712345679103"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "204",
+        "name": "dlv - quiz_answer",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "quiz_answer"}
+        ],
+        "fingerprint": "1712345679104"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "205",
+        "name": "dlv - scroll_threshold",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "scroll_threshold"}
+        ],
+        "fingerprint": "1712345679105"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "206",
+        "name": "dlv - seconds_elapsed",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "seconds_elapsed"}
+        ],
+        "fingerprint": "1712345679106"
+      },
+      {
+        "accountId": "6348601668",
+        "containerId": "248712267",
+        "variableId": "207",
+        "name": "dlv - cta_label",
+        "type": "v",
+        "parameter": [
+          {"type": "INTEGER", "key": "dataLayerVersion", "value": "2"},
+          {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"},
+          {"type": "TEMPLATE", "key": "name", "value": "cta_label"}
+        ],
+        "fingerprint": "1712345679107"
+      }
+    ],
+    "fingerprint": "1712345678901",
+    "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6348601668/containers/248712267/workspaces/2"
+  }
+}

@@ -1,0 +1,390 @@
+{
+  "exportFormatVersion": 2,
+  "exportTime": "2026-04-13 10:00:00",
+  "containerVersion": {
+    "path": "accounts/6348601668/containers/248712267/versions/0",
+    "accountId": "6348601668",
+    "containerId": "248712267",
+    "containerVersionId": "0",
+    "container": {
+      "path": "accounts/6348601668/containers/248712267",
+      "accountId": "6348601668",
+      "containerId": "248712267",
+      "name": "www.calcala-news.co.il",
+      "publicId": "GTM-WZGRLNZR",
+      "usageContext": ["WEB"]
+    },
+    "tag": [
+      {
+        "name": "GA4 - Configuration",
+        "type": "googtag",
+        "parameter": [
+          {"type": "template", "key": "tagId", "value": "G-7G473KVJY6"}
+        ],
+        "firingTriggerId": ["2147479553"]
+      },
+      {
+        "name": "GA4 - Event - quiz_open",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'quiz_open', {\n  'quiz_vertical': '{{dlv - quiz_vertical}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["1"]
+      },
+      {
+        "name": "GA4 - Event - quiz_step",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'quiz_step', {\n  'quiz_vertical': '{{dlv - quiz_vertical}}',\n  'quiz_step_index': '{{dlv - quiz_step_index}}',\n  'quiz_question_id': '{{dlv - quiz_question_id}}',\n  'quiz_answer': '{{dlv - quiz_answer}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["2"]
+      },
+      {
+        "name": "GA4 - Event - quiz_complete",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'quiz_complete', {\n  'quiz_vertical': '{{dlv - quiz_vertical}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["3"]
+      },
+      {
+        "name": "GA4 - Event - lead_form_view",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'lead_form_view', {\n  'quiz_vertical': '{{dlv - quiz_vertical}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["4"]
+      },
+      {
+        "name": "GA4 - Event - lead_submit_attempt",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'lead_submit_attempt', {\n  'quiz_vertical': '{{dlv - quiz_vertical}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["5"]
+      },
+      {
+        "name": "GA4 - Event - lead_success",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'lead_success', {\n  'quiz_vertical': '{{dlv - quiz_vertical}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["6"]
+      },
+      {
+        "name": "GA4 - Event - scroll_depth",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'scroll_depth', {\n  'scroll_threshold': '{{dlv - scroll_threshold}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["7"]
+      },
+      {
+        "name": "GA4 - Event - time_on_site",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'time_on_site', {\n  'seconds_elapsed': '{{dlv - seconds_elapsed}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["8"]
+      },
+      {
+        "name": "GA4 - Event - cta_click",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'cta_click', {\n  'cta_label': '{{dlv - cta_label}}'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["9"]
+      },
+      {
+        "name": "Microsoft Clarity - Base Code",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script type=\"text/javascript\">\n(function(c,l,a,r,i,t,y){\n    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n    t=l.createElement(r);t.async=1;t.src=\"https://www.clarity.ms/tag/\"+i;\n    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n})(window, document, \"clarity\", \"script\", \"w8bzd3dzby\");\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["2147479553"]
+      },
+      {
+        "name": "Facebook Pixel - Base Code",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\n!function(f,b,e,v,n,t,s)\n{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\nn.callMethod.apply(n,arguments):n.queue.push(arguments)};\nif(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';\nn.queue=[];t=b.createElement(e);t.async=!0;\nt.src=v;s=b.getElementsByTagName(e)[0];\ns.parentNode.insertBefore(t,s)}(window, document,'script',\n'https://connect.facebook.net/en_US/fbevents.js');\nfbq('init', 'FACEBOOK_PIXEL_ID_PLACEHOLDER');\nfbq('track', 'PageView');\n</script>\n<noscript><img height=\"1\" width=\"1\" style=\"display:none\"\nsrc=\"https://www.facebook.com/tr?id=FACEBOOK_PIXEL_ID_PLACEHOLDER&ev=PageView&noscript=1\"\n/></noscript>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["2147479553"]
+      },
+      {
+        "name": "Facebook Pixel - Lead Event",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\nfbq('track', 'Lead');\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["6"]
+      },
+      {
+        "name": "Google Ads - Conversion - Lead",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "template",
+            "key": "html",
+            "value": "<script>\ngtag('event', 'conversion', {\n  'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL'\n});\n</script>"
+          },
+          {"type": "boolean", "key": "supportDocumentWrite", "value": "false"}
+        ],
+        "firingTriggerId": ["6"]
+      }
+    ],
+    "trigger": [
+      {
+        "name": "Custom Event - quiz_open",
+        "type": "customEvent",
+        "triggerId": "1",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "quiz_open"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - quiz_step",
+        "type": "customEvent",
+        "triggerId": "2",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "quiz_step"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - quiz_complete",
+        "type": "customEvent",
+        "triggerId": "3",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "quiz_complete"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - lead_form_view",
+        "type": "customEvent",
+        "triggerId": "4",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "lead_form_view"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - lead_submit_attempt",
+        "type": "customEvent",
+        "triggerId": "5",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "lead_submit_attempt"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - lead_success",
+        "type": "customEvent",
+        "triggerId": "6",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "lead_success"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - scroll_depth",
+        "type": "customEvent",
+        "triggerId": "7",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "scroll_depth"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - time_on_site",
+        "type": "customEvent",
+        "triggerId": "8",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "time_on_site"}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Custom Event - cta_click",
+        "type": "customEvent",
+        "triggerId": "9",
+        "customEventFilter": [
+          {
+            "type": "equals",
+            "parameter": [
+              {"type": "template", "key": "arg0", "value": "{{_event}}"},
+              {"type": "template", "key": "arg1", "value": "cta_click"}
+            ]
+          }
+        ]
+      }
+    ],
+    "variable": [
+      {
+        "name": "dlv - quiz_vertical",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "quiz_vertical"}
+        ]
+      },
+      {
+        "name": "dlv - quiz_step_index",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "quiz_step_index"}
+        ]
+      },
+      {
+        "name": "dlv - quiz_question_id",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "quiz_question_id"}
+        ]
+      },
+      {
+        "name": "dlv - quiz_answer",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "quiz_answer"}
+        ]
+      },
+      {
+        "name": "dlv - scroll_threshold",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "scroll_threshold"}
+        ]
+      },
+      {
+        "name": "dlv - seconds_elapsed",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "seconds_elapsed"}
+        ]
+      },
+      {
+        "name": "dlv - cta_label",
+        "type": "v",
+        "parameter": [
+          {"type": "integer", "key": "dataLayerVersion", "value": "2"},
+          {"type": "boolean", "key": "setDefaultValue", "value": "false"},
+          {"type": "template", "key": "name", "value": "cta_label"}
+        ]
+      }
+    ]
+  }
+}
