@@ -161,9 +161,9 @@
         <!-- Red header -->
         <div class="exit-popup-header">
           <button id="exit-popup-close" aria-label="סגור חלונית" class="exit-popup-x">✕</button>
-          <div class="exit-popup-badge">💬 שאירו פרטים — נחזור אליכם</div>
-          <h2 id="exit-lead-headline" class="exit-popup-headline">רוצים לדעת אם מגיע לכם החזר?</h2>
-          <p class="exit-popup-sub">השאירו שם ומספר טלפון — יועץ שלנו יחזור אליכם בהקדם.</p>
+          <div class="exit-popup-badge">💬 רגע לפני שאתה עוזב</div>
+          <h2 id="exit-lead-headline" class="exit-popup-headline">התעניינתם?</h2>
+          <p class="exit-popup-sub">השאירו פרטים ויענו לכם על כל השאלות.</p>
         </div>
 
         <!-- Form body -->
@@ -178,17 +178,17 @@
                 <label for="exit-lead-phone" class="exit-lead-label">מספר טלפון</label>
                 <input type="tel" id="exit-lead-phone" class="exit-lead-input" placeholder="050-0000000" autocomplete="tel" required />
               </div>
-              <div id="exit-lead-error" class="exit-lead-error hidden"></div>
+              <div id="exit-lead-error" class="exit-lead-error" style="display:none;"></div>
               <button type="submit" id="exit-lead-submit" class="exit-popup-cta-btn" style="margin-top:0.5rem;">
                 <span id="exit-lead-btn-text">שלח פרטים</span>
-                <span id="exit-lead-spinner" class="exit-lead-spinner hidden"></span>
+                <span id="exit-lead-spinner" class="exit-lead-spinner" style="display:none;"></span>
               </button>
             </form>
           </div>
-          <div id="exit-lead-success" class="exit-lead-success hidden">
+          <div id="exit-lead-success" class="exit-lead-success" style="display:none;">
             <div class="exit-lead-success-icon">✅</div>
             <p class="exit-lead-success-title">תודה! קיבלנו את פרטיכם</p>
-            <p class="exit-lead-success-sub">יועץ שלנו יצור קשר בהקדם.</p>
+            <p class="exit-lead-success-sub">ניצור קשר בהקדם.</p>
           </div>
           <button id="exit-popup-dismiss" class="exit-popup-dismiss-link">
             לא תודה, לא מעניין אותי
@@ -218,21 +218,23 @@
       if (!name || !phone) {
         errorEl.textContent = 'נא למלא שם ומספר טלפון';
         errorEl.classList.remove('hidden');
+        errorEl.style.display = 'block';
         return;
       }
       const phoneClean = phone.replace(/[\s\-]/g, '');
       if (!/^0\d{8,9}$/.test(phoneClean)) {
         errorEl.textContent = 'נא להזין מספר טלפון תקין (לדוגמה: 0501234567)';
         errorEl.classList.remove('hidden');
+        errorEl.style.display = 'block';
         return;
       }
-      errorEl.classList.add('hidden');
+      errorEl.style.display = 'none';
 
       // Show spinner
       const submitBtn = document.getElementById('exit-lead-submit');
       submitBtn.disabled = true;
-      document.getElementById('exit-lead-btn-text').classList.add('hidden');
-      document.getElementById('exit-lead-spinner').classList.remove('hidden');
+      document.getElementById('exit-lead-btn-text').style.display = 'none';
+      document.getElementById('exit-lead-spinner').style.display = 'inline-block';
 
       try {
         // Submit to Supabase leads table
@@ -257,17 +259,17 @@
         sessionStorage.setItem(SESSION_CONV_KEY, '1');
 
         // Show success state
-        document.getElementById('exit-lead-form-wrap').classList.add('hidden');
-        document.getElementById('exit-lead-success').classList.remove('hidden');
+        document.getElementById('exit-lead-form-wrap').style.display = 'none';
+        document.getElementById('exit-lead-success').style.display = 'block';
         document.getElementById('exit-popup-dismiss').textContent = 'סגור';
 
       } catch (err) {
         console.error('Lead submission error:', err);
         errorEl.textContent = 'שגיאה בשליחת הפרטים. נסה שוב.';
-        errorEl.classList.remove('hidden');
+        errorEl.style.display = 'block';
         submitBtn.disabled = false;
-        document.getElementById('exit-lead-btn-text').classList.remove('hidden');
-        document.getElementById('exit-lead-spinner').classList.add('hidden');
+        document.getElementById('exit-lead-btn-text').style.display = 'inline';
+        document.getElementById('exit-lead-spinner').style.display = 'none';
       }
     });
   }

@@ -205,8 +205,8 @@
                 <p class="text-sm text-yellow-800">⚠️ קיימים מאמרים המשויכים לקטגוריה זו. מחיקתה תסיר את השיוך.</p>
             </div>
             <div class="modal-actions">
-                <button onclick="confirmDelete()" class="btn btn-danger">מחק</button>
-                <button onclick="closeDeleteModal()" class="btn btn-secondary">ביטול</button>
+                <button onclick="window.confirmDelete()" class="btn btn-danger">מחק</button>
+                <button onclick="window.closeDeleteModal()" class="btn btn-secondary">ביטול</button>
             </div>
         </div>
     </div>
@@ -216,7 +216,6 @@
     <script src="/admin/js/supabase-client.js"></script>
     <script src="/admin/js/auth.js"></script>
     <script>
-        // Check authentication
         // State
         let categories = [];
         let editingCategoryId = null;
@@ -277,10 +276,7 @@
 
                 const { data, error } = await supabaseClient
                     .from('categories')
-                    .select(`
-            *,
-            articles (count)
-          `)
+                    .select(`*, articles (count)`)
                     .order('display_order', { ascending: true });
 
                 if (error) throw error;
@@ -296,42 +292,62 @@
             }
         }
 
-        // Render categories
+        // Render categories — uses data attributes, NO onclick in innerHTML
+        // All clicks are captured via event delegation on categoriesTableBody
         function renderCategories() {
             if (categories.length === 0) {
                 emptyState.classList.remove('hidden');
                 return;
             }
 
-            categoriesTableBody.innerHTML = categories.map((cat, index) => `
+            categoriesTableBody.innerHTML = categories.map((cat) => `
         <tr data-id="${cat.id}">
           <td class="cursor-move text-center">⋮⋮</td>
           <td>
-            <span class="font-medium editable" onclick="editInline(this, '${cat.id}', 'name')">${cat.name}</span>
+            <span class="font-medium editable"
+                  data-action="inline-edit"
+                  data-field="name"
+                  data-cat-id="${cat.id}">${cat.name}</span>
           </td>
           <td>
-            <span class="text-gray-600 editable" onclick="editInline(this, '${cat.id}', 'slug')">${cat.slug}</span>
+            <span class="text-gray-600 editable"
+                  data-action="inline-edit"
+                  data-field="slug"
+                  data-cat-id="${cat.id}">${cat.slug}</span>
           </td>
           <td>${cat.display_order}</td>
           <td>${cat.articles?.[0]?.count || 0}</td>
           <td>
             <div class="flex gap-2">
-              <button onclick="openEditCategoryModal('${cat.id}')" class="text-blue-600 hover:text-blue-700">
-                ✏️
-              </button>
-              <button onclick="openDeleteModal('${cat.id}')" class="text-red-600 hover:text-red-700">
-                🗑️
-              </button>
+              <button data-action="edit"
+                      data-cat-id="${cat.id}"
+                      class="text-blue-600 hover:text-blue-700"
+                      title="עריכה" type="button">✏️</button>
+              <button data-action="delete"
+                      data-cat-id="${cat.id}"
+                      class="text-red-600 hover:text-red-700"
+                      title="מחיקה" type="button">🗑️</button>
             </div>
           </td>
         </tr>
       `).join('');
 
             categoriesTableContainer.classList.remove('hidden');
-
-            // Initialize drag-and-drop
             initSortable();
         }
+
+        // ── Event delegation on the table body ──
+        // Works even after innerHTML is replaced; handles all row-level actions.
+        categoriesTableBody.addEventListener('click', function(e) {
+            const el = e.target.closest('[data-action]');
+            if (!el) return;
+            const action = el.dataset.action;
+            const id     = el.dataset.catId;
+
+            if (action === 'edit')        openEditCategoryModal(id);
+            else if (action === 'delete') openDeleteModal(id);
+            else if (action === 'inline-edit') editInline(el, id, el.dataset.field);
+        });
 
         // Initialize Sortable
         function initSortable() {
@@ -339,16 +355,12 @@
                 console.warn('SortableJS not yet loaded — drag-and-drop disabled');
                 return;
             }
-            if (sortable) {
-                sortable.destroy();
-            }
+            if (sortable) sortable.destroy();
 
             sortable = new Sortable(categoriesTableBody, {
                 animation: 150,
                 handle: 'td:first-child',
-                onEnd: async (evt) => {
-                    await updateDisplayOrder();
-                }
+                onEnd: async () => { await updateDisplayOrder(); }
             });
         }
 
@@ -356,15 +368,9 @@
         async function updateDisplayOrder() {
             const rows = categoriesTableBody.querySelectorAll('tr');
             const updates = [];
-
             rows.forEach((row, index) => {
-                const id = row.dataset.id;
-                updates.push({
-                    id,
-                    display_order: index + 1
-                });
+                updates.push({ id: row.dataset.id, display_order: index + 1 });
             });
-
             try {
                 for (const update of updates) {
                     await supabaseClient
@@ -372,10 +378,8 @@
                         .update({ display_order: update.display_order })
                         .eq('id', update.id);
                 }
-
                 window.authUtils.showSuccess('סדר התצוגה עודכן');
                 await loadCategories();
-
             } catch (error) {
                 console.error('Error updating order:', error);
                 window.authUtils.showError('שגיאה בעדכון סדר התצוגה');
@@ -384,7 +388,7 @@
 
         // Inline editing
         function editInline(element, categoryId, field) {
-            const currentValue = element.textContent;
+            const currentValue = element.textContent.trim();
             const input = document.createElement('input');
             input.type = 'text';
             input.value = currentValue;
@@ -397,11 +401,8 @@
                 }
                 element.textContent = newValue || currentValue;
             });
-
             input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur();
-                }
+                if (e.key === 'Enter') input.blur();
             });
 
             element.textContent = '';
@@ -417,20 +418,18 @@
                     .from('categories')
                     .update(data)
                     .eq('id', id);
-
                 if (error) throw error;
-
                 window.authUtils.showSuccess('הקטגוריה עודכנה');
                 await loadCategories();
-
             } catch (error) {
                 console.error('Error updating category:', error);
                 window.authUtils.showError('שגיאה בעדכון הקטגוריה');
             }
         }
 
-        // Open new category modal
-        function openNewCategoryModal() {
+        // ── Modal helpers exposed on window (called from static HTML onclick attrs) ──
+
+        window.openNewCategoryModal = function() {
             editingCategoryId = null;
             document.getElementById('modalTitle').textContent = 'קטגוריה חדשה';
             categoryName.value = '';
@@ -439,46 +438,42 @@
             document.getElementById('nameError').classList.add('hidden');
             document.getElementById('slugError').classList.add('hidden');
             categoryModal.classList.remove('hidden');
-        }
+        };
 
-        // Open edit category modal
         function openEditCategoryModal(id) {
-            const category = categories.find(c => c.id === id);
-            if (!category) return;
+            const category = categories.find(c => String(c.id) === String(id));
+            if (!category) { console.warn('Category not found:', id); return; }
 
             editingCategoryId = id;
             document.getElementById('modalTitle').textContent = 'עריכת קטגוריה';
             categoryName.value = category.name;
             categorySlug.value = category.slug;
             categorySlug.dataset.manuallyEdited = 'true';
+            document.getElementById('nameError').classList.add('hidden');
+            document.getElementById('slugError').classList.add('hidden');
             categoryModal.classList.remove('hidden');
         }
 
-        // Close category modal
-        function closeCategoryModal() {
+        window.closeCategoryModal = function() {
             categoryModal.classList.add('hidden');
             editingCategoryId = null;
-        }
+        };
 
-        // Save category
         async function saveCategory() {
             const name = categoryName.value.trim();
             const slug = categorySlug.value.trim();
 
-            // Validation
             if (!name) {
                 document.getElementById('nameError').textContent = 'שם הקטגוריה הוא שדה חובה';
                 document.getElementById('nameError').classList.remove('hidden');
                 return;
             }
-
             if (!slug) {
                 document.getElementById('slugError').textContent = 'Slug הוא שדה חובה';
                 document.getElementById('slugError').classList.remove('hidden');
                 return;
             }
 
-            // Show loading
             const saveBtn = categoryForm.querySelector('button[type="submit"]');
             saveBtn.disabled = true;
             document.getElementById('saveBtnText').classList.add('hidden');
@@ -486,38 +481,23 @@
 
             try {
                 if (editingCategoryId) {
-                    // Update existing
                     const { error } = await supabaseClient
                         .from('categories')
                         .update({ name, slug })
                         .eq('id', editingCategoryId);
-
                     if (error) throw error;
-
                     window.authUtils.showSuccess('הקטגוריה עודכנה');
                 } else {
-                    // Create new
                     const maxOrder = categories.length > 0
-                        ? Math.max(...categories.map(c => c.display_order))
-                        : 0;
-
+                        ? Math.max(...categories.map(c => c.display_order)) : 0;
                     const { error } = await supabaseClient
                         .from('categories')
-                        .insert([{
-                            name,
-                            slug,
-                            display_order: maxOrder + 1,
-                            created_at: new Date().toISOString()
-                        }]);
-
+                        .insert([{ name, slug, display_order: maxOrder + 1, created_at: new Date().toISOString() }]);
                     if (error) throw error;
-
                     window.authUtils.showSuccess('הקטגוריה נוצרה');
                 }
-
-                closeCategoryModal();
+                window.closeCategoryModal();
                 await loadCategories();
-
             } catch (error) {
                 console.error('Error saving category:', error);
                 window.authUtils.showError('שגיאה בשמירת הקטגוריה');
@@ -528,63 +508,44 @@
             }
         }
 
-        // Open delete modal
-        async function openDeleteModal(id) {
+        function openDeleteModal(id) {
             categoryToDelete = id;
-            const category = categories.find(c => c.id === id);
-
+            const category = categories.find(c => String(c.id) === String(id));
             if (category) {
                 const articleCount = category.articles?.[0]?.count || 0;
-
-                if (articleCount > 0) {
-                    document.getElementById('deleteWarning').classList.remove('hidden');
-                } else {
-                    document.getElementById('deleteWarning').classList.add('hidden');
-                }
+                document.getElementById('deleteWarning').classList.toggle('hidden', articleCount === 0);
             }
-
             deleteModal.classList.remove('hidden');
         }
 
-        // Close delete modal
-        function closeDeleteModal() {
+        window.closeDeleteModal = function() {
             categoryToDelete = null;
             deleteModal.classList.add('hidden');
-        }
+        };
 
-        // Confirm delete
-        async function confirmDelete() {
+        window.confirmDelete = async function() {
             if (!categoryToDelete) return;
-
             try {
                 const { error } = await supabaseClient
                     .from('categories')
                     .delete()
                     .eq('id', categoryToDelete);
-
                 if (error) throw error;
-
                 window.authUtils.showSuccess('הקטגוריה נמחקה');
-                closeDeleteModal();
+                window.closeDeleteModal();
                 await loadCategories();
-
             } catch (error) {
                 console.error('Error deleting category:', error);
                 window.authUtils.showError('שגיאה במחיקת הקטגוריה');
             }
-        }
+        };
 
         // Close modals on outside click
         categoryModal.addEventListener('click', (e) => {
-            if (e.target === categoryModal) {
-                closeCategoryModal();
-            }
+            if (e.target === categoryModal) window.closeCategoryModal();
         });
-
         deleteModal.addEventListener('click', (e) => {
-            if (e.target === deleteModal) {
-                closeDeleteModal();
-            }
+            if (e.target === deleteModal) window.closeDeleteModal();
         });
 
         // Initialize — auth.js already handles redirect if not logged in
