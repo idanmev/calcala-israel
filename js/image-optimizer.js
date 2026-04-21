@@ -35,8 +35,8 @@
         // Skip data URIs, SVGs, blobs
         if (url.startsWith('data:') || url.startsWith('blob:') || url.includes('.svg')) return url;
 
-        // Merge defaults
-        const options = Object.assign({ f: 'auto', q: 100 }, opts);
+        // Merge defaults. q: 85 uses high quality but allows ImageKit to properly compress the image size.
+        const options = Object.assign({ f: 'auto', q: 85 }, opts);
 
         // Build transformation string
         const trParts = [];

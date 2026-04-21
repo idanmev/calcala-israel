@@ -118,7 +118,7 @@ function updateHeroUI(container, article) {
     const rawImgUrl = article.featured_image_url || '/images/placeholder.jpg';
     const imgUrl = _esc(
         window.getOptimizedImageUrl
-            ? window.getOptimizedImageUrl(rawImgUrl, { w: 1200, f: 'auto', q: 100 })
+            ? window.getOptimizedImageUrl(rawImgUrl, { w: 1200, f: 'auto' })
             : rawImgUrl
     );
     const catName = _esc(article.categories?.name || 'כללי');
@@ -203,7 +203,7 @@ async function renderGridArticles() {
 
         // Render each article
         const _img = (url, w) => window.getOptimizedImageUrl
-            ? window.getOptimizedImageUrl(url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800', { w, f: 'auto', q: 100 })
+            ? window.getOptimizedImageUrl(url || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800', { w, f: 'auto' })
             : (url || `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`);
 
         articlesToShow.forEach(article => {
