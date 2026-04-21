@@ -1,7 +1,7 @@
 /**
  * Lead Form Block Tool for Editor.js
- * Allows editors to insert a Lead Capture Form anywhere within the article body.
- * Supports selecting from saved templates in lead_form_templates table.
+ * Renders a realistic preview of the lead form as it appears to readers.
+ * Title/subtitle/button are editable inline. Template picker at the top.
  */
 class LeadFormBlock {
     static get toolbox() {
@@ -15,13 +15,15 @@ class LeadFormBlock {
         this.api = api;
         this.config = config || {};
         this.data = {
-            templateId:  data.templateId  !== undefined ? data.templateId  : null,
-            title:       data.title       !== undefined ? data.title       : 'התעניינתם?',
-            subtitle:    data.subtitle    !== undefined ? data.subtitle    : 'השאירו פרטים ויענו לכם על כל השאלות.',
-            buttonText:  data.buttonText  !== undefined ? data.buttonText  : 'שלח פרטים'
+            templateId: data.templateId !== undefined ? data.templateId : null,
+            title:      data.title      !== undefined ? data.title      : 'התעניינתם?',
+            subtitle:   data.subtitle   !== undefined ? data.subtitle   : 'השאירו פרטים ויענו לכם על כל השאלות.',
+            buttonText: data.buttonText !== undefined ? data.buttonText : 'שלח פרטים'
         };
-        this.wrapper   = null;
         this._templates = [];
+        this._titleEl = null;
+        this._subtitleEl = null;
+        this._btnEl = null;
     }
 
     async _loadTemplates() {
@@ -33,7 +35,6 @@ class LeadFormBlock {
                 .order('created_at', { ascending: true });
             this._templates = data || [];
 
-            // If no templateId set yet and there's a default, apply it
             if (!this.data.templateId && this._templates.length > 0) {
                 const def = this._templates.find(t => t.is_default) || this._templates[0];
                 this._applyTemplate(def, false);
@@ -43,128 +44,154 @@ class LeadFormBlock {
         }
     }
 
-    _applyTemplate(tpl, updateInputs = true) {
+    _applyTemplate(tpl, updateDom = true) {
         this.data.templateId = tpl.id;
         this.data.title      = tpl.title;
         this.data.subtitle   = tpl.subtitle || '';
         this.data.buttonText = tpl.button_text;
 
-        if (updateInputs && this.wrapper) {
-            this.wrapper.querySelector('[data-key="title"]').value      = this.data.title;
-            this.wrapper.querySelector('[data-key="subtitle"]').value   = this.data.subtitle;
-            this.wrapper.querySelector('[data-key="buttonText"]').value = this.data.buttonText;
+        if (updateDom) {
+            if (this._titleEl)    this._titleEl.textContent    = this.data.title;
+            if (this._subtitleEl) this._subtitleEl.textContent = this.data.subtitle;
+            if (this._btnEl)      this._btnEl.textContent      = this.data.buttonText;
         }
     }
 
-    _buildTemplateSelector() {
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'margin-bottom: 12px; text-align: right;';
-
-        const label = document.createElement('label');
-        label.textContent = 'תבנית: ';
-        label.style.cssText = 'font-size: 12px; font-weight: 600; color: #374151; margin-left: 6px;';
-
-        const select = document.createElement('select');
-        select.style.cssText = 'font-size: 13px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit;';
-        select.innerHTML = '<option value="">— בחר תבנית —</option>' +
-            this._templates.map(t =>
-                `<option value="${t.id}" ${this.data.templateId === t.id ? 'selected' : ''}>${t.name}${t.is_default ? ' (ברירת מחדל)' : ''}</option>`
-            ).join('');
-
-        select.addEventListener('change', () => {
-            const tpl = this._templates.find(t => t.id === select.value);
-            if (tpl) this._applyTemplate(tpl);
-        });
-
-        wrap.appendChild(label);
-        wrap.appendChild(select);
-        return wrap;
-    }
-
     render() {
-        this.wrapper = document.createElement('div');
-        this.wrapper.style.cssText = `
-            background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%);
-            border: 2px dashed #ef4444;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+            background: linear-gradient(135deg, #fff7f7 0%, #fff9f5 100%);
+            border: 2px solid #ef4444;
+            border-radius: 16px;
+            padding: 28px 24px;
             direction: rtl;
             margin: 12px 0;
-            position: relative;
+            font-family: 'Heebo', 'Rubik', sans-serif;
         `;
 
-        const header = document.createElement('div');
-        header.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px;';
-        header.innerHTML = `
-            <span style="font-size: 24px;">💬</span>
-            <span style="font-size: 16px; font-weight: 700; color: #991b1b;">טופס לידים במאמר</span>
-        `;
-        this.wrapper.appendChild(header);
+        // ── Template selector (top bar) ──
+        const topBar = document.createElement('div');
+        topBar.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #fecaca;';
 
-        // Template selector placeholder — will be populated after async load
-        const selectorPlaceholder = document.createElement('div');
-        selectorPlaceholder.id = 'tpl-selector-placeholder';
-        this.wrapper.appendChild(selectorPlaceholder);
+        const badge = document.createElement('span');
+        badge.textContent = '💬 טופס לידים';
+        badge.style.cssText = 'font-size:13px; font-weight:700; color:#991b1b; background:#fee2e2; padding:3px 10px; border-radius:20px;';
 
-        // Inputs
-        const grid = document.createElement('div');
-        grid.style.cssText = 'display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin: 0 auto; text-align: right;';
+        const selectorWrap = document.createElement('div');
+        selectorWrap.style.cssText = 'display:flex; align-items:center; gap:6px;';
 
-        const createInput = (labelText, key) => {
-            const wrap = document.createElement('div');
-            const label = document.createElement('label');
-            label.textContent = labelText;
-            label.style.cssText = 'display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.dataset.key = key;
-            input.value = this.data[key];
-            input.style.cssText = `
-                width: 100%; box-sizing: border-box; padding: 8px 12px;
-                border: 1px solid #d1d5db; border-radius: 6px;
-                font-size: 14px; font-family: inherit; direction: rtl;
-            `;
-            input.addEventListener('input', (e) => {
-                this.data[key] = e.target.value;
-                this.data.templateId = null; // manual edit detaches from template
-            });
-            wrap.appendChild(label);
-            wrap.appendChild(input);
-            return wrap;
+        const selectorLabel = document.createElement('span');
+        selectorLabel.textContent = 'תבנית:';
+        selectorLabel.style.cssText = 'font-size:12px; color:#6b7280;';
+
+        const select = document.createElement('select');
+        select.style.cssText = 'font-size:12px; padding:3px 8px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; background:white; cursor:pointer;';
+        select.innerHTML = '<option value="">— בחר תבנית —</option>';
+
+        selectorWrap.appendChild(selectorLabel);
+        selectorWrap.appendChild(select);
+        topBar.appendChild(badge);
+        topBar.appendChild(selectorWrap);
+        wrapper.appendChild(topBar);
+
+        // ── Form preview ──
+        const formPreview = document.createElement('div');
+        formPreview.style.cssText = 'max-width:460px; margin:0 auto; text-align:center;';
+
+        // Title (editable)
+        this._titleEl = document.createElement('div');
+        this._titleEl.contentEditable = 'true';
+        this._titleEl.textContent = this.data.title;
+        this._titleEl.style.cssText = 'font-size:22px; font-weight:700; color:#1f2937; margin-bottom:8px; outline:none; border-bottom:1px dashed transparent; cursor:text;';
+        this._titleEl.setAttribute('data-placeholder', 'כותרת הטופס');
+        this._titleEl.addEventListener('input', () => {
+            this.data.title = this._titleEl.textContent;
+            this.data.templateId = null;
+        });
+        this._titleEl.addEventListener('focus', () => this._titleEl.style.borderBottomColor = '#ef4444');
+        this._titleEl.addEventListener('blur',  () => this._titleEl.style.borderBottomColor = 'transparent');
+
+        // Subtitle (editable)
+        this._subtitleEl = document.createElement('div');
+        this._subtitleEl.contentEditable = 'true';
+        this._subtitleEl.textContent = this.data.subtitle;
+        this._subtitleEl.style.cssText = 'font-size:14px; color:#6b7280; margin-bottom:20px; outline:none; border-bottom:1px dashed transparent; cursor:text;';
+        this._subtitleEl.addEventListener('input', () => {
+            this.data.subtitle = this._subtitleEl.textContent;
+            this.data.templateId = null;
+        });
+        this._subtitleEl.addEventListener('focus', () => this._subtitleEl.style.borderBottomColor = '#ef4444');
+        this._subtitleEl.addEventListener('blur',  () => this._subtitleEl.style.borderBottomColor = 'transparent');
+
+        // Fields row (visual only)
+        const fieldsRow = document.createElement('div');
+        fieldsRow.style.cssText = 'display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; justify-content:center;';
+
+        const makeField = (placeholder) => {
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.placeholder = placeholder;
+            inp.disabled = true;
+            inp.style.cssText = 'flex:1; min-width:120px; padding:10px 14px; border:1.5px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; background:white; color:#9ca3af; direction:rtl;';
+            return inp;
         };
+        fieldsRow.appendChild(makeField('שם מלא'));
+        fieldsRow.appendChild(makeField('05X-XXXXXXX'));
 
-        grid.appendChild(createInput('כותרת הטופס', 'title'));
-        grid.appendChild(createInput('כותרת משנה', 'subtitle'));
-        grid.appendChild(createInput('טקסט כפתור', 'buttonText'));
-        this.wrapper.appendChild(grid);
-
-        // Load templates async and inject selector
-        this._loadTemplates().then(() => {
-            if (this._templates.length > 0) {
-                const selector = this._buildTemplateSelector();
-                selectorPlaceholder.replaceWith(selector);
-                // Re-sync inputs after template applied
-                this.wrapper.querySelector('[data-key="title"]').value      = this.data.title;
-                this.wrapper.querySelector('[data-key="subtitle"]').value   = this.data.subtitle;
-                this.wrapper.querySelector('[data-key="buttonText"]').value = this.data.buttonText;
-            }
+        // Submit button (editable text)
+        const btnWrap = document.createElement('div');
+        this._btnEl = document.createElement('div');
+        this._btnEl.contentEditable = 'true';
+        this._btnEl.textContent = this.data.buttonText;
+        this._btnEl.style.cssText = `
+            display:inline-block; background:#dc2626; color:white; font-size:15px;
+            font-weight:700; padding:12px 40px; border-radius:8px; cursor:text;
+            outline:none; min-width:140px; margin-top:4px;
+        `;
+        this._btnEl.addEventListener('input', () => {
+            this.data.buttonText = this._btnEl.textContent;
+            this.data.templateId = null;
         });
 
-        return this.wrapper;
+        btnWrap.appendChild(this._btnEl);
+
+        formPreview.appendChild(this._titleEl);
+        formPreview.appendChild(this._subtitleEl);
+        formPreview.appendChild(fieldsRow);
+        formPreview.appendChild(btnWrap);
+        wrapper.appendChild(formPreview);
+
+        // ── Load templates async ──
+        this._loadTemplates().then(() => {
+            if (this._templates.length === 0) return;
+            select.innerHTML = '<option value="">— בחר תבנית —</option>' +
+                this._templates.map(t =>
+                    `<option value="${t.id}" ${this.data.templateId === t.id ? 'selected' : ''}>${t.name}${t.is_default ? ' (ברירת מחדל)' : ''}</option>`
+                ).join('');
+            select.addEventListener('change', () => {
+                const tpl = this._templates.find(t => t.id === select.value);
+                if (tpl) this._applyTemplate(tpl, true);
+            });
+            // Sync DOM after template applied on init
+            if (this._titleEl)    this._titleEl.textContent    = this.data.title;
+            if (this._subtitleEl) this._subtitleEl.textContent = this.data.subtitle;
+            if (this._btnEl)      this._btnEl.textContent      = this.data.buttonText;
+        });
+
+        return wrapper;
     }
 
     save() {
         return {
             templateId: this.data.templateId,
-            title:      this.data.title,
-            subtitle:   this.data.subtitle,
-            buttonText: this.data.buttonText
+            title:      this._titleEl    ? this._titleEl.textContent.trim()    : this.data.title,
+            subtitle:   this._subtitleEl ? this._subtitleEl.textContent.trim() : this.data.subtitle,
+            buttonText: this._btnEl      ? this._btnEl.textContent.trim()      : this.data.buttonText
         };
     }
 
     validate(savedData) {
-        return !!savedData.title && !!savedData.title.trim();
+        return !!(savedData.title && savedData.title.trim());
     }
 
     static get sanitize() {
