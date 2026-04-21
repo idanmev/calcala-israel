@@ -714,10 +714,22 @@ async function loadArticle() {
                 renderEntryHook(article.categories.slug);
                 // No specific quiz — sidebar CTA stays hidden
                 renderSidebarQuizCta(null, article.categories.slug);
+
+                // Hide bottom CTA block since no quiz is assigned
+                const bottomCtaBlock = document.getElementById('article-bottom-cta-block');
+                if (bottomCtaBlock) bottomCtaBlock.style.display = 'none';
+                const inlineCta = document.getElementById('article-inline-cta');
+                if (inlineCta) inlineCta.style.display = 'none';
             }
         } else {
             // No category — sidebar CTA stays hidden
             renderSidebarQuizCta(null, null);
+
+            // Hide bottom CTA block since no quiz is assigned
+            const bottomCtaBlock = document.getElementById('article-bottom-cta-block');
+            if (bottomCtaBlock) bottomCtaBlock.style.display = 'none';
+            const inlineCta = document.getElementById('article-inline-cta');
+            if (inlineCta) inlineCta.style.display = 'none';
         }
 
         // 9. Sidebar most read

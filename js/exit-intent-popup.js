@@ -1,5 +1,6 @@
 // exit-intent-popup.js
-// Exit-intent / scroll-back popup that launches the article's own quiz modal.
+// Exit-intent / scroll-back popup that launches the article's own quiz modal (quiz articles)
+// or shows a lead capture form (name + phone) for articles without a quiz.
 // Trigger: desktop → mouseleave above viewport; mobile → scroll-up >100px after 50% depth.
 // Suppression: quiz CTA clicked this session | quiz converted | dismissed within 7 days | not an article page.
 
@@ -15,6 +16,10 @@
   const SESSION_CONV_KEY  = 'quiz_converted';          // sessionStorage — lead submitted
   const LS_DISMISS_KEY    = 'popup_dismissed_at';      // localStorage — 7-day cap
   const DISMISS_DAYS      = 7;
+
+  // Supabase (reuse same credentials as article-loader.js)
+  const SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
 
   /* ──────────────────────────────────────────────
      HEADLINE MAP  (quiz type → Hebrew copy)
@@ -59,16 +64,14 @@
     return !!sessionStorage.getItem('quiz_cta_clicked');
   }
 
-  /** True if the current article has no quiz assigned */
-  function hasNoQuiz() {
-    // window.currentArticleQuizId is set by article-loader.js only when a quiz is linked
-    return !window.currentArticleQuizId;
+  /** True if the current article has a quiz assigned */
+  function hasQuiz() {
+    return !!window.currentArticleQuizId;
   }
 
-  /** Master suppression check */
+  /** Master suppression check — now runs for ALL article pages */
   function shouldSuppress() {
     return !isArticlePage()
-      || hasNoQuiz()
       || hasShownThisSession()
       || hasConverted()
       || recentlyDismissed()
@@ -86,17 +89,15 @@
   }
 
   /* ──────────────────────────────────────────────
-     BUILD POPUP DOM
+     BUILD QUIZ POPUP (articles with quiz)
   ────────────────────────────────────────────── */
-  function buildPopup() {
-    // Remove stale instance if any
+  function buildQuizPopup() {
     const stale = document.getElementById(OVERLAY_ID);
     if (stale) stale.remove();
 
     const catSlug  = window.currentArticleCategory || '';
     const headline = resolveHeadline(catSlug);
 
-    // Overlay
     const overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
     overlay.setAttribute('dir', 'rtl');
@@ -126,7 +127,6 @@
 
     document.body.appendChild(overlay);
 
-    // Wire up events
     document.getElementById('exit-popup-close').addEventListener('click', dismissPopup);
     document.getElementById('exit-popup-dismiss').addEventListener('click', dismissPopup);
     overlay.addEventListener('click', function (e) {
@@ -135,14 +135,139 @@
     document.addEventListener('keydown', handleEscKey);
 
     document.getElementById('exit-popup-cta').addEventListener('click', function () {
-      // Record that a quiz CTA was clicked this session (suppresses future re-trigger)
       sessionStorage.setItem('quiz_cta_clicked', '1');
       hidePopup();
-      // Launch the article's specific quiz — same call the sidebar & bottom CTAs use
       const quizId   = window.currentArticleQuizId   || null;
       const catSlugV = window.currentArticleCategory  || null;
       if (typeof window.openQuizModal === 'function') {
         window.openQuizModal(catSlugV, null, null, quizId);
+      }
+    });
+  }
+
+  /* ──────────────────────────────────────────────
+     BUILD LEAD FORM POPUP (articles without quiz)
+  ────────────────────────────────────────────── */
+  function buildLeadPopup() {
+    const stale = document.getElementById(OVERLAY_ID);
+    if (stale) stale.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = OVERLAY_ID;
+    overlay.setAttribute('dir', 'rtl');
+    overlay.innerHTML = `
+      <div id="${POPUP_ID}" role="dialog" aria-modal="true" aria-labelledby="exit-lead-headline">
+
+        <!-- Red header -->
+        <div class="exit-popup-header">
+          <button id="exit-popup-close" aria-label="סגור חלונית" class="exit-popup-x">✕</button>
+          <div class="exit-popup-badge">💬 שאירו פרטים — נחזור אליכם</div>
+          <h2 id="exit-lead-headline" class="exit-popup-headline">רוצים לדעת אם מגיע לכם החזר?</h2>
+          <p class="exit-popup-sub">השאירו שם ומספר טלפון — יועץ שלנו יחזור אליכם בהקדם.</p>
+        </div>
+
+        <!-- Form body -->
+        <div class="exit-popup-body">
+          <div id="exit-lead-form-wrap">
+            <form id="exit-lead-form" novalidate>
+              <div class="exit-lead-field">
+                <label for="exit-lead-name" class="exit-lead-label">שם מלא</label>
+                <input type="text" id="exit-lead-name" class="exit-lead-input" placeholder="ישראל ישראלי" autocomplete="name" required />
+              </div>
+              <div class="exit-lead-field">
+                <label for="exit-lead-phone" class="exit-lead-label">מספר טלפון</label>
+                <input type="tel" id="exit-lead-phone" class="exit-lead-input" placeholder="050-0000000" autocomplete="tel" required />
+              </div>
+              <div id="exit-lead-error" class="exit-lead-error hidden"></div>
+              <button type="submit" id="exit-lead-submit" class="exit-popup-cta-btn" style="margin-top:0.5rem;">
+                <span id="exit-lead-btn-text">שלח פרטים</span>
+                <span id="exit-lead-spinner" class="exit-lead-spinner hidden"></span>
+              </button>
+            </form>
+          </div>
+          <div id="exit-lead-success" class="exit-lead-success hidden">
+            <div class="exit-lead-success-icon">✅</div>
+            <p class="exit-lead-success-title">תודה! קיבלנו את פרטיכם</p>
+            <p class="exit-lead-success-sub">יועץ שלנו יצור קשר בהקדם.</p>
+          </div>
+          <button id="exit-popup-dismiss" class="exit-popup-dismiss-link">
+            לא תודה, לא מעניין אותי
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('exit-popup-close').addEventListener('click', dismissPopup);
+    document.getElementById('exit-popup-dismiss').addEventListener('click', dismissPopup);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) dismissPopup();
+    });
+    document.addEventListener('keydown', handleEscKey);
+
+    // Form submission
+    document.getElementById('exit-lead-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name  = document.getElementById('exit-lead-name').value.trim();
+      const phone = document.getElementById('exit-lead-phone').value.trim();
+      const errorEl = document.getElementById('exit-lead-error');
+
+      // Validation
+      if (!name || !phone) {
+        errorEl.textContent = 'נא למלא שם ומספר טלפון';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      const phoneClean = phone.replace(/[\s\-]/g, '');
+      if (!/^0\d{8,9}$/.test(phoneClean)) {
+        errorEl.textContent = 'נא להזין מספר טלפון תקין (לדוגמה: 0501234567)';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      errorEl.classList.add('hidden');
+
+      // Show spinner
+      const submitBtn = document.getElementById('exit-lead-submit');
+      submitBtn.disabled = true;
+      document.getElementById('exit-lead-btn-text').classList.add('hidden');
+      document.getElementById('exit-lead-spinner').classList.remove('hidden');
+
+      try {
+        // Submit to Supabase leads table
+        const client = window.supabase
+          ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+          : null;
+
+        if (client) {
+          const source = window.location.href;
+          const articleTitle = document.title || '';
+          await client.from('leads').insert([{
+            name,
+            phone: phoneClean,
+            source: 'exit_popup',
+            article_url: source,
+            article_title: articleTitle,
+            created_at: new Date().toISOString()
+          }]);
+        }
+
+        // Mark converted so popup won't show again this session
+        sessionStorage.setItem(SESSION_CONV_KEY, '1');
+
+        // Show success state
+        document.getElementById('exit-lead-form-wrap').classList.add('hidden');
+        document.getElementById('exit-lead-success').classList.remove('hidden');
+        document.getElementById('exit-popup-dismiss').textContent = 'סגור';
+
+      } catch (err) {
+        console.error('Lead submission error:', err);
+        errorEl.textContent = 'שגיאה בשליחת הפרטים. נסה שוב.';
+        errorEl.classList.remove('hidden');
+        submitBtn.disabled = false;
+        document.getElementById('exit-lead-btn-text').classList.remove('hidden');
+        document.getElementById('exit-lead-spinner').classList.add('hidden');
       }
     });
   }
@@ -157,7 +282,12 @@
   function showPopup() {
     if (shouldSuppress()) return;
 
-    buildPopup();
+    // Build the correct popup variant
+    if (hasQuiz()) {
+      buildQuizPopup();
+    } else {
+      buildLeadPopup();
+    }
 
     // Trigger transition on next paint
     requestAnimationFrame(() => {
@@ -223,17 +353,14 @@
           const docHeight = document.documentElement.scrollHeight - window.innerHeight;
           const depth     = docHeight > 0 ? scrollY / docHeight : 0;
 
-          // Track maximum scroll depth
           if (scrollY > maxScrollY) {
             maxScrollY = scrollY;
           }
 
-          // Once user has scrolled past 50% of the page, arm the trigger
           if (depth >= 0.5) {
             passedHalfway = true;
           }
 
-          // Fire when: armed + now scrolling back up by >100px
           if (passedHalfway && (maxScrollY - scrollY) > 100) {
             triggeredOnce = true;
             window.removeEventListener('scroll', onScroll, { passive: true });
@@ -251,17 +378,13 @@
 
   /* ──────────────────────────────────────────────
      INTERCEPT QUIZ CONVERSIONS
-     Patch submitLead so we can set quiz_converted
-     when the lead form is successfully submitted.
   ────────────────────────────────────────────── */
   function patchSubmitLead() {
-    // Wait until modal.js has defined window.submitLead
     const originalFn = window.submitLead;
     if (typeof originalFn !== 'function') return false;
 
     window.submitLead = async function () {
       await originalFn.apply(this, arguments);
-      // If no error was thrown, we consider it converted
       sessionStorage.setItem(SESSION_CONV_KEY, '1');
     };
     return true;
@@ -269,8 +392,6 @@
 
   /* ──────────────────────────────────────────────
      INTERCEPT openQuizModal CLICKS
-     Any click of openQuizModal counts as "CTA clicked this session"
-     so we suppress the popup after that.
   ────────────────────────────────────────────── */
   function patchOpenQuizModal() {
     const originalFn = window.openQuizModal;
@@ -284,7 +405,7 @@
   }
 
   /* ──────────────────────────────────────────────
-     INJECT CSS  (self-contained, no extra file needed)
+     INJECT CSS
   ────────────────────────────────────────────── */
   function injectStyles() {
     if (document.getElementById('exit-intent-styles')) return;
@@ -419,6 +540,10 @@
         cursor: pointer;
         letter-spacing: -0.01em;
         transition: background 0.18s ease, transform 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
       }
 
       .exit-popup-cta-btn:hover {
@@ -428,6 +553,12 @@
 
       .exit-popup-cta-btn:active {
         transform: scale(0.98);
+      }
+
+      .exit-popup-cta-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
       }
 
       /* Dismiss link */
@@ -445,6 +576,88 @@
 
       .exit-popup-dismiss-link:hover {
         color: #6b7280;
+      }
+
+      /* ── Lead form styles ── */
+      .exit-lead-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 0.875rem;
+      }
+
+      .exit-lead-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #374151;
+        text-align: right;
+      }
+
+      .exit-lead-input {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        border: 1.5px solid #d1d5db;
+        border-radius: 0.625rem;
+        font-size: 1rem;
+        color: #111827;
+        outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        text-align: right;
+        direction: rtl;
+        box-sizing: border-box;
+      }
+
+      .exit-lead-input:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+      }
+
+      .exit-lead-error {
+        font-size: 0.8rem;
+        color: #dc2626;
+        font-weight: 500;
+        text-align: right;
+        margin-top: -0.4rem;
+        margin-bottom: 0.4rem;
+      }
+
+      /* Spinner */
+      .exit-lead-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: exit-spin 0.7s linear infinite;
+      }
+
+      @keyframes exit-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Success state */
+      .exit-lead-success {
+        text-align: center;
+        padding: 1rem 0;
+      }
+
+      .exit-lead-success-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .exit-lead-success-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #111827;
+        margin: 0 0 0.35rem;
+      }
+
+      .exit-lead-success-sub {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin: 0;
       }
 
       /* ── Mobile: full-width bottom sheet ── */
@@ -481,8 +694,7 @@
 
     injectStyles();
 
-    // Patch quiz functions (may already be defined by the time DOMContentLoaded fires,
-    // or may be deferred — try immediately, then retry after a short delay)
+    // Patch quiz functions
     if (!patchOpenQuizModal()) {
       setTimeout(patchOpenQuizModal, 500);
     }
@@ -500,8 +712,6 @@
     }
   }
 
-  // Run after DOM is ready — article-loader.js sets window.currentArticleCategory lazily,
-  // so we only need the DOM to be interactive here; we read the category at show-time.
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

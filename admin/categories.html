@@ -23,7 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- SortableJS for drag-and-drop -->
-    <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="../css/tailwind-build.css" />
 </head>
 
@@ -335,6 +335,10 @@
 
         // Initialize Sortable
         function initSortable() {
+            if (typeof Sortable === 'undefined') {
+                console.warn('SortableJS not yet loaded — drag-and-drop disabled');
+                return;
+            }
             if (sortable) {
                 sortable.destroy();
             }
