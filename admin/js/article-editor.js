@@ -100,6 +100,10 @@ const editor = new EditorJS({
         quiz: {
             class: QuizBlock,
             shortcut: 'CMD+SHIFT+Q'
+        },
+        leadForm: {
+            class: LeadFormBlock,
+            shortcut: 'CMD+SHIFT+L'
         }
     },
     i18n: {
