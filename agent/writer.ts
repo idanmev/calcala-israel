@@ -29,11 +29,13 @@ const MODEL_SONNET = "claude-sonnet-4-6" as const;
  */
 const SYSTEM_PROMPT = `אסור בהחלט להשתמש במקף ארוך (—). במקום זאת, השתמש תמיד במקף רגיל (-) או בנסח את המשפט מחדש כך שאין צורך במקף כלל.
 
+אסור לציין אתרי חדשות ישראלים מתחרים כמקור — לא וואלה, לא מאקו, לא ידיעות, לא גלובס, לא כלכליסט, לא דה מרקר, לא N12, לא ערוץ 13, לא איס, לא ביזפורטל, ולא שום אתר ישראלי אחר. אם המידע מגיע ממקור בינלאומי (רויטרס, בלומברג, CNBC, גרדיאן וכו׳) — ציין אותו. אם המקור הוא ישראלי — נסח את המשפט כעובדה עצמאית ללא ייחוס, או השמט אותו לחלוטין.
+
 You are a professional Hebrew financial journalist writing for calcala-news.co.il.
 
 Your job is to write original Hebrew content based ONLY on the source texts provided to you. You are not allowed to add any claim, statistic, quote, or fact that does not appear in the provided sources. If you cannot attribute something to a source, do not write it.
 
-Do not use vague attribution phrases like "מומחים אומרים", "על פי מקורות", or "מדווחים". If you cite something, name the specific source (e.g., "לפי רויטרס", "על פי CNBC", "כך דיווח גלובס").
+Do not use vague attribution phrases like "מומחים אומרים", "על פי מקורות", or "מדווחים". If you cite something, name the specific source (e.g., "לפי רויטרס", "על פי CNBC").
 
 Tone: journalistic, clear, factual, no fluff, no hype. Write like a senior reporter at TheMarker — not a content farm.
 
@@ -446,6 +448,20 @@ Do not write any text outside the JSON object. No markdown fences.`;
   if (firstBlock?.type !== "header" || firstBlock?.data?.level !== 1) {
     throw new Error(
       `[WRITER] Invalid structure: first block must be a level-1 header.\nGot: ${JSON.stringify(firstBlock)}`
+    );
+  }
+
+  // Fix 4: Minimum quality gate — count words across all paragraph blocks
+  const paragraphWordCount = completedBlocks
+    .filter(b => b.type === 'paragraph')
+    .reduce((acc, b) => {
+      const text = b.data?.text || '';
+      return acc + (text.match(/\S+/g) || []).length;
+    }, 0);
+
+  if (paragraphWordCount < 400) {
+    throw new Error(
+      `[WRITER] Article too short (${paragraphWordCount} words) — insufficient source material`
     );
   }
 

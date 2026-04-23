@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { fetchAllStories } from './fetcher';
+import { fetchAllStories, enrichTopicWithSearch } from './fetcher';
 import { selectTopics } from './selector';
 import { filterTopics } from './filter';
 import { scrapeTopics } from './scraper';
@@ -55,9 +55,20 @@ export async function runAgent() {
         const scrapedData = scrapedGroups[0];
         console.log(`[SCRAPER] Finished. Scraped ${scrapedData.scrapedTexts.length} articles.`);
 
+        // Enricher — add live web research context
+        const enrichmentText = await enrichTopicWithSearch(topicGroup.topic_name);
+        const enrichedTexts = [...scrapedData.scrapedTexts];
+        if (enrichmentText && enrichmentText.split(/\S+/g).length > 30) {
+          const wordCount = (enrichmentText.match(/\S+/g) || []).length;
+          enrichedTexts.push(`[Web Research]\n${enrichmentText}`);
+          console.log(`[ENRICHER] Added web research context for topic: ${topicGroup.topic_name} (${wordCount} words).`);
+        } else {
+          console.log(`[ENRICHER] Enrichment skipped or too short for topic: ${topicGroup.topic_name}`);
+        }
+
         // Writer
         console.log(`[WRITER] Starting...`);
-        const { editorjs, meta_description } = await writer(scrapedData.scrapedTexts, scrapedData.topic_name);
+        const { editorjs, meta_description } = await writer(enrichedTexts, scrapedData.topic_name);
         console.log(`[WRITER] Finished. Generated ${editorjs.length} blocks.`);
 
         // Inserter

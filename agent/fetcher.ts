@@ -1,4 +1,5 @@
 import Parser from 'rss-parser';
+import Anthropic from '@anthropic-ai/sdk';
 
 export interface Story {
   source_name: string;
@@ -42,11 +43,29 @@ const SOURCES: FeedSource[] = [
 ];
 
 export async function fetchAllStories(): Promise<Story[]> {
+  return fetchStoriesForWindow(24);
+}
+
+async function fetchStoriesForWindow(hours: number): Promise<Story[]> {
   const parser = new Parser({
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RSS reader)' }
   });
   const allStories: Story[] = [];
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+  // First pass: 24h
+  const results = await fetchFromSources(parser, cutoff);
+
+  if (hours === 24 && results.length < 25) {
+    console.log(`[FETCHER] Story pool too thin (${results.length} stories) — expanding to 72h window`);
+    return fetchStoriesForWindow(72);
+  }
+
+  return results;
+}
+
+async function fetchFromSources(parser: any, cutoff: Date): Promise<Story[]> {
+  const allStories: Story[] = [];
 
   for (const source of SOURCES) {
     let feedUrl = source.url;
@@ -87,7 +106,7 @@ export async function fetchAllStories(): Promise<Story[]> {
       if (!item.title || !item.link) continue;
 
       const publishedAt = item.pubDate ? new Date(item.pubDate) : new Date();
-      if (publishedAt < twentyFourHoursAgo) continue;
+      if (publishedAt < cutoff) continue;
 
       // Extract raw text for summary (remove HTML if any)
       const contentOptions = [
@@ -148,4 +167,52 @@ export async function fetchAllStories(): Promise<Story[]> {
   }
 
   return Array.from(uniqueStoriesMap.values());
+}
+
+/**
+ * Enriches a topic with live web research using Anthropic's web_search tool.
+ * Called after filter approval, before scraping.
+ */
+export async function enrichTopicWithSearch(topicName: string): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.warn('[ENRICHER] ANTHROPIC_API_KEY not set — skipping enrichment.');
+    return '';
+  }
+
+  const client = new Anthropic({ apiKey });
+
+  try {
+    const response = await (client.messages.create as any)({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
+      system: 'You are a research assistant for an Israeli personal finance news website. Given a topic, search for recent factual information about it — focusing on data, numbers, decisions, and implications for Israeli consumers. Search in both Hebrew and English. Return a concise summary of what you find, maximum 400 words, in English. Only include verifiable facts. Do not editorialize.',
+      tools: [
+        {
+          type: 'web_search_20250305',
+          name: 'web_search'
+        }
+      ],
+      messages: [
+        {
+          role: 'user',
+          content: `Research this topic for an Israeli finance news article: ${topicName}. Focus on recent developments, specific numbers, official decisions, and what it means for Israeli consumers or investors.`
+        }
+      ]
+    });
+
+    // Concatenate all text blocks from the response
+    const textParts: string[] = [];
+    for (const block of response.content) {
+      if (block.type === 'text' && block.text) {
+        textParts.push(block.text.trim());
+      }
+    }
+
+    return textParts.join('\n\n');
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[ENRICHER] Web research failed: ${msg}`);
+    return '';
+  }
 }
