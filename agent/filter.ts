@@ -11,7 +11,7 @@ Answer YES only if the topic meets at least one of these criteria:
 - Directly affects Israeli consumers financially (interest rates, mortgage changes, cost of living, taxes, insurance, pension)
 - Covers the Israeli capital market or Israeli economy with data or decisions
 - Covers a global financial event with clear and direct implications for Israeli investors or consumers
-- Covers an Israeli tech or startup story with significant economic impact
+- Covers a Israeli tech or startup story with significant economic impact
 
 Answer NO if:
 - The topic is primarily about US or international politics with no direct Israeli financial impact
@@ -20,11 +20,12 @@ Answer NO if:
 - The topic is military, geopolitical, or general world news without a clear financial angle for Israelis
 
 Respond with ONLY a JSON object in this exact format, nothing else:
-{"decision": "YES" or "NO", "reason": "one sentence explanation in English"}`;
+{"decision": "YES" or "NO", "reason": "one sentence explanation in English", "score": number between 1 and 10 indicating topic quality/relevance}`;
 
 interface FilterDecision {
   decision: 'YES' | 'NO';
   reason: string;
+  score: number;
 }
 
 async function callHaikuFilter(
@@ -56,7 +57,11 @@ function parseFilterDecision(raw: string, topicName: string): FilterDecision {
     if (parsed.decision !== 'YES' && parsed.decision !== 'NO') {
       throw new Error(`Unexpected decision value: ${parsed.decision}`);
     }
-    return { decision: parsed.decision, reason: parsed.reason || '' };
+    return { 
+      decision: parsed.decision, 
+      reason: parsed.reason || '',
+      score: typeof parsed.score === 'number' ? parsed.score : 0
+    };
   } catch (err) {
     throw new Error(
       `[FILTER] Could not parse decision JSON for "${topicName}". Raw: ${raw.slice(0, 200)}`
@@ -77,6 +82,7 @@ export async function filterTopics(
 
   const client = new Anthropic({ apiKey });
   const approved: TopicGroup[] = [];
+  const rejectedWithScores: { topic: TopicGroup; reason: string; score: number }[] = [];
 
   for (const topic of topics) {
     // Build user message: topic name + each story's title and summary
@@ -88,19 +94,35 @@ export async function filterTopics(
 
     try {
       const raw = await callHaikuFilter(client, userMessage);
-      const { decision, reason } = parseFilterDecision(raw, topic.topic_name);
+      const { decision, reason, score } = parseFilterDecision(raw, topic.topic_name);
 
       if (decision === 'YES') {
-        console.log(`[FILTER] ✅ Approved: ${topic.topic_name} — ${reason}`);
+        console.log(`[FILTER] ✅ Approved: ${topic.topic_name} — ${reason} (Score: ${score})`);
         approved.push(topic);
       } else {
-        console.log(`[FILTER] ❌ Rejected: ${topic.topic_name} — ${reason}`);
+        console.log(`[FILTER] ❌ Rejected: ${topic.topic_name} — ${reason} (Score: ${score})`);
+        rejectedWithScores.push({ topic, reason, score });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[FILTER] ⚠️  Filter failed for "${topic.topic_name}", keeping by default. Error: ${msg}`);
       approved.push(topic);
     }
+  }
+
+  // Fallback: If nothing approved, pick the best rejected one
+  if (approved.length === 0 && rejectedWithScores.length > 0) {
+    console.log(`[FILTER] ⚠️ No topics approved — selecting best available fallback topic.`);
+    
+    // Sort by score descending
+    rejectedWithScores.sort((a, b) => b.score - a.score);
+    const best = rejectedWithScores[0];
+    
+    console.log(`[FILTER] ⚠️ Fallback selection: ${best.topic.topic_name} (Original reason: ${best.reason}, Score: ${best.score})`);
+    
+    // Optional: could update the topic_name or internal metadata if needed, 
+    // but the request just says to approve it.
+    approved.push(best.topic);
   }
 
   console.log(`[FILTER] Finished. ${approved.length}/${topics.length} topic(s) approved.`);
