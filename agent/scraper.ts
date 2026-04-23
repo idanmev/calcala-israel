@@ -12,6 +12,7 @@ export async function scrapeTopics(topicGroups: TopicGroup[]): Promise<ScrapedTo
   for (const group of topicGroups) {
     console.log(`[SCRAPER] Processing group: ${group.topic_name}`);
     const minRequired = group.stories.length === 1 ? 1 : 2;
+    const scrapedTexts: string[] = [];
 
     for (const story of group.stories) {
         let scrapeSuccess = false;
