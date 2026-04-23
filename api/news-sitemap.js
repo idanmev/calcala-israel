@@ -1,4 +1,4 @@
-// Google News Sitemap — articles published within last 2 days
+// Google News Sitemap
 // Spec: https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap
 
 const SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
@@ -16,9 +16,16 @@ module.exports = async function handler(req, res) {
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
     const twoDaysAgoISO = twoDaysAgo.toISOString();
 
-    const url = `${SUPABASE_URL}/rest/v1/articles?select=slug,title,publish_date,author&status=eq.published&publish_date=gte.${encodeURIComponent(twoDaysAgoISO)}&order=publish_date.desc&limit=1000`;
-    const articlesRes = await fetch(url, { headers });
-    const articles = await articlesRes.json();
+    let url = `${SUPABASE_URL}/rest/v1/articles?select=slug,title,publish_date,author&status=eq.published&publish_date=gte.${encodeURIComponent(twoDaysAgoISO)}&order=publish_date.desc&limit=1000`;
+    let articlesRes = await fetch(url, { headers });
+    let articles = await articlesRes.json();
+
+    // Fallback: If no articles in the last 48 hours, fetch the last 10 published articles
+    if (!Array.isArray(articles) || articles.length === 0) {
+      url = `${SUPABASE_URL}/rest/v1/articles?select=slug,title,publish_date,author&status=eq.published&order=publish_date.desc&limit=10`;
+      articlesRes = await fetch(url, { headers });
+      articles = await articlesRes.json();
+    }
 
     const baseUrl = 'https://calcala-news.co.il';
 
@@ -44,6 +51,7 @@ module.exports = async function handler(req, res) {
           .replace(/'/g, '&apos;');
 
         xml += `  <url>\n`;
+        // We use /article/ here as defined in the website's vercel.json rewrites
         xml += `    <loc>${baseUrl}/article/${encodeURIComponent(art.slug)}</loc>\n`;
         xml += `    <news:news>\n`;
         xml += `      <news:publication>\n`;

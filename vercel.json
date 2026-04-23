@@ -25,8 +25,8 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "calcala-news.co.il" }],
-      "destination": "https://www.calcala-news.co.il/$1",
+      "has": [{ "type": "host", "value": "www.calcala-news.co.il" }],
+      "destination": "https://calcala-news.co.il/$1",
       "permanent": true
     }
   ],

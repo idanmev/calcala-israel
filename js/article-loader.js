@@ -824,17 +824,36 @@ async function loadArticle() {
                 },
                 {
                     "@type": "NewsArticle",
-                    "headline": article.title,
-                    "image": [
-                        article.featured_image_url || "https://calcala-news.co.il/images/og-default.jpg"
-                    ],
+                    "headline": article.title && article.title.length > 110 ? article.title.substring(0, 107) + '...' : article.title,
+                    "description": article.meta_description || article.subtitle || article.title,
+                    "image": {
+                        "@type": "ImageObject",
+                        "url": article.featured_image_url || "https://calcala-news.co.il/images/og-default.jpg",
+                        "width": 1200,
+                        "height": 630
+                    },
                     "datePublished": article.publish_date,
-                    "dateModified": article.publish_date,
-                    "author": [{
+                    "dateModified": article.updated_at || article.publish_date,
+                    "author": {
                         "@type": "Person",
-                        "name": article.author || "מערכת כלכלה-ניוז",
-                        "url": article.author ? `https://calcala-news.co.il/author/${encodeURIComponent(article.author.replace(/\\s+/g, '-'))}` : "https://calcala-news.co.il/about"
-                    }]
+                        "name": article.author || "מערכת כלכלה-ניוז"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "כלכלה-ניוז",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "https://calcala-news.co.il/images/og-default.jpg"
+                        }
+                    },
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": canonicalUrl
+                    },
+                    "inLanguage": "he-IL",
+                    "isPartOf": {
+                        "@id": "https://calcala-news.co.il/#website"
+                    }
                 }
             ]
         });
