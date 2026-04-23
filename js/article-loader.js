@@ -945,17 +945,31 @@ function initInlineLeadForms(articleTitle, categoryName) {
             try {
                 // Determine vertical name string if we need to categorize
                 const verticalStr = categoryName ? `מאמר / קטגוריה - ${categoryName}` : 'מאמר תוכן';
+                const urlParams = new URLSearchParams(window.location.search);
+                const articleSlug = urlParams.get('slug') || window.location.pathname.split('/').filter(Boolean).pop();
 
-                const { error } = await supabaseArt.from('leads').insert([{
+                const leadPayload = {
+                    vertical: verticalStr,
+                    category_slug: window.currentArticleCategory || 'taxation',
                     name: name,
                     phone: phoneClean,
-                    source: 'inline_article_lead_form',
-                    conversion_url: window.location.pathname + window.location.search,
-                    utm_campaign: articleTitle,
-                    vertical: verticalStr // Store category context
-                }]);
+                    source_url: window.location.href,
+                    article_slug: articleSlug,
+                    utm_source: 'inline_article_lead_form',
+                    utm_campaign: articleTitle
+                };
 
-                if (error) throw error;
+                const response = await fetch('https://gtuxstslzsiuinxjvfdj.supabase.co/functions/v1/submit-lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(leadPayload),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'שגיאה בשליחת הטופס');
+                }
 
                 // Show success UI
                 form.style.display = 'none';
@@ -963,7 +977,7 @@ function initInlineLeadForms(articleTitle, categoryName) {
 
             } catch (err) {
                 console.error('Lead submission failed for inline form:', err);
-                errorEl.textContent = 'אירעה שגיאה בשליחת הפרטים. אנא נסו שוב.';
+                errorEl.textContent = err.message || 'אירעה שגיאה בשליחת הפרטים. אנא נסו שוב.';
                 errorEl.style.display = 'block';
                 
                 btn.disabled = false;

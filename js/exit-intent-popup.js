@@ -176,7 +176,7 @@
               </div>
               <div class="exit-lead-field">
                 <label for="exit-lead-phone" class="exit-lead-label">מספר טלפון</label>
-                <input type="tel" id="exit-lead-phone" class="exit-lead-input" autocomplete="tel" required />
+                <input type="tel" id="exit-lead-phone" class="exit-lead-input" autocomplete="tel" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required />
               </div>
               <div id="exit-lead-error" class="exit-lead-error" style="display:none;"></div>
               <button type="submit" id="exit-lead-submit" class="exit-popup-cta-btn" style="margin-top:0.5rem;">
@@ -236,22 +236,31 @@
       document.getElementById('exit-lead-spinner').style.display = 'inline-block';
 
       try {
-        // Submit to Supabase leads table
-        const client = window.supabase
-          ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-          : null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleSlug = urlParams.get('slug') || window.location.pathname.split('/').filter(Boolean).pop();
+        const catSlug = window.currentArticleCategory || 'taxation';
 
-        if (client) {
-          const source = window.location.href;
-          const articleTitle = document.title || '';
-          await client.from('leads').insert([{
-            name,
-            phone: phoneClean,
-            source: 'exit_popup',
-            article_url: source,
-            article_title: articleTitle,
-            created_at: new Date().toISOString()
-          }]);
+        const leadPayload = {
+          vertical: 'כללי', // Default
+          category_slug: catSlug,
+          name: name,
+          phone: phoneClean,
+          source_url: window.location.href,
+          article_slug: articleSlug,
+          utm_source: 'exit_popup',
+          utm_campaign: document.title || ''
+        };
+
+        const response = await fetch('https://gtuxstslzsiuinxjvfdj.supabase.co/functions/v1/submit-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(leadPayload),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'שגיאה בשליחת הטופס');
         }
 
         // Mark converted so popup won't show again this session
@@ -264,7 +273,7 @@
 
       } catch (err) {
         console.error('Lead submission error:', err);
-        errorEl.textContent = 'שגיאה בשליחת הפרטים. נסה שוב.';
+        errorEl.textContent = err.message || 'שגיאה בשליחת הפרטים. נסה שוב.';
         errorEl.style.display = 'block';
         submitBtn.disabled = false;
         document.getElementById('exit-lead-btn-text').style.display = 'inline';

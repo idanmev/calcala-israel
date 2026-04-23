@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ניהול לידים - Calcala-News</title>
     
     <link rel="stylesheet" href="/admin/css/admin-styles.css">
@@ -92,8 +93,8 @@
             </div>
 
             <!-- Leads table -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <table class="w-full">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden overflow-x-auto">
+                <table class="w-full min-w-[1000px]">
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th class="text-right px-6 py-4 text-sm font-bold text-gray-700">שם</th>
@@ -108,7 +109,7 @@
                     </thead>
                     <tbody id="leads-table-body">
                         <tr>
-                            <td colspan="7" class="text-center py-12 text-gray-400">טוען לידים...</td>
+                            <td colspan="8" class="text-center py-12 text-gray-400">טוען לידים...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -116,11 +117,24 @@
         </main>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="modal-title">מחיקת ליד</h3>
+            <p class="text-gray-600">האם אתה בטוח שברצונך למחוק את הליד הזה? פעולה זו אינה הפיכה.</p>
+            <div class="modal-actions">
+                <button id="confirmDeleteBtn" class="btn btn-danger">מחק</button>
+                <button id="cancelDeleteBtn" class="btn btn-secondary">ביטול</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/admin/js/supabase-client.js"></script>
     <script src="/admin/js/auth.js"></script>
     <script>
         let allLeads = [];
+        let leadToDelete = null;
 
         async function loadLeads() {
             const tbody = document.getElementById('leads-table-body');
@@ -205,7 +219,7 @@
                     '<td class="px-6 py-4"><select onchange="updateLeadStatus(\'' + lead.id + '\', this.value)" class="text-sm border border-gray-200 rounded px-2 py-1">' + selectHtml + '</select></td>' +
                     '<td class="px-6 py-4"><div class="flex gap-2 items-center">' +
                         '<a href="https://wa.me/972' + phoneClean + '" target="_blank" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">💬 וואטסאפ</a>' +
-                        '<button onclick="deleteLead(\'' + lead.id + '\')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm font-bold" title="מחק ליד">🗑️</button>' +
+                        '<button type="button" data-action="delete" data-lead-id="' + lead.id + '" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm font-bold" title="מחק ליד">🗑️</button>' +
                     '</div></td>' +
                 '</tr>';
             }).join('');
@@ -224,16 +238,58 @@
             await supabaseClient.from('leads').update({ status: status }).eq('id', id);
         }
 
-        async function deleteLead(id) {
-            if (!confirm('האם למחוק את הליד הזה? פעולה זו אינה הפיכה.')) return;
-            var result = await supabaseClient.from('leads').delete().eq('id', id);
-            if (result.error) {
-                alert('שגיאה במחיקת הליד: ' + result.error.message);
-            } else {
-                allLeads = allLeads.filter(function(l) { return l.id !== id; });
-                filterLeads();
+        function openDeleteModal(id) {
+            leadToDelete = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            leadToDelete = null;
+            document.getElementById('deleteModal').classList.remove('active');
+            // small delay to allow animation to finish before display:none
+            setTimeout(() => {
+                document.getElementById('deleteModal').classList.add('hidden');
+            }, 300);
+        }
+
+        async function confirmDelete() {
+            if (!leadToDelete) return;
+            
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const originalText = confirmBtn.textContent;
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'מוחק...';
+
+            try {
+                var result = await supabaseClient.from('leads').delete().eq('id', leadToDelete);
+                if (result.error) {
+                    alert('שגיאה במחיקת הליד: ' + result.error.message);
+                } else {
+                    allLeads = allLeads.filter(function(l) { return l.id !== leadToDelete; });
+                    filterLeads();
+                    closeDeleteModal();
+                    window.authUtils.showSuccess('הליד נמחק בהצלחה');
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('שגיאה בתקשורת עם השרת');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = originalText;
             }
         }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+        document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+
+        document.getElementById('leads-table-body').addEventListener('click', function(e) {
+            const btn = e.target.closest('button[data-action="delete"]');
+            if (btn) {
+                const leadId = btn.getAttribute('data-lead-id');
+                if (leadId) openDeleteModal(leadId);
+            }
+        });
 
         function exportLeads() {
             var vertical = document.getElementById('vertical-filter').value;
@@ -259,6 +315,13 @@
             a.download = 'leads-' + new Date().toISOString().split('T')[0] + '.csv';
             a.click();
         }
+
+        // Close modal on outside click
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target.id === 'deleteModal') {
+                closeDeleteModal();
+            }
+        });
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
