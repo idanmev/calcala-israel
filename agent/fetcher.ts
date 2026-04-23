@@ -97,18 +97,18 @@ export async function fetchAllStories(): Promise<Story[]> {
         item.summary || ''
       ];
       
-      let longestContent = contentOptions[0];
-      for (const c of contentOptions) {
-        if (c.length > longestContent.length) {
-          longestContent = c;
-        }
-      }
-
-      const rawContent = longestContent.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+      // Concatenate all available fields for maximum context
+      const combinedContent = contentOptions.join(' ');
+      const rawContent = combinedContent.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
       
       const summary = rawContent.substring(0, 300);
       const fullSummaryWords = rawContent.split(/\s+/);
-      const fullSummary = fullSummaryWords.slice(0, 1500).join(' ');
+      
+      // Google News specific: include title at start of fullSummary
+      let fullSummary = fullSummaryWords.slice(0, 1500).join(' ');
+      if (item.link?.includes('news.google.com')) {
+        fullSummary = `${item.title}. ${fullSummary}`;
+      }
 
       sourceStories.push({
         source_name: source.name,
