@@ -1,4 +1,4 @@
-// articles.js - Dynamic article loading for Calcala-News
+// articles.js [v1.0.1 cache-bust] - Dynamic article loading for Calcala-News
 console.log('Articles JS: Initializing...');
 
 // Shortcut for escapeHtml

@@ -1,4 +1,4 @@
-// article-loader.js - Complete dynamic article loader for Calcala-News
+// article-loader.js [v1.0.1 cache-bust] - Complete dynamic article loader for Calcala-News
 
 // Unique variable names to avoid conflicts with other scripts
 const ART_SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';

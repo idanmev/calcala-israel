@@ -1,4 +1,4 @@
-// exit-intent-popup.js
+// exit-intent-popup.js [v1.0.1 cache-bust]
 // Exit-intent / scroll-back popup that launches the article's own quiz modal (quiz articles)
 // or shows a lead capture form (name + phone) for articles without a quiz.
 // Trigger: desktop → mouseleave above viewport; mobile → scroll-up >100px after 50% depth.
