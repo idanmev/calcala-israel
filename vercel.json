@@ -1,4 +1,15 @@
 {
+  "crons": [
+    {
+      "path": "/api/run-agent",
+      "schedule": "0 5 * * *"
+    }
+  ],
+  "functions": {
+    "api/run-agent.ts": {
+      "maxDuration": 300
+    }
+  },
   "buildCommand": "npm run build",
   "outputDirectory": ".",
   "framework": null,
@@ -22,14 +33,7 @@
       ]
     }
   ],
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.calcala-news.co.il" }],
-      "destination": "https://calcala-news.co.il/$1",
-      "permanent": true
-    }
-  ],
+  "redirects": [],
   "rewrites": [
     { "source": "/sitemap.xml",      "destination": "/api/sitemap" },
     { "source": "/news-sitemap.xml", "destination": "/api/news-sitemap" },

@@ -1,0 +1,492 @@
+import Anthropic from "@anthropic-ai/sdk";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface WriterOutput {
+  editorjs: any[];
+  meta_description: string;
+}
+
+/** A single shell returned by Stage 1 — describes one block to be written. */
+interface BlockShell {
+  type: "header" | "paragraph";
+  level?: 1 | 2; // only present when type === "header"
+  instruction: string; // what this block should say, in Hebrew
+}
+
+// ---------------------------------------------------------------------------
+// Model constants
+// ---------------------------------------------------------------------------
+
+const MODEL_HAIKU = "claude-haiku-4-5-20251001" as const;
+const MODEL_SONNET = "claude-sonnet-4-6" as const;
+
+/**
+ * Core system prompt.
+ * EM DASH BAN comes first (verbatim Hebrew), followed by all other rules.
+ */
+const SYSTEM_PROMPT = `אסור בהחלט להשתמש במקף ארוך (—). במקום זאת, השתמש תמיד במקף רגיל (-) או בנסח את המשפט מחדש כך שאין צורך במקף כלל.
+
+You are a professional Hebrew financial journalist writing for calcala-news.co.il.
+
+Your job is to write original Hebrew content based ONLY on the source texts provided to you. You are not allowed to add any claim, statistic, quote, or fact that does not appear in the provided sources. If you cannot attribute something to a source, do not write it.
+
+Do not use vague attribution phrases like "מומחים אומרים", "על פי מקורות", or "מדווחים". If you cite something, name the specific source (e.g., "לפי רויטרס", "על פי CNBC", "כך דיווח גלובס").
+
+Tone: journalistic, clear, factual, no fluff, no hype. Write like a senior reporter at TheMarker — not a content farm.
+
+The full article must follow this SEO structure:
+- Strong H1 headline (the article title)
+- Short intro paragraph (2-3 sentences summarizing the story)
+- 2-3 H2 subheadings with body paragraphs under each
+- A closing paragraph with context or implication
+- Total length: 650-900 words
+
+Return only the JSON asked of you. No preamble, no explanation, no markdown fences.`;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Replace every em dash (—, U+2014) in a string with a regular hyphen (-).
+ * This is the post-processing safety net in case the model ignores the prompt rule.
+ */
+function banEmDash(text: string): string {
+  return text.replace(/\u2014/g, "-");
+}
+
+/**
+ * Builds the sources block that is injected into every API call.
+ */
+function buildSourcesBlock(scrapedTexts: string[]): string {
+  return scrapedTexts
+    .map((text, idx) => `[Source ${idx + 1}]\n${text.trim()}`)
+    .join("\n\n---\n\n");
+}
+
+/**
+ * Extracts the raw text content from the Anthropic response.
+ * When extended thinking is enabled the response may contain both
+ * "thinking" blocks and "text" blocks; we only want the "text" block.
+ */
+function extractTextContent(
+  content: Anthropic.Messages.ContentBlock[]
+): string {
+  for (const block of content) {
+    if (block.type === "text") {
+      return block.text;
+    }
+  }
+  throw new Error(
+    "[WRITER] No text block found in Anthropic response. Full content: " +
+      JSON.stringify(content)
+  );
+}
+
+/**
+ * Strips any accidental markdown code fences Claude might add despite the
+ * system prompt forbidding them (belt-and-suspenders).
+ */
+function stripMarkdownFences(raw: string): string {
+  return raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/, "")
+    .trim();
+}
+
+/**
+ * Attempts to repair and parse a JSON string that may be truncated.
+ * Handles nested cases: truncated mid-string, mid-object, mid-array.
+ */
+function repairAndParseJSON(raw: string, label: string): any {
+  let cleaned = stripMarkdownFences(raw);
+
+  // First try as-is
+  try { return JSON.parse(cleaned); } catch (_) {}
+
+  // Repair strategy: track open brackets/braces and close them
+  const stack: string[] = [];
+  let inString = false;
+  let escape = false;
+
+  for (const ch of cleaned) {
+    if (escape) { escape = false; continue; }
+    if (ch === '\\' && inString) { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') stack.push('}');
+    else if (ch === '[') stack.push(']');
+    else if (ch === '}' || ch === ']') stack.pop();
+  }
+
+  // If we were left inside a string, close it
+  if (inString) cleaned += '"';
+
+  // Close any dangling comma before closing bracket
+  cleaned = cleaned.replace(/,\s*$/, '');
+
+  // Close open brackets/braces in reverse order
+  while (stack.length > 0) {
+    cleaned += stack.pop();
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (parseErr: unknown) {
+    const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+    throw new Error(
+      `[WRITER - ${label}] Failed to parse JSON after repair.\nError: ${msg}\nRaw (first 1000): ${raw.slice(0, 1000)}`
+    );
+  }
+}
+
+/**
+ * Makes a Haiku API call for the STRUCTURE stage with max_tokens: 2000.
+ * Higher token limit to ensure the full JSON array is never truncated.
+ */
+async function callHaikuStructure(
+  client: Anthropic,
+  userContent: string,
+  label: string
+): Promise<string> {
+  const attempt = async (): Promise<string> => {
+    const response = await client.messages.create({
+      model: MODEL_HAIKU,
+      max_tokens: 3000,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+    });
+    const raw = extractTextContent(response.content);
+    return banEmDash(raw);
+  };
+
+  try {
+    return await attempt();
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[WRITER] ${label} failed (attempt 1): ${message}. Retrying…`);
+    try {
+      return await attempt();
+    } catch (retryErr: unknown) {
+      const retryMessage =
+        retryErr instanceof Error ? retryErr.message : String(retryErr);
+      throw new Error(
+        `[WRITER] ${label} failed after retry: ${retryMessage}`
+      );
+    }
+  }
+}
+
+/**
+ * Makes a Haiku API call (no thinking, max_tokens: 1000) and returns the
+ * cleaned, em-dash-free text. Retries once on failure.
+ */
+async function callHaiku(
+  client: Anthropic,
+  userContent: string,
+  label: string
+): Promise<string> {
+  const attempt = async (): Promise<string> => {
+    const response = await client.messages.create({
+      model: MODEL_HAIKU,
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+    });
+    const raw = extractTextContent(response.content);
+    return banEmDash(raw);
+  };
+
+  try {
+    return await attempt();
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[WRITER] ${label} failed (attempt 1): ${message}. Retrying…`);
+    try {
+      return await attempt();
+    } catch (retryErr: unknown) {
+      const retryMessage =
+        retryErr instanceof Error ? retryErr.message : String(retryErr);
+      throw new Error(
+        `[WRITER] ${label} failed after retry: ${retryMessage}`
+      );
+    }
+  }
+}
+
+/**
+ * Makes a Sonnet API call (no thinking, max_tokens: 1000) and returns the
+ * cleaned, em-dash-free text. Retries once on failure.
+ */
+async function callSonnet(
+  client: Anthropic,
+  userContent: string,
+  label: string
+): Promise<string> {
+  const attempt = async (): Promise<string> => {
+    const response = await client.messages.create({
+      model: MODEL_SONNET,
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+    });
+    const raw = extractTextContent(response.content);
+    return banEmDash(raw);
+  };
+
+  try {
+    return await attempt();
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[WRITER] ${label} failed (attempt 1): ${message}. Retrying…`);
+    try {
+      return await attempt();
+    } catch (retryErr: unknown) {
+      const retryMessage =
+        retryErr instanceof Error ? retryErr.message : String(retryErr);
+      throw new Error(
+        `[WRITER] ${label} failed after retry: ${retryMessage}`
+      );
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main exported function
+// ---------------------------------------------------------------------------
+
+export async function writer(
+  scrapedTexts: string[],
+  topicName: string
+): Promise<WriterOutput> {
+  // -------------------------------------------------------------------------
+  // Input guards (must remain: 1,500 words/source, 6,000 words total)
+  // -------------------------------------------------------------------------
+  let totalWords = scrapedTexts.reduce(
+    (acc, text) => acc + (text.match(/\S+/g) || []).length,
+    0
+  );
+  let droppedCount = 0;
+
+  while (totalWords > 6000 && scrapedTexts.length > 1) {
+    const dropped = scrapedTexts.pop();
+    if (dropped) {
+      totalWords -= (dropped.match(/\S+/g) || []).length;
+      droppedCount++;
+    }
+  }
+
+  if (droppedCount > 0) {
+    console.warn(
+      `[WRITER] Input exceeded 6,000 words limit. Dropped ${droppedCount} source(s). ` +
+        `Remaining sources: ${scrapedTexts.length}, total words: ${totalWords}.`
+    );
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "[WRITER] ANTHROPIC_API_KEY environment variable is not set."
+    );
+  }
+
+  const client = new Anthropic({ apiKey });
+  const sourcesBlock = buildSourcesBlock(scrapedTexts);
+
+  // =========================================================================
+  // STAGE 1 — Structure call (Haiku, no thinking, max_tokens: 1000)
+  // =========================================================================
+  console.log(`[WRITER - STRUCTURE] Planning article structure for topic: "${topicName}"…`);
+
+  const structureUserMessage = `Topic: ${topicName}
+
+Below are the source texts the article must be based on:
+
+${sourcesBlock}
+
+---
+
+Return ONLY a JSON array of block shells describing the article structure. Each object must have:
+- "type": either "header" or "paragraph"
+- "level": 1 or 2 (only when type is "header"; H1 first, then H2s)
+- "instruction": a short Hebrew string (one sentence max) describing exactly what this block should say
+
+Rules:
+- The first shell must be the H1 header
+- Follow with a short intro paragraph
+- Then 2-3 H2 headers, each followed by 1-2 paragraph shells
+- End with a closing paragraph shell
+- Do NOT write any actual article text — only instructions
+
+Example format:
+[
+  { "type": "header", "level": 1, "instruction": "כותרת ראשית: כותרת חזקה שמסכמת את הנושא" },
+  { "type": "paragraph", "instruction": "פסקת פתיחה שמציגה את עליית הריבית ואת ההשפעה הצפויה על המשכנתאות" },
+  { "type": "header", "level": 2, "instruction": "כותרת משנה: השפעה על שוק הנדל\"ן" },
+  { "type": "paragraph", "instruction": "פסקה המפרטת כיצד העלאת הריבית משפיעה על מחירי הדירות" }
+]
+
+Return only the JSON array. No preamble, no markdown fences.`;
+
+  const structureRaw = await callHaikuStructure(
+    client,
+    structureUserMessage,
+    "STRUCTURE"
+  );
+
+  let shells: BlockShell[];
+  shells = repairAndParseJSON(structureRaw, 'STRUCTURE') as BlockShell[];
+
+  // Structure validation guard
+  if (!Array.isArray(shells)) {
+    throw new Error(`[WRITER - STRUCTURE] Parsed structure is not an array. Got: ${typeof shells}`);
+  }
+  if (shells.length < 4) {
+    throw new Error(`[WRITER - STRUCTURE] Structure has fewer than 4 blocks (got ${shells.length}). Raw: ${structureRaw.slice(0, 500)}`);
+  }
+  if (shells[0]?.type !== 'header' || shells[0]?.level !== 1) {
+    throw new Error(`[WRITER - STRUCTURE] First block must be type "header" with level 1. Got: ${JSON.stringify(shells[0])}`);
+  }
+
+  console.log(
+    `[WRITER - STRUCTURE] Structure planned: ${shells.length} blocks.`
+  );
+
+  // =========================================================================
+  // STAGE 2 — Block-by-block generation
+  //   - header blocks  → Haiku,  no thinking, max_tokens: 1000
+  //   - paragraph blocks → Sonnet, no thinking, max_tokens: 1000
+  // =========================================================================
+  const completedBlocks: any[] = [];
+  const totalBlocks = shells.length;
+
+  for (let i = 0; i < shells.length; i++) {
+    const shell = shells[i];
+    const blockNum = i + 1;
+    console.log(
+      `[WRITER - BLOCK ${blockNum}/${totalBlocks}] Generating ${shell.type}${shell.level ? ` (H${shell.level})` : ""}…`
+    );
+
+    const writtenSoFar =
+      completedBlocks.length > 0
+        ? `\n\nAlready written blocks (maintain continuity):\n${JSON.stringify(completedBlocks, null, 2)}`
+        : "";
+
+    const blockUserMessage = `Topic: ${topicName}
+
+Source texts:
+${sourcesBlock}
+
+---
+
+Full article structure plan (${shells.length} blocks total):
+${JSON.stringify(shells, null, 2)}
+
+${writtenSoFar}
+
+---
+
+Now write ONLY block ${blockNum} of ${totalBlocks}.
+Instruction for this block: ${shell.instruction}
+Block type: ${shell.type}${shell.level ? `, level: ${shell.level}` : ""}
+
+Return ONLY a single Editor.js block as a JSON object. Examples:
+- Header: { "type": "header", "data": { "text": "כותרת", "level": 1 } }
+- Paragraph: { "type": "paragraph", "data": { "text": "תוכן הפסקה..." } }
+
+Do not write any text outside the JSON object. No markdown fences.`;
+
+    // Route to the correct model based on block type
+    const blockRaw =
+      shell.type === "header"
+        ? await callHaiku(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`)
+        : await callSonnet(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`);
+
+    const blockCleaned = stripMarkdownFences(blockRaw);
+
+    let blockObj: any;
+    try {
+      blockObj = repairAndParseJSON(blockCleaned, `BLOCK ${blockNum}/${totalBlocks}`);
+    } catch (parseErr: unknown) {
+      const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+      throw new Error(
+        `[WRITER - BLOCK ${blockNum}/${totalBlocks}] Failed to parse block JSON.\nError: ${msg}\nRaw: ${blockRaw.slice(0, 500)}`
+      );
+    }
+
+    if (!blockObj.type || !blockObj.data) {
+      throw new Error(
+        `[WRITER - BLOCK ${blockNum}/${totalBlocks}] Invalid block shape (missing type or data).\nGot: ${JSON.stringify(blockObj)}`
+      );
+    }
+
+    completedBlocks.push(blockObj);
+  }
+
+  // Validate first block is H1
+  const firstBlock = completedBlocks[0];
+  if (firstBlock?.type !== "header" || firstBlock?.data?.level !== 1) {
+    throw new Error(
+      `[WRITER] Invalid structure: first block must be a level-1 header.\nGot: ${JSON.stringify(firstBlock)}`
+    );
+  }
+
+  // =========================================================================
+  // STAGE 3 — Meta description (Haiku, no thinking, max_tokens: 1000)
+  // =========================================================================
+  console.log(`[WRITER - META] Generating meta description…`);
+
+  const assembledText = completedBlocks
+    .map((b) => b.data?.text || "")
+    .join(" ");
+
+  const metaUserMessage = `Below is a Hebrew article. Write a meta description for it in Hebrew — maximum 155 characters, suitable for search engines. Return ONLY the meta description string, nothing else.
+
+Article:
+${assembledText}`;
+
+  const metaRaw = await callHaiku(client, metaUserMessage, "META");
+  let metaDescription = metaRaw.trim().replace(/^["']|["']$/g, "");
+
+  if (metaDescription.length > 155) {
+    console.warn(
+      `[WRITER - META] meta_description exceeds 155 chars (${metaDescription.length}). Truncating.`
+    );
+    metaDescription = metaDescription.slice(0, 155);
+  }
+
+  console.log(
+    `[WRITER - META] Done. meta_description length: ${metaDescription.length} chars.`
+  );
+
+  // =========================================================================
+  // Final assembly
+  // =========================================================================
+  console.log(
+    `[WRITER] Article complete: "${firstBlock.data?.text?.slice(0, 60)}…" ` +
+      `(${completedBlocks.length} blocks, meta: ${metaDescription.length} chars)`
+  );
+
+  return {
+    editorjs: completedBlocks,
+    meta_description: metaDescription,
+  };
+}
