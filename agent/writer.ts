@@ -31,6 +31,8 @@ const SYSTEM_PROMPT = `אסור בהחלט להשתמש במקף ארוך (—).
 
 אסור לציין אתרי חדשות ישראלים מתחרים כמקור — לא וואלה, לא מאקו, לא ידיעות, לא גלובס, לא כלכליסט, לא דה מרקר, לא N12, לא ערוץ 13, לא איס, לא ביזפורטל, ולא שום אתר ישראלי אחר. אם המידע מגיע ממקור בינלאומי (רויטרס, בלומברג, CNBC, גרדיאן וכו׳) — ציין אותו. אם המקור הוא ישראלי — נסח את המשפט כעובדה עצמאית ללא ייחוס, או השמט אותו לחלוטין.
 
+כתוב אך ורק במילים עבריות קיימות ומוכרות. אסור להמציא מילים, לשלב שורשים בצורה לא נכונה, או להשתמש במילים שאינן קיימות בעברית תקנית. אם אינך בטוח במילה — השתמש בניסוח פשוט יותר. כותרות חייבות להיות ברורות, טבעיות, ומובנות לכל קורא ישראלי.
+
 You are a professional Hebrew financial journalist writing for calcala-news.co.il.
 
 Your job is to write original Hebrew content based ONLY on the source texts provided to you. You are not allowed to add any claim, statistic, quote, or fact that does not appear in the provided sources. If you cannot attribute something to a source, do not write it.
@@ -374,8 +376,9 @@ Return only the JSON array. No preamble, no markdown fences.`;
 
   // =========================================================================
   // STAGE 2 — Block-by-block generation
-  //   - header blocks  → Haiku,  no thinking, max_tokens: 1000
+  //   - header blocks  → Sonnet, no thinking, max_tokens: 1000
   //   - paragraph blocks → Sonnet, no thinking, max_tokens: 1000
+  //   - H1 additionally validated by Haiku, regenerated if invalid
   // =========================================================================
   const completedBlocks: any[] = [];
   const totalBlocks = shells.length;
@@ -416,11 +419,8 @@ Return ONLY a single Editor.js block as a JSON object. Examples:
 
 Do not write any text outside the JSON object. No markdown fences.`;
 
-    // Route to the correct model based on block type
-    const blockRaw =
-      shell.type === "header"
-        ? await callHaiku(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`)
-        : await callSonnet(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`);
+    // Fix 1: All block types (headers and paragraphs) use Sonnet
+    const blockRaw = await callSonnet(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`);
 
     const blockCleaned = stripMarkdownFences(blockRaw);
 
@@ -438,6 +438,45 @@ Do not write any text outside the JSON object. No markdown fences.`;
       throw new Error(
         `[WRITER - BLOCK ${blockNum}/${totalBlocks}] Invalid block shape (missing type or data).\nGot: ${JSON.stringify(blockObj)}`
       );
+    }
+
+    // Fix 3: Validate H1 headline using Haiku
+    if (shell.type === 'header' && shell.level === 1) {
+      const headline = blockObj.data?.text || '';
+      const validationPrompt = `You are a Hebrew language checker. Read this Hebrew headline and answer only with valid JSON: {"valid": true or false, "issue": "description if invalid, or null if valid"}
+
+A headline is invalid if it:
+- Contains a non-existent Hebrew word
+- Is grammatically broken or unnatural
+- Contains mixed languages incorrectly
+- Is longer than 15 words
+
+Headline to check: ${headline}`;
+
+      try {
+        const validationRaw = await callHaiku(client, validationPrompt, 'BLOCK 1 VALIDATION');
+        const validationResult = repairAndParseJSON(stripMarkdownFences(validationRaw), 'H1 VALIDATION');
+
+        if (validationResult.valid === false) {
+          const issue = validationResult.issue || 'unknown issue';
+          console.log(`[WRITER - BLOCK 1] ⚠️ Headline failed validation: ${issue} — regenerating.`);
+
+          const regenMessage = blockUserMessage +
+            `\n\nIMPORTANT: The previous attempt was rejected. Issue: "${issue}". Write a clear, natural Hebrew headline using only real, existing Hebrew words.`;
+          const regenRaw = await callSonnet(client, regenMessage, 'BLOCK 1 REGEN');
+          const regenCleaned = stripMarkdownFences(regenRaw);
+          const regenObj = repairAndParseJSON(regenCleaned, 'BLOCK 1 REGEN');
+          if (regenObj.type && regenObj.data) {
+            blockObj = regenObj;
+            console.log(`[WRITER - BLOCK 1] ✅ Regenerated headline: "${regenObj.data?.text}"`);
+          }
+        } else {
+          console.log(`[WRITER - BLOCK 1] ✅ Headline passed validation: "${headline}"`);
+        }
+      } catch (valErr) {
+        const msg = valErr instanceof Error ? valErr.message : String(valErr);
+        console.warn(`[WRITER - BLOCK 1] Validation check failed (non-fatal): ${msg}`);
+      }
     }
 
     completedBlocks.push(blockObj);
