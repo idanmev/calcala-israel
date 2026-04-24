@@ -36,7 +36,8 @@ export interface InserterResult {
 
 export async function insertArticle(
   editorJsBlocks: any[],
-  metaDescription: string
+  metaDescription: string,
+  featuredImageUrl: string | null = null
 ): Promise<InserterResult> {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
@@ -143,7 +144,7 @@ When in doubt between categories, prefer שוק-ההון for market/economy stor
     status: 'hidden',
     category_id: categoryId,
     author: 'צוות כלכלה ניוז',
-    featured_image_url: null,
+    featured_image_url: featuredImageUrl,
   };
 
   // We attempt to include meta_description. Supabase ignores fields that don't exist if not strictly enforced,

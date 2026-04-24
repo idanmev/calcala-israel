@@ -5,6 +5,7 @@ import { filterTopics } from './filter';
 import { scrapeTopics } from './scraper';
 import { writer } from './writer';
 import { insertArticle } from './inserter';
+import { generateArticleImage } from './image-generator';
 import { notifyTelegram } from './notifier';
 
 export async function runAgent() {
@@ -71,14 +72,17 @@ export async function runAgent() {
         const { editorjs, meta_description } = await writer(enrichedTexts, scrapedData.topic_name);
         console.log(`[WRITER] Finished. Generated ${editorjs.length} blocks.`);
 
+        // Image Generator
+        const title = editorjs.find((b: any) => b.type === 'header')?.data?.text?.replace(/<[^>]*>?/gm, '') || scrapedData.topic_name;
+        const featuredImageUrl = await generateArticleImage(title, scrapedData.topic_name, meta_description);
+
         // Inserter
         console.log(`[INSERTER] Starting...`);
-        const { id, slug } = await insertArticle(editorjs, meta_description);
+        const { id, slug } = await insertArticle(editorjs, meta_description, featuredImageUrl);
         console.log(`[INSERTER] Finished. Inserted ID: ${id}, Slug: ${slug}`);
 
         // Notifier
         console.log(`[NOTIFIER] Starting...`);
-        const title = editorjs.find(b => b.type === 'header')?.data?.text?.replace(/<[^>]*>?/gm, '') || scrapedData.topic_name;
         await notifyTelegram(id, slug, title, meta_description);
         console.log(`[NOTIFIER] Finished.`);
 
