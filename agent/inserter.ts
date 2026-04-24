@@ -79,7 +79,19 @@ export async function insertArticle(
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 200,
-        system: 'You are a content categorization assistant. Given an article title and description, and a list of available categories, return only the slug of the single most relevant category. Return only the slug string, nothing else.',
+        system: `You are a content categorization assistant. Given an article title and description, and a list of available categories, return only the slug of the single most relevant category. Return only the slug string, nothing else.
+
+Category assignment rules:
+- Oil prices, commodities, global markets → שוק-ההון
+- Interest rates, Bank of Israel decisions → משכנתאות-ונדלן OR פנסיה-וחסכון depending on context
+- Cost of living, inflation, consumer prices → כללי or the closest match
+- Pension, provident funds, savings → פנסיה-וחסכון
+- Real estate, mortgages → משכנתאות-ונדלן
+- Taxation → מיסוי
+- Insurance, health costs → בריאות
+- Tech, startups → טכנולוגיה
+- Law, regulation → משפט
+When in doubt between categories, prefer שוק-ההון for market/economy stories.`,
         messages: [{
           role: 'user',
           content: `Title: ${title}\nDescription: ${metaDescription}\n\nCategories:\n${categoryListStr}`
