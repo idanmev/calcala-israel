@@ -16,13 +16,20 @@ export async function notifyTelegram(
 
   const previewLink = `https://calcala-news.co.il/article.html?slug=${slug}`;
   
+  const escapeHtml = (str: string) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  };
+
   const text = `
-*New Article Draft* 📝
+<b>New Article Draft</b> 📝
 
-*Title:* ${title}
-*Meta:* ${metaDescription}
+<b>Title:</b> ${escapeHtml(title)}
+<b>Meta:</b> ${escapeHtml(metaDescription)}
 
-[Preview Link](${previewLink})
+<a href="${previewLink}">Preview Link</a>
   `.trim();
 
   const replyMarkup = {
@@ -47,13 +54,14 @@ export async function notifyTelegram(
       body: JSON.stringify({
         chat_id: chatId,
         text: text,
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: replyMarkup
       })
     });
 
     if (!response.ok) {
       const errorData = await response.text();
+      console.error(`[NOTIFIER] Telegram API Error. Status: ${response.status}, Body: ${errorData}`);
       throw new Error(`Telegram API Error: ${response.status} - ${errorData}`);
     }
     
