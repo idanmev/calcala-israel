@@ -35,7 +35,7 @@ const SOURCES: FeedSource[] = [
   // בנק ישראל וריבית
   { name: 'בנק ישראל וריבית', url: 'https://news.google.com/rss/search?q=%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A8%D7%99%D7%91%D7%99%D7%AA+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
   // עלות המחיה
-  { name: 'עלות המחיה', url: 'https://news.google.com/rss/search?q=%D7%99%D7%95%D7%A7%D7%A8+%D7%94%D7%9E%D7%97%D7%99%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },e' },
+  { name: 'עלות המחיה', url: 'https://news.google.com/rss/search?q=%D7%99%D7%95%D7%A7%D7%A8+%D7%94%D7%9E%D7%97%D7%99%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
   // English sources
   { name: 'Reuters Business', url: 'https://feeds.reuters.com/reuters/businessNews', language: 'en' },
   { name: 'CNBC Top News', url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', language: 'en' },
