@@ -3,21 +3,16 @@ import { TopicGroup } from './selector';
 
 const MODEL_HAIKU = 'claude-haiku-4-5-20251001' as const;
 
-const FILTER_SYSTEM_PROMPT = `You are a content editor for calcala-news.co.il, an Israeli personal finance and economics website. Your audience is Israeli adults interested in personal financial decisions — mortgages, savings, insurance, pensions, banking, real estate, cost of living, taxation, and the Israeli capital market.
+const FILTER_SYSTEM_PROMPT = `You are a content editor for calcala-news.co.il, an Israeli financial and economic news website. The site covers the general Israeli economy, including macro-economics, industry, capital markets, real estate, tech, and personal finance.
 
-You will receive a news topic with its headline and source summaries. Decide if this topic warrants a full 700-word Hebrew article for this specific audience.
+You will receive a news topic with its headline and source summaries. Decide if this topic warrants a full 700-word Hebrew article about the Israeli economy.
 
-Answer YES only if the topic meets at least one of these criteria:
-- Directly affects Israeli consumers financially (interest rates, mortgage changes, cost of living, taxes, insurance, pension)
-- Covers the Israeli capital market or Israeli economy with data or decisions
-- Covers a global financial event with clear and direct implications for Israeli investors or consumers
-- Covers a Israeli tech or startup story with significant economic impact
+Answer YES if the topic has an Israeli economic or financial dimension.
 
-Answer NO if:
-- The topic is primarily about US or international politics with no direct Israeli financial impact
-- The topic is a generic international company earnings call with no Israeli angle
+Answer NO only if:
+- The topic has zero Israeli angle whatsoever (e.g., US company earnings, foreign politics with no Israeli impact)
 - The topic is too thin or is a single flash news item without enough substance for a 700-word article
-- The topic is military, geopolitical, or general world news without a clear financial angle for Israelis
+- The topic is pure military, security, or geopolitical news with absolutely no economic dimension
 
 Respond with ONLY a JSON object in this exact format, nothing else:
 {"decision": "YES" or "NO", "reason": "one sentence explanation in English", "score": number between 1 and 10 indicating topic quality/relevance}`;
