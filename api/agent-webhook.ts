@@ -49,7 +49,7 @@ export default async function handler(req: any, res: any) {
 
   const newStatus = action === 'approve' ? 'published' : 'rejected';
 
-  // Update Supabase
+  // Update Supabase status first
   const { error } = await supabase
     .from('articles')
     .update({ status: newStatus })
@@ -61,6 +61,41 @@ export default async function handler(req: any, res: any) {
     responseText = `❌ Error updating article to ${newStatus}`;
   } else {
     responseText = action === 'approve' ? '✅ Article Approved & Published!' : '❌ Article Rejected!';
+
+    // If approved, handle SSG and featured article logic
+    if (action === 'approve') {
+      // 1. Try to set as featured
+      const { error: featErr } = await supabase
+        .from('articles')
+        .update({ is_featured: true })
+        .eq('id', id);
+      
+      if (featErr) {
+        console.log('Note: Could not set is_featured on article. Column might not exist.', featErr);
+      }
+
+      // 2. Try to update curated_widgets
+      const { error: widErr } = await supabase
+        .from('curated_widgets')
+        .update({ article_id: id, display_order: 1 })
+        .eq('widget_type', 'featured');
+        
+      if (widErr) {
+        console.log('Note: Could not update curated_widgets table.', widErr);
+      }
+
+      // 3. Trigger SSG rebuild programmatically
+      try {
+        const host = req.headers.host || 'calcala-news.co.il';
+        const protocol = host.includes('localhost') ? 'http' : 'https';
+        console.log(`[WEBHOOK] Triggering SSG Rebuild at ${protocol}://${host}/api/rebuild-ssg...`);
+        fetch(`${protocol}://${host}/api/rebuild-ssg`, { method: 'POST' }).catch(e => {
+          console.error('[WEBHOOK] Background SSG fetch failed', e);
+        });
+      } catch (e) {
+        console.error('Failed to trigger SSG rebuild', e);
+      }
+    }
   }
 
   // Edit Telegram message to remove buttons and show result

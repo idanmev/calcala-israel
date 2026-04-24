@@ -66,25 +66,61 @@ export async function insertArticle(
 
   let categoryId = null;
   if (categories && categories.length > 0) {
-    // Simple keyword matching against title
-    const titleWords = title.split(/\s+/);
-    let bestMatchCount = 0;
-    let bestCategory = categories[0];
+    try {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) throw new Error("Missing Anthropic API Key for categorization");
+      
+      // Import anthropic inside the function to avoid circular or missing dependencies if not at top-level
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey });
 
-    for (const category of categories) {
-      let matchCount = 0;
-      for (const word of titleWords) {
-        if (word.length > 2 && (category.name.includes(word) || (category.slug && category.slug.includes(word)))) {
-          matchCount++;
+      const categoryListStr = categories.map((c: any) => `- Name: ${c.name}, Slug: ${c.slug}`).join('\n');
+      
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        system: 'You are a content categorization assistant. Given an article title and description, and a list of available categories, return only the slug of the single most relevant category. Return only the slug string, nothing else.',
+        messages: [{
+          role: 'user',
+          content: `Title: ${title}\nDescription: ${metaDescription}\n\nCategories:\n${categoryListStr}`
+        }]
+      });
+
+      // Handle the content block assuming the first block is text
+      const contentBlock: any = response.content[0];
+      const returnedSlug = contentBlock.text ? contentBlock.text.trim() : '';
+      
+      const matchedCategory = categories.find((c: any) => c.slug === returnedSlug);
+      
+      if (matchedCategory) {
+        categoryId = matchedCategory.id;
+        console.log(`[INSERTER] AI matched category: ${matchedCategory.name} (id: ${categoryId})`);
+      } else {
+        throw new Error(`AI returned invalid slug: ${returnedSlug}`);
+      }
+    } catch (aiErr) {
+      console.warn('[INSERTER] AI category matching failed, falling back to keywords:', (aiErr as any).message);
+      
+      // Simple keyword matching against title
+      const titleWords = title.split(/\s+/);
+      let bestMatchCount = 0;
+      let bestCategory = categories[0];
+
+      for (const category of categories) {
+        let matchCount = 0;
+        for (const word of titleWords) {
+          if (word.length > 2 && (category.name.includes(word) || (category.slug && category.slug.includes(word)))) {
+            matchCount++;
+          }
+        }
+        if (matchCount > bestMatchCount) {
+          bestMatchCount = matchCount;
+          bestCategory = category;
         }
       }
-      if (matchCount > bestMatchCount) {
-        bestMatchCount = matchCount;
-        bestCategory = category;
-      }
+      categoryId = bestCategory.id;
+      console.log(`[INSERTER] Fallback selected category: ${bestCategory.name} (id: ${categoryId})`);
     }
-    categoryId = bestCategory.id;
-    console.log(`[INSERTER] Selected category: ${bestCategory.name} (id: ${categoryId})`);
   }
 
   console.log(`[INSERTER] Inserting article with slug: ${slug}`);
