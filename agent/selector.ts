@@ -46,13 +46,24 @@ function calculateSimilarity(tokensA: string[], tokensB: string[]): number {
   return intersection / union;
 }
 
+const aggregatorStopwords = [
+  'אייס', 'ice', 'גלובס', 'וואלה', 'מאקו', 'ynet', 'ידיעות',
+  'כלכליסט', 'מרקר', 'ביזפורטל', 'כאן', 'רשת', 'ערוץ',
+  'דיווח', 'מקור', 'לפי', 'על', 'פי', 'את', 'של', 'עם',
+  'הם', 'היא', 'הוא', 'זה', 'כי', 'אם', 'כל', 'אבל',
+  'רק', 'כבר', 'עוד', 'גם', 'אחד', 'שני', 'ראשון'
+];
+
 function extractKeywords(stories: Story[]): string {
   const wordCounts = new Map<string, number>();
+  const stopSet = new Set(aggregatorStopwords);
   
   for (const story of stories) {
     const tokens = tokenize(story.title + ' ' + story.summary);
     for (const token of tokens) {
-      wordCounts.set(token, (wordCounts.get(token) || 0) + 1);
+      if (!stopSet.has(token)) {
+        wordCounts.set(token, (wordCounts.get(token) || 0) + 1);
+      }
     }
   }
   

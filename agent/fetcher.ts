@@ -20,19 +20,22 @@ interface FeedSource {
 const SOURCES: FeedSource[] = [
   // Hebrew sources
   { name: 'Ynet כלכלה', url: 'https://www.ynet.co.il/Integration/StoryRss2.xml', language: 'he' },
-  { name: 'Google News - Israeli Economy', url: 'https://news.google.com/rss/search?q=%D7%9B%D7%9C%D7%9B%D7%9C%D7%94&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Finance', url: 'https://news.google.com/rss/search?q=%D7%91%D7%95%D7%A8%D7%A1%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Real Estate', url: 'https://news.google.com/rss/search?q=%D7%A0%D7%93%D7%9C%D7%9F+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Tech', url: 'https://news.google.com/rss/search?q=%D7%94%D7%99%D7%99%D7%98%D7%A7+%D7%99%D7%A9%D7%A3%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Mortgage', url: 'https://news.google.com/rss/search?q=%D7%A8%D7%99%D7%91%D7%99%D7%AA+%D7%9E%D7%A9%D7%9B%D7%A0%D7%AA%D7%90&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Mortgage Search', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A9%D7%9B%D7%A0%D7%AA%D7%90+%D7%91%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Insurance', url: 'https://news.google.com/rss/search?q=%D7%91%D7%99%D7%98%D7%95%D7%97+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Pension', url: 'https://news.google.com/rss/search?q=%D7%A4%D7%A0%D7%A1%D7%99%D7%94+%D7%92%D7%9E%D7%9C+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Banking', url: 'https://news.google.com/rss/search?q=%D7%91%D7%A0%D7%A7%D7%99%D7%9D+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Capital Market', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%95%D7%A7+%D7%94%D7%94%D7%95%D7%9F+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Economy 2026', url: 'https://news.google.com/rss/search?q=%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Bank of Israel Interest', url: 'https://news.google.com/rss/search?q=%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A8%D7%99%D7%91%D7%99%D7%AA&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News - Israeli Market', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A9%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C%D7%99&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // פנסיה וחסכון
+  { name: 'פנסיה וחסכון', url: 'https://news.google.com/rss/search?q=%D7%A4%D7%A0%D7%A1%D7%99%D7%94+%D7%92%D7%9E%D7%9C+%D7%A7%D7%A8%D7%9F+%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // משכנתאות ונדל"ן
+  { name: 'משכנתאות ונדל"ן', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A9%D7%9B%D7%A0%D7%AA%D7%90+%D7%A8%D7%99%D7%91%D7%99%D7%AA+%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // השקעות וניהול כסף
+  { name: 'השקעות וניהול כסף', url: 'https://news.google.com/rss/search?q=%D7%94%D7%A9%D7%A7%D7%A2%D7%95%D7%AA+%D7%91%D7%95%D7%A8%D7%A1%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // מיסוי
+  { name: 'מיסוי', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A1+%D7%94%D7%9B%D7%A0%D7%A1%D7%94+%D7%9E%D7%A2%D7%A1%D7%99%D7%9D+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // ביטוח ובריאות
+  { name: 'ביטוח ובריאות', url: 'https://news.google.com/rss/search?q=%D7%91%D7%99%D7%98%D7%95%D7%97+%D7%91%D7%A8%D7%99%D7%90%D7%95%D7%AA+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // שוק ההון
+  { name: 'שוק ההון', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%95%D7%A7+%D7%94%D7%94%D7%95%D7%9F+%D7%AA%D7%9C+%D7%90%D7%91%D7%99%D7%91&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // בנק ישראל וריבית
+  { name: 'בנק ישראל וריבית', url: 'https://news.google.com/rss/search?q=%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A8%D7%99%D7%91%D7%99%D7%AA+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  // עלות המחיה
+  { name: 'עלות המחיה', url: 'https://news.google.com/rss/search?q=%D7%99%D7%95%D7%A7%D7%A8+%D7%94%D7%9E%D7%97%D7%99%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },e' },
   // English sources
   { name: 'Reuters Business', url: 'https://feeds.reuters.com/reuters/businessNews', language: 'en' },
   { name: 'CNBC Top News', url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', language: 'en' },
