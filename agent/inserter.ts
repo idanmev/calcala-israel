@@ -94,6 +94,7 @@ export async function insertArticle(
     slug: slug,
     status: 'hidden',
     category_id: categoryId,
+    author: 'צוות כלכלה ניוז',
     featured_image_url: null,
   };
 

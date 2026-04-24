@@ -501,7 +501,7 @@ async function loadArticle() {
         titleInput.value = data.title || '';
         slugInput.value = data.slug || '';
         slugInput.dataset.manuallyEdited = 'true';
-        document.getElementById('author').value = data.author || 'צוות כלכליסט';
+        document.getElementById('author').value = data.author || 'צוות כלכלה ניוז';
         categorySelect.value = data.category_id || '';
         document.getElementById('article-quiz-id').value = data.quiz_id || '';
         metaDescription.value = data.meta_description || '';
