@@ -228,9 +228,9 @@
         const paginationContainer = document.getElementById('paginationContainer');
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
-        const deleteModal = document.getElementById('deleteModal');
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidebar = document.getElementById('sidebar');
+
+        console.log('[Dashboard] DOM Elements loaded. Script initialized.');
 
         // Hamburger menu toggle
         hamburgerBtn.addEventListener('click', () => {
@@ -313,7 +313,7 @@
               <a href="/admin/article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600 hover:text-blue-700">
                 ✏️
               </a>
-              <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600 hover:text-red-700">
+              <button data-action="delete" data-id="${_d(article.id)}" class="text-red-600 hover:text-red-700" title="מחיקה">
                 🗑️
               </button>
             </div>
@@ -353,7 +353,7 @@
             <div class="flex gap-3 items-center">
               ${copyBtnCard}
               <a href="/admin/article-edit?id=${encodeURIComponent(article.id)}" class="text-blue-600">ערוך</a>
-              <button data-delete-id="${_d(article.id)}" class="delete-article-btn text-red-600">מחק</button>
+              <button data-action="delete" data-id="${_d(article.id)}" class="text-red-600">מחק</button>
             </div>
           </div>
         </div>
@@ -436,19 +436,29 @@
             renderArticles();
         }
 
-        // Event delegation — handle delete & copy-link clicks on the containers
-        function handleContainerClick(e) {
-            const deleteBtn = e.target.closest('.delete-article-btn');
+        // Event delegation — handle delete & copy-link clicks on the body
+        document.body.addEventListener('click', function(e) {
+            // Debug: console.log('[Dashboard] Click detected on:', e.target);
+            
+            // 1. Handle Delete
+            const deleteBtn = e.target.closest('[data-action="delete"]');
             if (deleteBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                window.openDeleteModal(deleteBtn.dataset.deleteId);
+                const id = deleteBtn.dataset.id;
+                console.log('[Dashboard] Delete button clicked for ID:', id);
+                if (id) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.openDeleteModal(id);
+                }
                 return;
             }
+            
+            // 2. Handle Copy Link
             const copyBtn = e.target.closest('.copy-link-btn');
             if (copyBtn) {
                 e.preventDefault();
                 const slug = copyBtn.dataset.slug;
+                console.log('[Dashboard] Copy link clicked for slug:', slug);
                 const url = `${window.location.origin}/article/${encodeURIComponent(slug)}`;
                 navigator.clipboard.writeText(url).then(() => {
                     copyBtn.textContent = '✅';
@@ -457,10 +467,7 @@
                     prompt('העתק קישור:', url);
                 });
             }
-        }
-        
-        articlesTableBody.addEventListener('click', handleContainerClick);
-        articlesCardsContainer.addEventListener('click', handleContainerClick);
+        });
 
         // Delete modal
         window.openDeleteModal = function(articleId) {
