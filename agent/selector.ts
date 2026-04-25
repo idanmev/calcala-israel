@@ -114,33 +114,56 @@ export async function selectTopics(stories: Story[]): Promise<TopicGroup[]> {
     }
   }
 
+  // Only exclusively Israeli terms — no generic English financial words (economy, tax, inflation)
+  // which appear in any Bloomberg/CNBC story and would let non-Israeli topics pass.
+  const hardRequiredKeywords = [
+    'israel', 'israeli', 'tel aviv', 'shekel', 'bank of israel', 'tase',
+    'ישראל', 'ישראלי', 'תל אביב', 'שקל', 'בנק ישראל', 'בורסה',
+    'משכנתא', 'ריבית', 'כלכלה', 'פנסיה', 'נדלן', 'מיסוי',
+    'ביטוח', 'יוקר המחיה', 'אינפלציה', 'היטק', 'סטארטאפ'
+  ];
+
   // 2. Score each topic group
-  const scoredGroups: TopicGroup[] = groups.map(group => {
+  const scoredGroups: TopicGroup[] = groups.map((group, idx) => {
     const uniqueSources = new Set(group.map(s => s.source_name)).size;
-    
+
     const englishCount = group.filter(s => s.language === 'en').length;
     const hebrewCount = group.filter(s => s.language === 'he').length;
-    
-    // Gap opportunity: High English coverage, low/no Hebrew coverage
-    const isGapOpportunity = englishCount >= 2 && hebrewCount <= 1;
-    
+
+    // Hard gate: if no story in the group contains any Israeli/finance keyword, score = 0
+    const combinedText = group.map(s => s.title + ' ' + s.summary).join(' ').toLowerCase();
+    const passesHardGate = hardRequiredKeywords.some(kw => combinedText.includes(kw));
+
+    if (!passesHardGate) {
+      return {
+        topic_name: extractKeywords(group),
+        stories: group,
+        gap_score: false,
+        score: 0,
+        relevanceScore: 0
+      };
+    }
+
+    // Calculate relevance score first
+    let relevanceScore = 0;
+    for (const story of group) {
+      const text = (story.title + ' ' + story.summary).toLowerCase();
+
+      const hasIsraelKeyword = israelKeywords.some(kw => text.includes(kw));
+      if (hasIsraelKeyword) relevanceScore += 3;
+
+      const hasFinanceKeyword = financeKeywords.some(kw => text.includes(kw));
+      if (hasFinanceKeyword) relevanceScore += 1;
+    }
+
+    // Gap opportunity: High English coverage, low/no Hebrew coverage, AND some Israeli relevance
+    const isGapOpportunity = englishCount >= 2 && hebrewCount <= 1 && relevanceScore > 0;
+
     // Calculate recency score (closer to now is better)
     const now = Date.now();
     const averageAgeHours = group.reduce((sum, story) => {
       return sum + (now - story.published_at.getTime()) / (1000 * 60 * 60);
     }, 0) / group.length;
-    
-    // Relevance scoring
-    let relevanceScore = 0;
-    for (const story of group) {
-      const text = (story.title + ' ' + story.summary).toLowerCase();
-      
-      const hasIsraelKeyword = israelKeywords.some(kw => text.includes(kw));
-      if (hasIsraelKeyword) relevanceScore += 3;
-      
-      const hasFinanceKeyword = financeKeywords.some(kw => text.includes(kw));
-      if (hasFinanceKeyword) relevanceScore += 1;
-    }
 
     // Scoring logic:
     // Base score = number of unique sources
@@ -149,7 +172,7 @@ export async function selectTopics(stories: Story[]): Promise<TopicGroup[]> {
     let score = uniqueSources;
     if (isGapOpportunity) score += 5;
     score -= (averageAgeHours * 0.1);
-    
+
     // Apply relevance blending and penalty
     score = score * (1 + relevanceScore / 10);
     if (relevanceScore === 0) {
@@ -161,12 +184,12 @@ export async function selectTopics(stories: Story[]): Promise<TopicGroup[]> {
     group.forEach(s => {
       sourceCounts.set(s.source_name, (sourceCounts.get(s.source_name) || 0) + 1);
     });
-    
+
     let maxSourceCount = 0;
     for (const count of sourceCounts.values()) {
       if (count > maxSourceCount) maxSourceCount = count;
     }
-    
+
     const maxSourcePercentage = maxSourceCount / group.length;
     if (maxSourcePercentage > 0.70) {
       score *= 0.7; // 30% penalty
@@ -184,7 +207,8 @@ export async function selectTopics(stories: Story[]): Promise<TopicGroup[]> {
   // Tiered Fallback Logic
   const preferredGroups = scoredGroups.filter(g => {
     const uniqueSources = new Set(g.stories.map(s => s.source_name)).size;
-    return uniqueSources >= 2;
+    // Must have 2+ sources AND some Israeli relevance
+    return uniqueSources >= 2 && (g.relevanceScore || 0) > 0;
   });
   preferredGroups.sort((a, b) => (b.score || 0) - (a.score || 0));
 
