@@ -48,10 +48,10 @@ Follow these exact rules from OpenAI's prompting guide:
       prompt: imagePrompt,
       size: '1536x1024' as any,
       quality: 'medium' as any,
-      response_format: 'b64_json'
+      output_format: 'png' as any
     } as any);
 
-    const base64Image = imageResponse.data[0].b64_json;
+    const base64Image = (imageResponse.data[0] as any).b64_json;
     if (!base64Image) {
       console.error('[IMAGE] No image in response');
       return null;

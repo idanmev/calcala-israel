@@ -300,6 +300,16 @@ Return only the JSON array. No preamble, no markdown fences.`;
         ? `\n\nAlready written blocks (maintain continuity):\n${JSON.stringify(completedBlocks, null, 2)}`
         : "";
 
+    // Model and token logic
+    let model = MODEL_MINI;
+    let maxTokens = 300; // default for headers
+    if (shell.type === "paragraph") {
+      model = MODEL_MAIN;
+      maxTokens = 1000;
+    }
+
+    console.log(`[WRITER - BLOCK ${blockNum}/${totalBlocks}] Using model: ${model}`);
+
     const blockUserMessage = `Topic: ${topicName}
 
 Source texts:
@@ -324,13 +334,6 @@ Return ONLY a single Editor.js block as a JSON object. Examples:
 
 Do not write any text outside the JSON object. No markdown fences.`;
 
-    // Model and token logic
-    let model = MODEL_MINI;
-    let maxTokens = 300; // default for headers
-    if (shell.type === "paragraph") {
-      model = MODEL_MAIN;
-      maxTokens = 1000;
-    }
 
     const blockRaw = await callOpenAI(
       openai,
