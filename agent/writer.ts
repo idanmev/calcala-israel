@@ -467,7 +467,7 @@ Headline to check: ${headline}`;
       return acc + (text.match(/\S+/g) || []).length;
     }, 0);
 
-  if (paragraphWordCount < 250) {
+  if (paragraphWordCount < 50) {
     throw new Error(
       `[WRITER] Article too short (${paragraphWordCount} words) — insufficient source material for a quality article`
     );
