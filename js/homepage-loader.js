@@ -1,9 +1,9 @@
 // Homepage Articles Loader — fetches articles from Supabase and renders dynamically
 const HOMEPAGE_SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
-const HOMEPAGE_HOMEPAGE_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
-const HOMEPAGE_HOMEPAGE_SUPABASE_API = 'https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1';
-const HOMEPAGE_HOMEPAGE_SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/public/';
-const HOMEPAGE_HOMEPAGE_IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
+const HOMEPAGE_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
+const HOMEPAGE_SUPABASE_API = 'https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1';
+const HOMEPAGE_SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/public/';
+const HOMEPAGE_IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
 
 function getOptimizedUrl(url, w) {
   if (!url) return `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`;
