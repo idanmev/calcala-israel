@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,7 +20,8 @@ interface BlockShell {
 // Model constants
 // ---------------------------------------------------------------------------
 
-const MODEL_HAIKU = "claude-haiku-4-5-20251001" as const;
+const MODEL_MINI = "gpt-4o-mini";
+const MODEL_MAIN = "gpt-4o";
 
 /**
  * Core system prompt.
@@ -81,26 +82,7 @@ function buildSourcesBlock(scrapedTexts: string[]): string {
 }
 
 /**
- * Extracts the raw text content from the Anthropic response.
- * When extended thinking is enabled the response may contain both
- * "thinking" blocks and "text" blocks; we only want the "text" block.
- */
-function extractTextContent(
-  content: Anthropic.Messages.ContentBlock[]
-): string {
-  for (const block of content) {
-    if (block.type === "text") {
-      return block.text;
-    }
-  }
-  throw new Error(
-    "[WRITER] No text block found in Anthropic response. Full content: " +
-      JSON.stringify(content)
-  );
-}
-
-/**
- * Strips any accidental markdown code fences Claude might add despite the
+ * Strips any accidental markdown code fences Claude/GPT might add despite the
  * system prompt forbidding them (belt-and-suspenders).
  */
 function stripMarkdownFences(raw: string): string {
@@ -157,27 +139,26 @@ function repairAndParseJSON(raw: string, label: string): any {
 }
 
 /**
- * Makes a Haiku API call for the STRUCTURE stage with max_tokens: 2000.
- * Higher token limit to ensure the full JSON array is never truncated.
+ * Makes an OpenAI API call and returns the cleaned, em-dash-free text.
+ * Retries once on failure.
  */
-async function callHaikuStructure(
-  client: Anthropic,
+async function callOpenAI(
+  openai: OpenAI,
+  modelName: string,
+  maxTokens: number,
   userContent: string,
   label: string
 ): Promise<string> {
   const attempt = async (): Promise<string> => {
-    const response = await client.messages.create({
-      model: MODEL_HAIKU,
-      max_tokens: 8000,
-      system: SYSTEM_PROMPT,
+    const response = await openai.chat.completions.create({
+      model: modelName,
+      max_tokens: maxTokens,
       messages: [
-        {
-          role: "user",
-          content: userContent,
-        },
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContent },
       ],
     });
-    const raw = extractTextContent(response.content);
+    const raw = response.choices[0].message.content ?? "";
     return banEmDash(raw);
   };
 
@@ -197,50 +178,6 @@ async function callHaikuStructure(
     }
   }
 }
-
-/**
- * Makes a Haiku API call (no thinking, max_tokens: 1500) and returns the
- * cleaned, em-dash-free text. Retries once on failure.
- */
-async function callHaiku(
-  client: Anthropic,
-  userContent: string,
-  label: string
-): Promise<string> {
-  const attempt = async (): Promise<string> => {
-    const response = await client.messages.create({
-      model: MODEL_HAIKU,
-      max_tokens: 4000,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: userContent,
-        },
-      ],
-    });
-    const raw = extractTextContent(response.content);
-    return banEmDash(raw);
-  };
-
-  try {
-    return await attempt();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn(`[WRITER] ${label} failed (attempt 1): ${message}. Retrying…`);
-    try {
-      return await attempt();
-    } catch (retryErr: unknown) {
-      const retryMessage =
-        retryErr instanceof Error ? retryErr.message : String(retryErr);
-      throw new Error(
-        `[WRITER] ${label} failed after retry: ${retryMessage}`
-      );
-    }
-  }
-}
-
-// callSonnet removed — all calls use callHaiku for cost optimisation.
 
 // ---------------------------------------------------------------------------
 // Main exported function
@@ -274,18 +211,18 @@ export async function writer(
     );
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "[WRITER] ANTHROPIC_API_KEY environment variable is not set."
+      "[WRITER] OPENAI_API_KEY environment variable is not set."
     );
   }
 
-  const client = new Anthropic({ apiKey });
+  const openai = new OpenAI({ apiKey });
   const sourcesBlock = buildSourcesBlock(scrapedTexts);
 
   // =========================================================================
-  // STAGE 1 — Structure call (Haiku, no thinking, max_tokens: 1000)
+  // STAGE 1 — Structure call (gpt-4o-mini, max_tokens: 3000)
   // =========================================================================
   console.log(`[WRITER - STRUCTURE] Planning article structure for topic: "${topicName}"…`);
 
@@ -319,8 +256,10 @@ Example format:
 
 Return only the JSON array. No preamble, no markdown fences.`;
 
-  const structureRaw = await callHaikuStructure(
-    client,
+  const structureRaw = await callOpenAI(
+    openai,
+    MODEL_MINI,
+    3000,
     structureUserMessage,
     "STRUCTURE"
   );
@@ -345,8 +284,6 @@ Return only the JSON array. No preamble, no markdown fences.`;
 
   // =========================================================================
   // STAGE 2 — Block-by-block generation
-  //   - ALL block types → Haiku, no thinking, max_tokens: 1000
-  //   - H1 additionally validated by Haiku, regenerated if invalid
   // =========================================================================
   const completedBlocks: any[] = [];
   const totalBlocks = shells.length;
@@ -387,8 +324,21 @@ Return ONLY a single Editor.js block as a JSON object. Examples:
 
 Do not write any text outside the JSON object. No markdown fences.`;
 
-    // All block types use Haiku for cost optimisation
-    const blockRaw = await callHaiku(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`);
+    // Model and token logic
+    let model = MODEL_MINI;
+    let maxTokens = 300; // default for headers
+    if (shell.type === "paragraph") {
+      model = MODEL_MAIN;
+      maxTokens = 1000;
+    }
+
+    const blockRaw = await callOpenAI(
+      openai,
+      model,
+      maxTokens,
+      blockUserMessage,
+      `BLOCK ${blockNum}/${totalBlocks}`
+    );
 
     const blockCleaned = stripMarkdownFences(blockRaw);
 
@@ -408,7 +358,7 @@ Do not write any text outside the JSON object. No markdown fences.`;
       );
     }
 
-    // Fix 3: Validate H1 headline using Haiku
+    // H1 validation using gpt-4o-mini
     if (shell.type === 'header' && shell.level === 1) {
       const headline = blockObj.data?.text || '';
       const validationPrompt = `You are a Hebrew language checker. Read this Hebrew headline and answer only with valid JSON: {"valid": true or false, "issue": "description if invalid, or null if valid"}
@@ -422,7 +372,13 @@ A headline is invalid if it:
 Headline to check: ${headline}`;
 
       try {
-        const validationRaw = await callHaiku(client, validationPrompt, 'BLOCK 1 VALIDATION');
+        const validationRaw = await callOpenAI(
+          openai,
+          MODEL_MINI,
+          200,
+          validationPrompt,
+          'BLOCK 1 VALIDATION'
+        );
         const validationResult = repairAndParseJSON(stripMarkdownFences(validationRaw), 'H1 VALIDATION');
 
         if (validationResult.valid === false) {
@@ -431,7 +387,13 @@ Headline to check: ${headline}`;
 
           const regenMessage = blockUserMessage +
             `\n\nIMPORTANT: The previous attempt was rejected. Issue: "${issue}". Write a clear, natural Hebrew headline using only real, existing Hebrew words.`;
-          const regenRaw = await callHaiku(client, regenMessage, 'BLOCK 1 REGEN');
+          const regenRaw = await callOpenAI(
+            openai,
+            MODEL_MINI,
+            300,
+            regenMessage,
+            'BLOCK 1 REGEN'
+          );
           const regenCleaned = stripMarkdownFences(regenRaw);
           const regenObj = repairAndParseJSON(regenCleaned, 'BLOCK 1 REGEN');
           if (regenObj.type && regenObj.data) {
@@ -458,7 +420,7 @@ Headline to check: ${headline}`;
     );
   }
 
-  // Fix 4: Minimum quality gate — count words across all paragraph blocks
+  // Minimum quality gate
   const paragraphWordCount = completedBlocks
     .filter(b => b.type === 'paragraph')
     .reduce((acc, b) => {
@@ -473,7 +435,7 @@ Headline to check: ${headline}`;
   }
 
   // =========================================================================
-  // STAGE 3 — Meta description (Haiku, no thinking, max_tokens: 1000)
+  // STAGE 3 — Meta description (gpt-4o-mini, max_tokens: 200)
   // =========================================================================
   console.log(`[WRITER - META] Generating meta description…`);
 
@@ -486,7 +448,13 @@ Headline to check: ${headline}`;
 Article:
 ${assembledText}`;
 
-  const metaRaw = await callHaiku(client, metaUserMessage, "META");
+  const metaRaw = await callOpenAI(
+    openai,
+    MODEL_MINI,
+    200,
+    metaUserMessage,
+    "META"
+  );
   let metaDescription = metaRaw.trim().replace(/^["']|["']$/g, "");
 
   if (metaDescription.length > 155) {

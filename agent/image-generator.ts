@@ -1,57 +1,8 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
+import OpenAI from 'openai';
 
-async function getGoogleAccessToken(): Promise<string> {
-  const { SignJWT, importPKCS8 } = await import('jose');
-  
-  const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!);
-  const now = Math.floor(Date.now() / 1000);
-  const privateKey = await importPKCS8(serviceAccount.private_key, 'RS256');
-  const jwt = await new SignJWT({
-    iss: serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/cloud-platform',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now,
-  })
-    .setProtectedHeader({ alg: 'RS256' })
-    .sign(privateKey);
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-  const data = await res.json() as any;
-  if (!data.access_token) throw new Error(`Token error: ${JSON.stringify(data)}`);
-  return data.access_token;
-}
-
-async function generateImagePrompt(articleTitle: string, metaDescription: string): Promise<string> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      system: 'You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English for a professional news photo. No politicians, no flags, no protests, no violence. Focus on symbolic financial/economic imagery — money, buildings, graphs, people working, markets. Return only the prompt, maximum 80 words. If the topic is sensitive or violent, return a generic prompt for "Israeli financial district with modern skyscrapers and business people".',
-      messages: [{ role: 'user', content: `Title: ${articleTitle}\nDescription: ${metaDescription}` }],
-    }),
-  });
-  const data = await response.json() as any;
-  const prompt = data.content[0].text.trim();
-  
-  // Safety check: if Claude still refuses or mentions refusal
-  if (prompt.toLowerCase().includes("can't write") || prompt.toLowerCase().includes("subject matter involves")) {
-    return "Israeli financial district with modern skyscrapers and professional business environment, high quality photorealistic news photography";
-  }
-  
-  return prompt;
-}
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generateArticleImage(
   articleTitle: string,
@@ -60,47 +11,53 @@ export async function generateArticleImage(
 ): Promise<string | null> {
   try {
     console.log(`[IMAGE] Generating prompt for: ${articleTitle}`);
-    const imagePrompt = await generateImagePrompt(articleTitle, metaDescription);
+    
+    // Step 1 — Generate image prompt using GPT-4o-mini
+    const promptResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 300,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a photojournalism art director for an Israeli financial news website. Given a Hebrew article title and description, write a prompt for gpt-image-2 that produces a REALISTIC news photograph — not an illustration, not a stock photo.
+
+Follow these exact rules from OpenAI's prompting guide:
+- Write the prompt as if describing a real photo being captured in the moment
+- Use photography language: "shot on 35mm film", "50mm lens", "shallow depth of field", "natural window light", "candid moment"
+- Ask for real texture: skin pores, fabric wear, imperfections, natural expressions
+- Avoid: studio polish, staged poses, perfect symmetry, floating graphics, glowing charts
+- Include Israeli context: Tel Aviv streets, Israeli shekel bills, Israeli bank branches, Israeli apartment buildings, local supermarkets, Israeli businesspeople in casual meetings
+- Start prompt with: "Photorealistic candid photograph,"
+- End prompt with: "Shot on 35mm film, natural light, no filters, honest and unposed."
+- Maximum 120 words total`
+        },
+        {
+          role: 'user',
+          content: `Article title: ${articleTitle}\nDescription: ${metaDescription}`
+        }
+      ]
+    });
+
+    const imagePrompt = promptResponse.choices[0].message.content?.trim() ?? '';
     console.log(`[IMAGE] Prompt: ${imagePrompt}`);
 
-    console.log('[IMAGE] Getting Google access token...');
-    const accessToken = await getGoogleAccessToken();
+    // Step 2 — Generate image using gpt-image-2
+    console.log('[IMAGE] Calling OpenAI Image API...');
+    const imageResponse = await openai.images.generate({
+      model: 'gpt-image-2' as any,
+      prompt: imagePrompt,
+      size: '1536x1024' as any,
+      quality: 'medium' as any,
+      response_format: 'b64_json'
+    } as any);
 
-    console.log('[IMAGE] Calling Imagen API...');
-    const imagenResponse = await fetch(
-      'https://us-central1-aiplatform.googleapis.com/v1/projects/calcala-news/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          instances: [{ prompt: imagePrompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: '16:9',
-            safetyFilterLevel: 'block_few',
-            personGeneration: 'allow_adult',
-          },
-        }),
-      }
-    );
-
-    const imagenData = await imagenResponse.json() as any;
-    console.log('[IMAGE] Imagen response status:', imagenResponse.status);
-
-    if (!imagenResponse.ok) {
-      console.error('[IMAGE] Imagen API error:', JSON.stringify(imagenData));
-      return null;
-    }
-
-    const base64Image = imagenData?.predictions?.[0]?.bytesBase64Encoded;
+    const base64Image = imageResponse.data[0].b64_json;
     if (!base64Image) {
-      console.error('[IMAGE] No image in response:', JSON.stringify(imagenData));
+      console.error('[IMAGE] No image in response');
       return null;
     }
 
+    // Step 3 — Upload to Supabase Storage
     console.log('[IMAGE] Uploading to Supabase Storage...');
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
     const imageBuffer = Buffer.from(base64Image, 'base64');

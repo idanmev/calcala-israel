@@ -14,6 +14,7 @@
     "dotenv": "^17.4.2",
     "jose": "^6.2.2",
     "node-fetch": "^2.7.0",
+    "openai": "^6.34.0",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {
