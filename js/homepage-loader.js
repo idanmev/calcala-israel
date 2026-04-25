@@ -1,6 +1,11 @@
 // Homepage Articles Loader — fetches articles from Supabase and renders dynamically
-const SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
+// Use existing globals if available, otherwise declare locally for standalone usage
+if (typeof SUPABASE_URL === 'undefined') {
+  var SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
+}
+if (typeof SUPABASE_KEY === 'undefined') {
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
+}
 const SUPABASE_API = 'https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1';
 const SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/public/';
 const IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
