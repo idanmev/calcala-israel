@@ -363,25 +363,6 @@
             articlesTableContainer.classList.remove('hidden');
             articlesCardsContainer.classList.remove('hidden');
 
-            // Event delegation for delete buttons
-            document.querySelectorAll('.delete-article-btn').forEach(btn => {
-                btn.addEventListener('click', () => openDeleteModal(btn.dataset.deleteId));
-            });
-
-            // Copy-link buttons for hidden articles
-            document.querySelectorAll('.copy-link-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const slug = btn.dataset.slug;
-                    const url = `${window.location.origin}/article/${encodeURIComponent(slug)}`;
-                    navigator.clipboard.writeText(url).then(() => {
-                        btn.textContent = '✅';
-                        setTimeout(() => { btn.textContent = '🔗'; }, 2000);
-                    }).catch(() => {
-                        prompt('העתק קישור:', url);
-                    });
-                });
-            });
-
             renderPagination();
         }
 
@@ -455,6 +436,29 @@
             renderArticles();
         }
 
+        // Event delegation — handle delete & copy-link clicks anywhere in the doc
+        document.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-article-btn');
+            if (deleteBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                openDeleteModal(deleteBtn.dataset.deleteId);
+                return;
+            }
+            const copyBtn = e.target.closest('.copy-link-btn');
+            if (copyBtn) {
+                e.preventDefault();
+                const slug = copyBtn.dataset.slug;
+                const url = `${window.location.origin}/article/${encodeURIComponent(slug)}`;
+                navigator.clipboard.writeText(url).then(() => {
+                    copyBtn.textContent = '✅';
+                    setTimeout(() => { copyBtn.textContent = '🔗'; }, 2000);
+                }).catch(() => {
+                    prompt('העתק קישור:', url);
+                });
+            }
+        });
+
         // Delete modal
         function openDeleteModal(articleId) {
             articleToDelete = articleId;
@@ -470,20 +474,23 @@
             if (!articleToDelete) return;
 
             try {
-                const { error } = await supabaseClient
+                console.log('[Delete] Attempting to delete article:', articleToDelete);
+                const { data, error } = await supabaseClient
                     .from('articles')
                     .delete()
-                    .eq('id', articleToDelete);
+                    .eq('id', articleToDelete)
+                    .select();
 
+                console.log('[Delete] Response data:', data, 'error:', error);
                 if (error) throw error;
 
                 window.authUtils.showSuccess('המאמר נמחק בהצלחה');
                 closeDeleteModal();
-                window.authUtils.checkAuth().then(isAuth => { if(isAuth) loadArticles(); });
+                loadArticles();
 
             } catch (error) {
-                console.error('Error deleting article:', error);
-                window.authUtils.showError('שגיאה במחיקת המאמר');
+                console.error('[Delete] Error deleting article:', error);
+                window.authUtils.showError('שגיאה במחיקת המאמר: ' + (error.message || JSON.stringify(error)));
             }
         }
 
