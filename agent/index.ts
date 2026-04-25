@@ -4,6 +4,7 @@ import { selectTopics } from './selector';
 import { filterTopics } from './filter';
 import { scrapeTopics } from './scraper';
 import { writer } from './writer';
+import { addInternalLinks } from './linker';
 import { insertArticle, getCategorySlug } from './inserter';
 import { generateArticleImage } from './image-generator';
 import { notifyTelegram } from './notifier';
@@ -65,12 +66,21 @@ export async function runAgent() {
         const title = editorjs.find((b: any) => b.type === 'header')?.data?.text?.replace(/<[^>]*>?/gm, '') || scrapedData.topic_name;
         const categorySlug = await getCategorySlug(title, meta_description);
 
+        // Linker
+        let linkedBlocks = editorjs;
+        try {
+          console.log(`[LINKER] Starting...`);
+          linkedBlocks = await addInternalLinks(editorjs, title, categorySlug || '');
+        } catch (linkerError) {
+          console.error(`[LINKER] Error:`, linkerError);
+        }
+
         // Image Generator
         const featuredImageUrl = await generateArticleImage(title, scrapedData.topic_name, meta_description, categorySlug);
 
         // Inserter
         console.log(`[INSERTER] Starting...`);
-        const { id, slug } = await insertArticle(editorjs, meta_description, featuredImageUrl);
+        const { id, slug } = await insertArticle(linkedBlocks, meta_description, featuredImageUrl);
         console.log(`[INSERTER] Finished. Inserted ID: ${id}, Slug: ${slug}`);
 
         // Notifier
