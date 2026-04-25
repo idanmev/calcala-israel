@@ -193,7 +193,7 @@ async function callHaikuStructure(
 }
 
 /**
- * Makes a Haiku API call (no thinking, max_tokens: 1000) and returns the
+ * Makes a Haiku API call (no thinking, max_tokens: 1500) and returns the
  * cleaned, em-dash-free text. Retries once on failure.
  */
 async function callHaiku(
@@ -204,7 +204,7 @@ async function callHaiku(
   const attempt = async (): Promise<string> => {
     const response = await client.messages.create({
       model: MODEL_HAIKU,
-      max_tokens: 1000,
+      max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: [
         {
