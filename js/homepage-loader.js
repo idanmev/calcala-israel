@@ -1,16 +1,16 @@
 // Homepage Articles Loader — fetches articles from Supabase and renders dynamically
 const HOMEPAGE_SUPABASE_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
-const HOMEPAGE_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
-const HOMEPAGE_SUPABASE_API = 'https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1';
-const HOMEPAGE_SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/public/';
-const HOMEPAGE_IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
+const HOMEPAGE_HOMEPAGE_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
+const HOMEPAGE_HOMEPAGE_SUPABASE_API = 'https://gtuxstslzsiuinxjvfdj.supabase.co/rest/v1';
+const HOMEPAGE_HOMEPAGE_SUPABASE_STORAGE_BASE = 'https://gtuxstslzsiuinxjvfdj.supabase.co/storage/v1/object/public/';
+const HOMEPAGE_HOMEPAGE_IMAGEKIT_ENDPOINT = 'https://ik.imagekit.io/7slg7dpqm/calcala/';
 
 function getOptimizedUrl(url, w) {
   if (!url) return `https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=${w}`;
   const trString = `tr:w-${w},f-auto,q-90`;
-  if (url.startsWith(SUPABASE_STORAGE_BASE)) {
-    const relativePath = url.slice(SUPABASE_STORAGE_BASE.length);
-    return IMAGEKIT_ENDPOINT + `${trString}/${relativePath}`;
+  if (url.startsWith(HOMEPAGE_SUPABASE_STORAGE_BASE)) {
+    const relativePath = url.slice(HOMEPAGE_SUPABASE_STORAGE_BASE.length);
+    return HOMEPAGE_IMAGEKIT_ENDPOINT + `${trString}/${relativePath}`;
   }
   return url;
 }
@@ -32,9 +32,9 @@ async function loadHomepageArticles() {
   try {
     // Fetch hero article (featured or latest)
     const heroRes = await fetch(
-      `${SUPABASE_API}/articles?select=*,categories(name,slug)&status=eq.published&is_featured=eq.true&order=publish_date.desc&limit=1`,
+      `${HOMEPAGE_SUPABASE_API}/articles?select=*,categories(name,slug)&status=eq.published&is_featured=eq.true&order=publish_date.desc&limit=1`,
       {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        headers: { 'apikey': HOMEPAGE_SUPABASE_KEY, 'Authorization': `Bearer ${HOMEPAGE_SUPABASE_KEY}` }
       }
     );
     const heroData = await heroRes.json();
@@ -43,9 +43,9 @@ async function loadHomepageArticles() {
     // Fallback if no featured article
     if (!heroArticle) {
       const latestRes = await fetch(
-        `${SUPABASE_API}/articles?select=*,categories(name,slug)&status=eq.published&order=publish_date.desc&limit=1`,
+        `${HOMEPAGE_SUPABASE_API}/articles?select=*,categories(name,slug)&status=eq.published&order=publish_date.desc&limit=1`,
         {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': HOMEPAGE_SUPABASE_KEY, 'Authorization': `Bearer ${HOMEPAGE_SUPABASE_KEY}` }
         }
       );
       const latestData = await latestRes.json();
@@ -54,9 +54,9 @@ async function loadHomepageArticles() {
 
     // Fetch grid articles
     const gridRes = await fetch(
-      `${SUPABASE_API}/articles?select=*,categories(name,slug)&status=eq.published&order=publish_date.desc&limit=13`,
+      `${HOMEPAGE_SUPABASE_API}/articles?select=*,categories(name,slug)&status=eq.published&order=publish_date.desc&limit=13`,
       {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        headers: { 'apikey': HOMEPAGE_SUPABASE_KEY, 'Authorization': `Bearer ${HOMEPAGE_SUPABASE_KEY}` }
       }
     );
     let gridData = await gridRes.json();
