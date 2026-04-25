@@ -456,8 +456,18 @@
                 }
             }
             
-            if (el.classList.contains('copy-link-btn')) {
-                // handle copy...
+            const copyBtn = el.closest('.copy-link-btn');
+            if (copyBtn) {
+                e.preventDefault();
+                const slug = copyBtn.dataset.slug;
+                console.log('[Dashboard] Copy link clicked for slug:', slug);
+                const url = `${window.location.origin}/article/${encodeURIComponent(slug)}`;
+                navigator.clipboard.writeText(url).then(() => {
+                    copyBtn.textContent = '✅';
+                    setTimeout(() => { copyBtn.textContent = '🔗'; }, 2000);
+                }).catch(() => {
+                    prompt('העתק קישור:', url);
+                });
             }
         }
 
