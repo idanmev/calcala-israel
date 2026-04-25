@@ -54,7 +54,7 @@ export default async function handler(req: any, res: any) {
     // 2. Fetch category from Supabase
     const apiUrl =
       `${SUPABASE_URL}/rest/v1/categories` +
-      `?select=id,name,slug,description` +
+      `?select=id,name,slug` +
       `&slug=eq.${encodeURIComponent(slug)}` +
       `&limit=1`;
 

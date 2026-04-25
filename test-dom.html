@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="deleteModal" class="hidden">MODAL</div>
+  <button class="delete-article-btn" data-delete-id="123">🗑️</button>
+  <script>
+    const deleteModal = document.getElementById('deleteModal');
+    let clicked = false;
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.delete-article-btn');
+      if (btn) {
+        clicked = true;
+        deleteModal.classList.remove('hidden');
+      }
+    });
+    // Simulate click
+    document.querySelector('.delete-article-btn').click();
+    console.log("Clicked:", clicked);
+    console.log("Modal class:", deleteModal.className);
+  </script>
+</body>
+</html>

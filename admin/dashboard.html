@@ -436,13 +436,13 @@
             renderArticles();
         }
 
-        // Event delegation — handle delete & copy-link clicks anywhere in the doc
-        document.addEventListener('click', (e) => {
+        // Event delegation — handle delete & copy-link clicks on the containers
+        function handleContainerClick(e) {
             const deleteBtn = e.target.closest('.delete-article-btn');
             if (deleteBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                openDeleteModal(deleteBtn.dataset.deleteId);
+                window.openDeleteModal(deleteBtn.dataset.deleteId);
                 return;
             }
             const copyBtn = e.target.closest('.copy-link-btn');
@@ -457,20 +457,23 @@
                     prompt('העתק קישור:', url);
                 });
             }
-        });
+        }
+        
+        articlesTableBody.addEventListener('click', handleContainerClick);
+        articlesCardsContainer.addEventListener('click', handleContainerClick);
 
         // Delete modal
-        function openDeleteModal(articleId) {
+        window.openDeleteModal = function(articleId) {
             articleToDelete = articleId;
             deleteModal.classList.remove('hidden');
-        }
+        };
 
-        function closeDeleteModal() {
+        window.closeDeleteModal = function() {
             articleToDelete = null;
             deleteModal.classList.add('hidden');
-        }
+        };
 
-        async function confirmDelete() {
+        window.confirmDelete = async function() {
             if (!articleToDelete) return;
 
             try {
@@ -485,14 +488,14 @@
                 if (error) throw error;
 
                 window.authUtils.showSuccess('המאמר נמחק בהצלחה');
-                closeDeleteModal();
+                window.closeDeleteModal();
                 loadArticles();
 
             } catch (error) {
                 console.error('[Delete] Error deleting article:', error);
                 window.authUtils.showError('שגיאה במחיקת המאמר: ' + (error.message || JSON.stringify(error)));
             }
-        }
+        };
 
         // Format date
         function formatDate(dateString) {
@@ -507,7 +510,7 @@
         // Close modal on outside click
         deleteModal.addEventListener('click', (e) => {
             if (e.target === deleteModal) {
-                closeDeleteModal();
+                window.closeDeleteModal();
             }
         });
 
