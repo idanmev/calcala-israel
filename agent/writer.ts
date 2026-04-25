@@ -20,7 +20,7 @@ interface BlockShell {
 // Model constants
 // ---------------------------------------------------------------------------
 
-const MODEL_HAIKU = "claude-3-5-haiku-latest" as const;
+const MODEL_HAIKU = "claude-haiku-4-5-20251001" as const;
 
 /**
  * Core system prompt.
