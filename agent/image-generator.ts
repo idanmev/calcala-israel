@@ -38,107 +38,154 @@ export async function generateArticleImage(
 
     // 1. Generate Prompt using Claude
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("Missing ANTHROPIC_API_KEY");
+    if (!apiKey) {
+      console.error("[IMAGE] Missing ANTHROPIC_API_KEY");
+      return null;
+    }
     
     const anthropic = new Anthropic({ apiKey });
     
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 150,
-      system: `You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English that would work as a professional news photo for this article. The image must be safe for work, non-violent, non-political (no politicians, no flags, no protests). Focus on symbolic, conceptual, or lifestyle imagery that represents the financial topic. Maximum 100 words. Return only the prompt, nothing else.`,
-      messages: [{
-        role: 'user',
-        content: `Title: ${articleTitle}\nDescription: ${metaDescription}\nTopic: ${topicName}`
-      }]
-    });
+    let generatedPrompt = '';
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 150,
+        system: `You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English that would work as a professional news photo for this article. The image must be safe for work, non-violent, non-political (no politicians, no flags, no protests). Focus on symbolic, conceptual, or lifestyle imagery that represents the financial topic. Maximum 100 words. Return only the prompt, nothing else.`,
+        messages: [{
+          role: 'user',
+          content: `Title: ${articleTitle}\nDescription: ${metaDescription}\nTopic: ${topicName}`
+        }]
+      });
+      const contentBlock: any = response.content[0];
+      generatedPrompt = contentBlock.text ? contentBlock.text.trim() : '';
+      console.log(`[IMAGE] Prompt: ${generatedPrompt}`);
+    } catch (promptErr) {
+      console.error("[IMAGE] Failed to generate prompt with Claude:", promptErr);
+      return null;
+    }
 
-    const contentBlock: any = response.content[0];
-    const generatedPrompt = contentBlock.text ? contentBlock.text.trim() : '';
-    
-    console.log(`[IMAGE] Prompt: ${generatedPrompt}`);
+    if (!generatedPrompt) {
+      console.error("[IMAGE] Generated prompt is empty");
+      return null;
+    }
+
     console.log(`[IMAGE] Calling Imagen 4...`);
 
     // 2. Call Vertex AI Imagen 4
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-      throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_JSON");
+      console.error("[IMAGE] Missing GOOGLE_SERVICE_ACCOUNT_JSON");
+      return null;
     }
 
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-    
-    const predictionServiceClient = new PredictionServiceClient({
-      apiEndpoint: 'us-central1-aiplatform.googleapis.com',
-      credentials
-    });
+    let base64Image = '';
+    try {
+      const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+      
+      const predictionServiceClient = new PredictionServiceClient({
+        apiEndpoint: 'us-central1-aiplatform.googleapis.com',
+        credentials
+      });
 
-    const endpoint = `projects/calcala-news/locations/us-central1/publishers/google/models/imagegeneration@006`;
-    const parameters = helpers.toValue({
-      sampleCount: 1,
-      aspectRatio: "16:9",
-      personGeneration: "DONT_ALLOW"
-    });
-    
-    const instances = [
-      helpers.toValue({
-        prompt: generatedPrompt
-      })
-    ];
+      const endpoint = `projects/calcala-news/locations/us-central1/publishers/google/models/imagegeneration@006`;
+      const parameters = helpers.toValue({
+        sampleCount: 1,
+        aspectRatio: "16:9",
+        personGeneration: "DONT_ALLOW"
+      });
+      
+      const instances = [
+        helpers.toValue({
+          prompt: generatedPrompt
+        })
+      ];
 
-    const request = {
-      endpoint,
-      instances,
-      parameters,
-    };
+      const request = {
+        endpoint,
+        instances,
+        parameters,
+      };
 
-    const [imagenResponse] = await predictionServiceClient.predict(request);
-    
-    if (!imagenResponse.predictions || imagenResponse.predictions.length === 0) {
-      throw new Error("No predictions returned from Imagen 4");
+      const [imagenResponse] = await predictionServiceClient.predict(request);
+      
+      if (!imagenResponse.predictions || imagenResponse.predictions.length === 0) {
+        throw new Error("No predictions returned from Imagen 4");
+      }
+      
+      // Extract base64. Try multiple paths as SDKs vary.
+      const prediction = imagenResponse.predictions[0] as any;
+      
+      if (prediction.bytesBase64Encoded) {
+        base64Image = prediction.bytesBase64Encoded;
+      } else if (prediction.structValue?.fields?.bytesBase64Encoded?.stringValue) {
+        base64Image = prediction.structValue.fields.bytesBase64Encoded.stringValue;
+      } else {
+        console.error("[IMAGE] Unexpected Imagen response format:", JSON.stringify(prediction, null, 2));
+        throw new Error("Could not find base64 image in Imagen response");
+      }
+
+      console.log(`[IMAGE] Image generated (base64 length: ${base64Image.length})`);
+    } catch (imagenErr) {
+      console.error("[IMAGE] Imagen 4 API call failed:", imagenErr);
+      return null;
     }
-    
-    // @ts-ignore
-    const base64Image = imagenResponse.predictions[0].structValue.fields.bytesBase64Encoded.stringValue;
-    if (!base64Image) {
-      throw new Error("Missing bytesBase64Encoded in prediction response");
-    }
-
-    console.log(`[IMAGE] Image generated, uploading to Supabase Storage...`);
 
     // 3. Upload to Supabase Storage
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    console.log(`[IMAGE] Uploading to Supabase Storage...`);
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY');
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const bucketName = 'article-images';
+
+      // Ensure bucket exists
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      if (bucketError) {
+        console.error("[IMAGE] Error listing buckets:", bucketError);
+        throw bucketError;
+      }
+      
+      if (!buckets?.find(b => b.name === bucketName)) {
+        console.log(`[IMAGE] Creating bucket: ${bucketName}`);
+        const { error: createError } = await supabase.storage.createBucket(bucketName, { public: true });
+        if (createError) {
+          console.error("[IMAGE] Error creating bucket:", createError);
+          throw createError;
+        }
+      }
+
+      const buffer = Buffer.from(base64Image, 'base64');
+      const slug = createSlug(articleTitle);
+      const fileName = `${Date.now()}-${slug}.png`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, buffer, { 
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error("[IMAGE] Supabase upload failed:", uploadError);
+        throw uploadError;
+      }
+
+      const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+      const publicUrl = urlData.publicUrl;
+
+      console.log(`[IMAGE] Uploaded: ${publicUrl}`);
+      return publicUrl;
+    } catch (storageErr) {
+      console.error("[IMAGE] Supabase Storage operation failed:", storageErr);
+      return null;
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const bucketName = 'article-images';
-
-    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-    if (bucketError) throw bucketError;
-    
-    if (!buckets?.find(b => b.name === bucketName)) {
-      await supabase.storage.createBucket(bucketName, { public: true });
-    }
-
-    const buffer = Buffer.from(base64Image, 'base64');
-    const slug = createSlug(articleTitle);
-    const fileName = `${Date.now()}-${slug}.png`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(bucketName)
-      .upload(fileName, buffer, { contentType: 'image/png' });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
-    const publicUrl = urlData.publicUrl;
-
-    console.log(`[IMAGE] Uploaded: ${publicUrl}`);
-    return publicUrl;
 
   } catch (error) {
-    console.error(`[IMAGE] Error during image generation:`, error);
+    console.error(`[IMAGE] Fatal error during image generation:`, error);
     return null;
   }
 }
