@@ -1,8 +1,10 @@
 import 'dotenv/config';
-import { SignJWT, importPKCS8 } from 'jose';
 import { createClient } from '@supabase/supabase-js';
 
 async function getGoogleAccessToken(): Promise<string> {
+  // Dynamic import for jose as it is an ES Module
+  const { SignJWT, importPKCS8 } = await import('jose');
+  
   const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!);
   const now = Math.floor(Date.now() / 1000);
   const privateKey = await importPKCS8(serviceAccount.private_key, 'RS256');
