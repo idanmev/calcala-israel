@@ -51,6 +51,8 @@ Do not use vague attribution phrases like "מומחים אומרים", "על פ�
 - תן זווית — לא רק מה קרה, אלא מה זה אומר לישראלי הממוצע
 - סיים עם משפט שמשאיר את הקורא עם משהו לחשוב עליו
 
+מבנה המשפטים: שלב בין משפטים קצרים מאוד (4-7 מילים) למשפטים ארוכים יותר. לפחות בכל פסקה יהיו שני משפטים קצרים ואחד ארוך. אסור להתחיל פסקאות עם: "בנוסף לכך", "יתרה מזאת", "לסיכום", "כמו כן", "יש לציין". אסור להשתמש בביטויים: "משמעותי", "ניכר", "מהותי", "לאור האמור", "בהקשר זה", "חשוב לציין".
+
 מבנה הכתבה:
 - כותרת ראשית (H1): חדה, סקרנית, עד 10 מילים. שאלה או טענה — לא תיאור
 - פסקת פתיחה: 2-3 משפטים שתופסים את הקורא. תתחיל עם העובדה הכי מעניינת, לא עם הרקע
@@ -147,14 +149,15 @@ async function callOpenAI(
   modelName: string,
   maxTokens: number,
   userContent: string,
-  label: string
+  label: string,
+  overrideSystemPrompt?: string
 ): Promise<string> {
   const attempt = async (): Promise<string> => {
     const response = await openai.chat.completions.create({
       model: modelName,
       max_tokens: maxTokens,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: overrideSystemPrompt || SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ],
     });
@@ -334,7 +337,6 @@ Return ONLY a single Editor.js block as a JSON object. Examples:
 
 Do not write any text outside the JSON object. No markdown fences.`;
 
-
     const blockRaw = await callOpenAI(
       openai,
       model,
@@ -415,8 +417,42 @@ Headline to check: ${headline}`;
     completedBlocks.push(blockObj);
   }
 
+  // =========================================================================
+  // STAGE 3 — Humanization Pass (gpt-4o, max_tokens: 4000)
+  // =========================================================================
+  console.log(`[WRITER - HUMANIZE] Running humanization pass...`);
+  const humanizationSystemPrompt = `You are a senior Hebrew editor at an Israeli news website. You receive an article in Editor.js JSON format and improve it to sound more human and natural. Rules:
+- Fix any sentences that sound translated from English
+- Remove corporate or academic language
+- Add occasional short punchy sentences that convey feeling ("המשקיעים לא אוהבים הפתעות")
+- Vary paragraph lengths — break up any paragraph with 4+ similar-length sentences
+- Remove repeated transitions and filler phrases
+- Keep all facts exactly as they are — only improve style
+- Return the SAME Editor.js JSON structure with improved text in each block
+- Return only valid JSON, no preamble`;
+
+  const humanizationUserMessage = `Improve this Hebrew article to sound more natural and human:\n${JSON.stringify(completedBlocks)}`;
+
+  const humanizedRaw = await callOpenAI(
+    openai,
+    MODEL_MAIN,
+    4000,
+    humanizationUserMessage,
+    "HUMANIZE",
+    humanizationSystemPrompt
+  );
+
+  let finalBlocks: any[];
+  try {
+    finalBlocks = repairAndParseJSON(humanizedRaw, 'HUMANIZE');
+  } catch (err) {
+    console.warn(`[WRITER - HUMANIZE] Humanization parse failed, falling back to original blocks.`);
+    finalBlocks = completedBlocks;
+  }
+  console.log(`[WRITER - HUMANIZE] Done.`);
+
   // Validate first block is H1
-  const firstBlock = completedBlocks[0];
+  const firstBlock = finalBlocks[0];
   if (firstBlock?.type !== "header" || firstBlock?.data?.level !== 1) {
     throw new Error(
       `[WRITER] Invalid structure: first block must be a level-1 header.\nGot: ${JSON.stringify(firstBlock)}`
@@ -424,7 +460,7 @@ Headline to check: ${headline}`;
   }
 
   // Minimum quality gate
-  const paragraphWordCount = completedBlocks
+  const paragraphWordCount = finalBlocks
     .filter(b => b.type === 'paragraph')
     .reduce((acc, b) => {
       const text = b.data?.text || '';
@@ -438,11 +474,11 @@ Headline to check: ${headline}`;
   }
 
   // =========================================================================
-  // STAGE 3 — Meta description (gpt-4o-mini, max_tokens: 200)
+  // STAGE 4 — Meta description (gpt-4o-mini, max_tokens: 200)
   // =========================================================================
   console.log(`[WRITER - META] Generating meta description…`);
 
-  const assembledText = completedBlocks
+  const assembledText = finalBlocks
     .map((b) => b.data?.text || "")
     .join(" ");
 
@@ -476,11 +512,11 @@ ${assembledText}`;
   // =========================================================================
   console.log(
     `[WRITER] Article complete: "${firstBlock.data?.text?.slice(0, 60)}…" ` +
-      `(${completedBlocks.length} blocks, meta: ${metaDescription.length} chars)`
+      `(${finalBlocks.length} blocks, meta: ${metaDescription.length} chars)`
   );
 
   return {
-    editorjs: completedBlocks,
+    editorjs: finalBlocks,
     meta_description: metaDescription,
   };
 }

@@ -4,7 +4,7 @@ import { selectTopics } from './selector';
 import { filterTopics } from './filter';
 import { scrapeTopics } from './scraper';
 import { writer } from './writer';
-import { insertArticle } from './inserter';
+import { insertArticle, getCategorySlug } from './inserter';
 import { generateArticleImage } from './image-generator';
 import { notifyTelegram } from './notifier';
 
@@ -61,9 +61,12 @@ export async function runAgent() {
         const { editorjs, meta_description } = await writer(scrapedData.scrapedTexts, scrapedData.topic_name);
         console.log(`[WRITER] Finished. Generated ${editorjs.length} blocks.`);
 
-        // Image Generator
+        // Early Categorization
         const title = editorjs.find((b: any) => b.type === 'header')?.data?.text?.replace(/<[^>]*>?/gm, '') || scrapedData.topic_name;
-        const featuredImageUrl = await generateArticleImage(title, scrapedData.topic_name, meta_description);
+        const categorySlug = await getCategorySlug(title, meta_description);
+
+        // Image Generator
+        const featuredImageUrl = await generateArticleImage(title, scrapedData.topic_name, meta_description, categorySlug);
 
         // Inserter
         console.log(`[INSERTER] Starting...`);

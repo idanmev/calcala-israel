@@ -29,9 +29,62 @@ function createSlug(title: string): string {
   return `${baseSlug}-${shortTimestamp}`;
 }
 
+export async function getCategorySlug(
+  title: string,
+  metaDescription: string
+): Promise<string | null> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const { data: categories } = await supabase.from('categories').select('id, name, slug');
+  if (!categories || categories.length === 0) return null;
+
+  try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Missing Anthropic API Key");
+    
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey });
+
+    const categoryListStr = categories.map((c: any) => `- Name: ${c.name}, Slug: ${c.slug}`).join('\n');
+    
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      system: `You are a content categorization assistant. Given an article title and description, and a list of available categories, return only the slug of the single most relevant category. Return only the slug string, nothing else.
+
+Category assignment rules:
+- Oil prices, commodities, global markets → שוק-ההון
+- Interest rates, Bank of Israel decisions → משכנתאות-ונדלן OR פנסיה-וחסכון depending on context
+- Cost of living, inflation, consumer prices → כללי or the closest match
+- Pension, provident funds, savings → פנסיה-וחסכון
+- Real estate, mortgages → משכנתאות-ונדלן
+- Taxation → מיסוי
+- Insurance, health costs → בריאות
+- Tech, startups → טכנולוגיה
+- Law, regulation → משמשפט
+When in doubt between categories, prefer שוק-ההון for market/economy stories.`,
+      messages: [{
+        role: 'user',
+        content: `Title: ${title}\nDescription: ${metaDescription}\n\nCategories:\n${categoryListStr}`
+      }]
+    });
+
+    const contentBlock: any = response.content[0];
+    const returnedSlug = contentBlock.text ? contentBlock.text.trim() : '';
+    const matchedCategory = categories.find((c: any) => c.slug === returnedSlug);
+    return matchedCategory ? matchedCategory.slug : categories[0].slug;
+  } catch (err) {
+    return categories[0].slug;
+  }
+}
+
 export interface InserterResult {
   id: string;
   slug: string;
+  categorySlug: string | null;
 }
 
 export async function insertArticle(
@@ -65,55 +118,20 @@ export async function insertArticle(
     console.error('[INSERTER] Error fetching categories:', catError);
   }
 
-  let categoryId = null;
-  if (categories && categories.length > 0) {
-    try {
-      const apiKey = process.env.ANTHROPIC_API_KEY;
-      if (!apiKey) throw new Error("Missing Anthropic API Key for categorization");
-      
-      // Import anthropic inside the function to avoid circular or missing dependencies if not at top-level
-      const Anthropic = require('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey });
+  let categoryId: string | null = null;
+  let matchedCategorySlug: string | null = null;
+  
+  const aiSlug = await getCategorySlug(title, metaDescription);
+  if (aiSlug && categories) {
+    const matchedCategory = categories.find((c: any) => c.slug === aiSlug);
+    if (matchedCategory) {
+      categoryId = matchedCategory.id;
+      matchedCategorySlug = matchedCategory.slug;
+      console.log(`[INSERTER] AI matched category: ${matchedCategory.name} (id: ${categoryId})`);
+    }
+  }
 
-      const categoryListStr = categories.map((c: any) => `- Name: ${c.name}, Slug: ${c.slug}`).join('\n');
-      
-      const response = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 200,
-        system: `You are a content categorization assistant. Given an article title and description, and a list of available categories, return only the slug of the single most relevant category. Return only the slug string, nothing else.
-
-Category assignment rules:
-- Oil prices, commodities, global markets → שוק-ההון
-- Interest rates, Bank of Israel decisions → משכנתאות-ונדלן OR פנסיה-וחסכון depending on context
-- Cost of living, inflation, consumer prices → כללי or the closest match
-- Pension, provident funds, savings → פנסיה-וחסכון
-- Real estate, mortgages → משכנתאות-ונדלן
-- Taxation → מיסוי
-- Insurance, health costs → בריאות
-- Tech, startups → טכנולוגיה
-- Law, regulation → משפט
-When in doubt between categories, prefer שוק-ההון for market/economy stories.`,
-        messages: [{
-          role: 'user',
-          content: `Title: ${title}\nDescription: ${metaDescription}\n\nCategories:\n${categoryListStr}`
-        }]
-      });
-
-      // Handle the content block assuming the first block is text
-      const contentBlock: any = response.content[0];
-      const returnedSlug = contentBlock.text ? contentBlock.text.trim() : '';
-      
-      const matchedCategory = categories.find((c: any) => c.slug === returnedSlug);
-      
-      if (matchedCategory) {
-        categoryId = matchedCategory.id;
-        console.log(`[INSERTER] AI matched category: ${matchedCategory.name} (id: ${categoryId})`);
-      } else {
-        throw new Error(`AI returned invalid slug: ${returnedSlug}`);
-      }
-    } catch (aiErr) {
-      console.warn('[INSERTER] AI category matching failed, falling back to keywords:', (aiErr as any).message);
-      
+  if (!categoryId && categories && categories.length > 0) {
       // Simple keyword matching against title
       const titleWords = title.split(/\s+/);
       let bestMatchCount = 0;
@@ -132,8 +150,8 @@ When in doubt between categories, prefer שוק-ההון for market/economy stor
         }
       }
       categoryId = bestCategory.id;
+      matchedCategorySlug = bestCategory.slug;
       console.log(`[INSERTER] Fallback selected category: ${bestCategory.name} (id: ${categoryId})`);
-    }
   }
 
   console.log(`[INSERTER] Inserting article with slug: ${slug}`);
@@ -180,6 +198,7 @@ When in doubt between categories, prefer שוק-ההון for market/economy stor
   
   return {
     id: data.id,
-    slug: data.slug
+    slug: data.slug,
+    categorySlug: matchedCategorySlug
   };
 }

@@ -4,14 +4,26 @@ import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+const categoryTemplates: Record<string, string> = {
+  'shuk-hahon': 'Photorealistic newswire photograph from the Tel Aviv Stock Exchange trading floor, taken with a Canon 5D and 35mm lens. Mid-day natural fluorescent lighting, Israeli traders in business shirts looking at large monitors showing red and green numbers, documentary photojournalism tone, Reuters/AP news style, muted colors, no dramatic cinematic lighting, no stock-photo posing.',
+  'mishkantaot-venadlan': 'Realistic press-style photograph of an Israeli apartment building or real estate scene, natural daylight, slightly overcast, documentary style, rule of thirds composition, looks like a wire-service news photo, no artistic filters.',
+  'pensiya-vechasachon': 'Photographic news image of an Israeli couple in their 50s reviewing financial documents at a kitchen table, shot on 50mm lens at eye level, natural window light, realistic, no posed smiles, documentary photojournalism tone.',
+  'misuy': 'Realistic documentary photograph of Israeli tax office or accountant meeting, natural office lighting, 35mm lens, Reuters/AP style, no stock-photo posing.',
+  'bri-ut': 'Photorealistic news photograph inside an Israeli clinic or pharmacy, natural fluorescent lighting, 50mm lens, documentary style, Reuters/AP wire photo look.',
+  'default': 'Photorealistic newswire photograph related to Israeli economy and finance, natural lighting, 35mm lens, documentary photojournalism style, Reuters/AP news wire look, no studio lighting, no posed corporate handshake, no infographics, no floating icons.'
+};
+
 export async function generateArticleImage(
   articleTitle: string,
   topicName: string,
-  metaDescription: string
+  metaDescription: string,
+  categorySlug: string | null
 ): Promise<string | null> {
   try {
-    console.log(`[IMAGE] Generating prompt for: ${articleTitle}`);
+    console.log(`[IMAGE] Generating prompt for: ${articleTitle} (Category: ${categorySlug})`);
     
+    const template = categoryTemplates[categorySlug || 'default'] || categoryTemplates['default'];
+
     // Step 1 — Generate image prompt using GPT-4o-mini
     const promptResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -19,21 +31,11 @@ export async function generateArticleImage(
       messages: [
         {
           role: 'system',
-          content: `You are a photojournalism art director for an Israeli financial news website. Given a Hebrew article title and description, write a prompt for gpt-image-2 that produces a REALISTIC news photograph — not an illustration, not a stock photo.
-
-Follow these exact rules from OpenAI's prompting guide:
-- Write the prompt as if describing a real photo being captured in the moment
-- Use photography language: "shot on 35mm film", "50mm lens", "shallow depth of field", "natural window light", "candid moment"
-- Ask for real texture: skin pores, fabric wear, imperfections, natural expressions
-- Avoid: studio polish, staged poses, perfect symmetry, floating graphics, glowing charts
-- Include Israeli context: Tel Aviv streets, Israeli shekel bills, Israeli bank branches, Israeli apartment buildings, local supermarkets, Israeli businesspeople in casual meetings
-- Start prompt with: "Photorealistic candid photograph,"
-- End prompt with: "Shot on 35mm film, natural light, no filters, honest and unposed."
-- Maximum 120 words total`
+          content: `You are a photojournalism art director. Given a base image template and a specific article, write a final gpt-image-1 prompt that adapts the template with story-specific details. Keep the photojournalistic style. Add 1-2 specific visual details from the article (e.g. "screens show shekel weakening", "shelves with rising price tags"). Maximum 150 words. Start with "Photorealistic candid photograph," and end with "No studio lighting, no posed smiles, no floating graphics, no text overlays."`
         },
         {
           role: 'user',
-          content: `Article title: ${articleTitle}\nDescription: ${metaDescription}`
+          content: `Base Template: ${template}\n\nArticle Title: ${articleTitle}\nDescription: ${metaDescription}`
         }
       ]
     });
@@ -41,10 +43,10 @@ Follow these exact rules from OpenAI's prompting guide:
     const imagePrompt = promptResponse.choices[0].message.content?.trim() ?? '';
     console.log(`[IMAGE] Prompt: ${imagePrompt}`);
 
-    // Step 2 — Generate image using gpt-image-2
+    // Step 2 — Generate image using gpt-image-1
     console.log('[IMAGE] Calling OpenAI Image API...');
     const imageResponse = await openai.images.generate({
-      model: 'gpt-image-2' as any,
+      model: 'gpt-image-1' as any,
       prompt: imagePrompt,
       size: '1536x1024' as any,
       quality: 'medium' as any,
