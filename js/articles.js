@@ -42,10 +42,11 @@ function formatHebrewDate(dateString) {
 
 // Render hero article
 async function renderHeroArticle() {
-    if (window.__PRELOADED_ARTICLES__) {
-        console.log('Articles JS: SSG preloaded, skipping hero render');
-        return;
-    }
+    const heroContainer = document.getElementById('hero-article');
+    if (!heroContainer) return;
+
+    const preloadedId = heroContainer.dataset.id;
+    console.log('Articles JS: Preloaded Hero ID:', preloadedId);
     console.log('Articles JS: Rendering hero article...');
     try {
         let heroData = null;
@@ -81,8 +82,12 @@ async function renderHeroArticle() {
         }
 
         const article = heroData && heroData.length > 0 ? heroData[0] : null;
-        const heroContainer = document.getElementById('hero-article');
-        if (!heroContainer) return;
+        
+        // HYBRID CHECK: If we have preloaded content, only update if the ID is different
+        if (preloadedId && article && article.id === preloadedId) {
+            console.log('Articles JS: Preloaded content is fresh. Skipping update.');
+            return;
+        }
 
         if (!article) {
             console.warn('No featured article found, trying to use latest published article');
@@ -143,11 +148,13 @@ function updateHeroUI(container, article) {
     `;
     container.style.cursor = 'pointer';
     container.onclick = () => window.location.href = `/article/${slug}`;
+    container.dataset.rendered = 'true'; // Mark that we've dynamically rendered this
+    container.dataset.id = article.id;
 }
 
 // Render grid articles
-async function renderGridArticles() {
-    if (window.__PRELOADED_ARTICLES__) {
+async function renderGridArticles(force = false) {
+    if (window.__PRELOADED_ARTICLES__ && !force) {
         console.log('Articles JS: SSG preloaded, skipping grid render');
         return;
     }
@@ -319,10 +326,17 @@ async function renderMostReadWidget() {
 }
 
 // Initialize on page load
-function startLoading() {
+async function startLoading() {
     if (initSupabase()) {
-        renderHeroArticle();
-        renderGridArticles();
+        // Hero handles its own hybrid check
+        await renderHeroArticle();
+        
+        // If hero container is now different from what was pre-rendered, 
+        // or if we aren't preloaded, render the grid too.
+        const heroContainer = document.getElementById('hero-article');
+        const isStale = heroContainer && heroContainer.dataset.rendered === 'true';
+        
+        renderGridArticles(isStale);
         renderMostReadWidget();
     } else {
         // Retry if Supabase library is still loading

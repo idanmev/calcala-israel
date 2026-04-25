@@ -75,7 +75,7 @@ async function build() {
         const img1600 = getOptimizedUrl(heroArticle.featured_image_url, 1600);
 
         heroHtml = `
-      <a href="/article/${slug}" id="hero-article" class="lg:col-span-8 block relative h-full min-h-[384px] bg-slate-900 rounded-sm overflow-hidden group" style="cursor: pointer;">
+      <a href="/article/${slug}" id="hero-article" data-id="${heroArticle.id}" class="lg:col-span-8 block relative h-full min-h-[384px] bg-slate-900 rounded-sm overflow-hidden group" style="cursor: pointer;">
         <picture>
             <source media="(max-width: 640px)" srcset="${img400} 400w, ${img800} 800w, ${img1200} 1200w" sizes="100vw">
             <source media="(max-width: 1024px)" srcset="${img1200} 1200w, ${img1600} 1600w" sizes="100vw">
@@ -133,17 +133,19 @@ async function build() {
     indexHtml = indexHtml.replace(/<script>\s*window\.__HERO_FETCH__[\s\S]*?<\/script>/, '');
 
     // Inject PRELOAD data flag so JS knows not to re-render
-    const preloadedScript = `
+    if (!indexHtml.includes('window.__PRELOADED_ARTICLES__ = true;')) {
+        const preloadedScript = `
     <!-- SSG Preload Flag -->
     <script>
         window.__PRELOADED_ARTICLES__ = true;
     </script>
     `;
-    if (indexHtml.includes('<!-- LCP Pre-fetch for Hero Article -->')) {
-        indexHtml = indexHtml.replace('<!-- LCP Pre-fetch for Hero Article -->', preloadedScript);
-    } else {
-        // Fallback injection after <head>
-        indexHtml = indexHtml.replace('<head>', '<head>\n' + preloadedScript);
+        if (indexHtml.includes('<!-- LCP Pre-fetch for Hero Article -->')) {
+            indexHtml = indexHtml.replace('<!-- LCP Pre-fetch for Hero Article -->', preloadedScript);
+        } else {
+            // Fallback injection after <head>
+            indexHtml = indexHtml.replace('<head>', '<head>\n' + preloadedScript);
+        }
     }
 
     // Inject Hero Container (Replacing entire `<a id="hero-article">...</a>`)
