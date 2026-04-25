@@ -15,47 +15,60 @@ interface FeedSource {
   name: string;
   url: string;
   language: 'he' | 'en';
+  timeWindowHours?: number; // override per-source; Google News uses 72h
 }
+
+const GOOGLE_NEWS_WINDOW = 72;
 
 const SOURCES: FeedSource[] = [
   // Hebrew sources
   { name: 'Ynet כלכלה', url: 'https://www.ynet.co.il/Integration/StoryRss2.xml', language: 'he' },
   // פנסיה וחסכון
-  { name: 'פנסיה וחסכון', url: 'https://news.google.com/rss/search?q=%D7%A4%D7%A0%D7%A1%D7%99%D7%94+%D7%92%D7%9E%D7%9C+%D7%A7%D7%A8%D7%9F+%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'פנסיה וחסכון', url: 'https://news.google.com/rss/search?q=%D7%A4%D7%A0%D7%A1%D7%99%D7%94+%D7%92%D7%9E%D7%9C+%D7%A7%D7%A8%D7%9F+%D7%94%D7%A9%D7%AA%D7%9C%D7%9E%D7%95%D7%AA&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // משכנתאות ונדל"ן
-  { name: 'משכנתאות ונדל"ן', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A9%D7%9B%D7%A0%D7%AA%D7%90+%D7%A8%D7%99%D7%91%D7%99%D7%AA+%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'משכנתאות ונדל"ן', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A9%D7%9B%D7%A0%D7%AA%D7%90+%D7%A8%D7%99%D7%91%D7%99%D7%AA+%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // השקעות וניהול כסף
-  { name: 'השקעות וניהול כסף', url: 'https://news.google.com/rss/search?q=%D7%94%D7%A9%D7%A7%D7%A2%D7%95%D7%AA+%D7%91%D7%95%D7%A8%D7%A1%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'השקעות וניהול כסף', url: 'https://news.google.com/rss/search?q=%D7%94%D7%A9%D7%A7%D7%A2%D7%95%D7%AA+%D7%91%D7%95%D7%A8%D7%A1%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // מיסוי
-  { name: 'מיסוי', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A1+%D7%94%D7%9B%D7%A0%D7%A1%D7%94+%D7%9E%D7%A2%D7%A1%D7%99%D7%9D+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'מיסוי', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%A1+%D7%94%D7%9B%D7%A0%D7%A1%D7%94+%D7%9E%D7%A2%D7%A1%D7%99%D7%9D+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // ביטוח ובריאות
-  { name: 'ביטוח ובריאות', url: 'https://news.google.com/rss/search?q=%D7%91%D7%99%D7%98%D7%95%D7%97+%D7%91%D7%A8%D7%99%D7%90%D7%95%D7%AA+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'ביטוח ובריאות', url: 'https://news.google.com/rss/search?q=%D7%91%D7%99%D7%98%D7%95%D7%97+%D7%91%D7%A8%D7%99%D7%90%D7%95%D7%AA+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // שוק ההון
-  { name: 'שוק ההון', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%95%D7%A7+%D7%94%D7%94%D7%95%D7%9F+%D7%AA%D7%9C+%D7%90%D7%91%D7%99%D7%91&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'שוק ההון', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%95%D7%A7+%D7%94%D7%94%D7%95%D7%9F+%D7%AA%D7%9C+%D7%90%D7%91%D7%99%D7%91&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // בנק ישראל וריבית
-  { name: 'בנק ישראל וריבית', url: 'https://news.google.com/rss/search?q=%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A8%D7%99%D7%91%D7%99%D7%AA+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'בנק ישראל וריבית', url: 'https://news.google.com/rss/search?q=%D7%91%D7%A0%D7%A7+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A8%D7%99%D7%91%D7%99%D7%AA+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // עלות המחיה
-  { name: 'עלות המחיה', url: 'https://news.google.com/rss/search?q=%D7%99%D7%95%D7%A7%D7%A8+%D7%94%D7%9E%D7%97%D7%99%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'עלות המחיה', url: 'https://news.google.com/rss/search?q=%D7%99%D7%95%D7%A7%D7%A8+%D7%94%D7%9E%D7%97%D7%99%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+2026&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  // Calcalist via Google News
+  { name: 'כלכליסט', url: 'https://news.google.com/rss/search?q=site:calcalist.co.il&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  // Globes via Google News
+  { name: 'גלובס', url: 'https://news.google.com/rss/search?q=site:globes.co.il+%D7%9B%D7%9C%D7%9B%D7%9C%D7%94&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  // TheMarker via Google News
+  { name: 'TheMarker', url: 'https://news.google.com/rss/search?q=site:themarker.com&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  // Israeli economy today
+  { name: 'כלכלת ישראל היום', url: 'https://news.google.com/rss/search?q=%D7%9B%D7%9C%D7%9B%D7%9C%D7%AA+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%94%D7%99%D7%95%D7%9D&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  // Israeli finance news
+  { name: 'חדשות כלכלה ישראל', url: 'https://news.google.com/rss/search?q=%D7%97%D7%93%D7%A9%D7%95%D7%AA+%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  // Google News Economy
+  { name: 'Google News Economy', url: 'https://news.google.com/rss/search?q=%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A9%D7%95%D7%A7&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  { name: 'Google News Prices', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D+%D7%99%D7%95%D7%A7%D7%A8+%D7%A6%D7%A8%D7%9B%D7%9F&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  { name: 'Google News Tech', url: 'https://news.google.com/rss/search?q=%D7%94%D7%99%D7%99%D7%98%D7%A7+%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
+  { name: 'Google News Wages', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%9B%D7%A8+%D7%9E%D7%99%D7%A0%D7%99%D7%9E%D7%95%D7%9D+%D7%AA%D7%A2%D7%A1%D7%95%D7%A7%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he', timeWindowHours: GOOGLE_NEWS_WINDOW },
   // English sources
-  { name: 'Reuters Business', url: 'https://feeds.reuters.com/reuters/businessNews', language: 'en' },
   { name: 'CNBC Top News', url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', language: 'en' },
-  { name: 'MarketWatch', url: 'https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines', language: 'en' },
   { name: 'Yahoo Finance', url: 'https://finance.yahoo.com/news/rssindex', language: 'en' },
   { name: 'Seeking Alpha', url: 'https://seekingalpha.com/feed.xml', language: 'en' },
   { name: 'The Guardian Business', url: 'https://www.theguardian.com/us/business/rss', language: 'en' },
-  { name: 'Reuters Israel', url: 'https://feeds.reuters.com/reuters/INeconomics', language: 'en' },
-  { name: 'MarketWatch Economy', url: 'https://feeds.marketwatch.com/marketwatch/economy-politics/', language: 'en' },
-  { name: 'Google News Economy', url: 'https://news.google.com/rss/search?q=%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A9%D7%95%D7%A7&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News Prices', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D+%D7%99%D7%95%D7%A7%D7%A8+%D7%A6%D7%A8%D7%9B%D7%9F&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News Tech', url: 'https://news.google.com/rss/search?q=%D7%94%D7%99%D7%99%D7%98%D7%A7+%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
-  { name: 'Google News Wages', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%9B%D7%A8+%D7%9E%D7%99%D7%A0%D7%99%D7%9E%D7%95%D7%9D+%D7%AA%D7%A2%D7%A1%D7%95%D7%A7%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' }
+  { name: 'Bloomberg Markets', url: 'https://feeds.bloomberg.com/markets/news.rss', language: 'en' },
+  { name: 'AP Business', url: 'https://rsshub.app/apnews/business', language: 'en' },
+  { name: 'WSJ Markets', url: 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml', language: 'en' },
 ];
 
 export async function fetchAllStories(): Promise<Story[]> {
   return fetchStoriesForWindow(24);
 }
 
-async function fetchStoriesForWindow(hours: number): Promise<Story[]> {
+export async function fetchStoriesForWindow(hours: number): Promise<Story[]> {
   const parser = new Parser({
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RSS reader)' }
   });
@@ -77,6 +90,9 @@ async function fetchFromSources(parser: any, cutoff: Date): Promise<Story[]> {
   const allStories: Story[] = [];
 
   for (const source of SOURCES) {
+    const sourceCutoff = source.timeWindowHours
+      ? new Date(Date.now() - source.timeWindowHours * 60 * 60 * 1000)
+      : cutoff;
     let feedUrl = source.url;
     let feed;
 
@@ -115,7 +131,7 @@ async function fetchFromSources(parser: any, cutoff: Date): Promise<Story[]> {
       if (!item.title || !item.link) continue;
 
       const publishedAt = item.pubDate ? new Date(item.pubDate) : new Date();
-      if (publishedAt < cutoff) continue;
+      if (publishedAt < sourceCutoff) continue;
 
       // Extract raw text for summary (remove HTML if any)
       const contentOptions = [
@@ -152,13 +168,14 @@ async function fetchFromSources(parser: any, cutoff: Date): Promise<Story[]> {
     sourceStories.sort((a, b) => b.published_at.getTime() - a.published_at.getTime());
 
     const cappedSources = [
-      'Seeking Alpha', 
-      'CNBC Top News', 
-      'MarketWatch', 
-      'Yahoo Finance', 
+      'Seeking Alpha',
+      'CNBC Top News',
+      'Yahoo Finance',
       'The Guardian Business',
       'Ynet כלכלה',
-      'MarketWatch Economy'
+      'Bloomberg Markets',
+      'AP Business',
+      'WSJ Markets',
     ];
 
     if (cappedSources.includes(source.name)) {

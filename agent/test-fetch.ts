@@ -1,53 +1,51 @@
+import 'dotenv/config';
 import { fetchAllStories } from './fetcher';
 import { selectTopics } from './selector';
 
-async function main() {
-  console.log('--- Starting Fetch ---');
-  const stories = await fetchAllStories();
+async function runDiagnostics() {
+  console.log('--- Starting Fetch & Select Diagnostics ---');
   
+  // 1. Fetch Stories
+  console.log('\n[FETCHER] Fetching stories...');
+  const stories = await fetchAllStories();
+  console.log(`[FETCHER] Total stories fetched: ${stories.length}\n`);
+
+  // Group and count by source
   const sourceCounts: Record<string, number> = {};
   for (const story of stories) {
     sourceCounts[story.source_name] = (sourceCounts[story.source_name] || 0) + 1;
   }
   
-  console.log('\n--- Fetch Results ---');
-  let totalRetrieved = 0;
-  for (const [source, count] of Object.entries(sourceCounts)) {
-    console.log(`- ${source}: ${count} stories`);
-    totalRetrieved += count;
+  console.log('--- Stories per Source ---');
+  for (const [source, count] of Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])) {
+    console.log(`${source}: ${count} stories`);
   }
-  
-  // Note: Actual fetch failures are logged by fetcher.ts to console.error during the process.
-  console.log(`\nTotal unique stories retrieved: ${totalRetrieved}`);
-  
-  console.log('\n--- Starting Selection ---');
+
+  if (stories.length === 0) {
+    console.log('\nNo stories fetched. Exiting.');
+    return;
+  }
+
+  // 2. Select Topics
+  console.log('\n[SELECTOR] Running topic selection...');
   const topics = await selectTopics(stories);
+  console.log(`[SELECTOR] Found ${topics.length} topic groups.\n`);
+
+  // 3. Print Top 5 Topics
+  console.log('--- Top 5 Selected Topics ---');
+  const topTopics = topics.slice(0, 5);
   
-  console.log('\n--- Top 2 Selected Topics ---');
-  topics.forEach((topic, index) => {
-    console.log(`\n#${index + 1} Topic: ${topic.topic_name}`);
-    console.log(`Gap Score: ${topic.gap_score}`);
-    console.log(`Score: ${topic.score}`);
-    if (topic.fallback_tier) {
-      console.log(`Fallback Tier: ${topic.fallback_tier}`);
+  for (let i = 0; i < topTopics.length; i++) {
+    const t = topTopics[i];
+    console.log(`${i + 1}. Topic: "${t.topic_name}"`);
+    console.log(`   Score: ${t.score || 'N/A'}`);
+    console.log(`   Stories in group (${t.stories.length}):`);
+    
+    for (const s of t.stories) {
+      console.log(`      - [${s.source_name}] ${s.title}`);
     }
-    console.log(`Source URLs:`);
-    const breakdown = new Map<string, number>();
-    topic.stories.forEach(s => {
-      breakdown.set(s.source_name, (breakdown.get(s.source_name) || 0) + 1);
-      console.log(`  -> [${s.source_name}] ${s.url}`);
-    });
-    console.log(`\nSource Breakdown:`);
-    for (const [src, count] of breakdown.entries()) {
-      console.log(`  - ${src}: ${count} stories`);
-    }
-  });
-  
-  console.log('\nProcess completed successfully.');
-  process.exit(0);
+    console.log('');
+  }
 }
 
-main().catch(error => {
-  console.error('Fatal Error:', error);
-  process.exit(1);
-});
+runDiagnostics().catch(console.error);

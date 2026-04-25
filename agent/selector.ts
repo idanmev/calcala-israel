@@ -1,4 +1,4 @@
-import { Story } from './fetcher';
+import { Story, fetchStoriesForWindow } from './fetcher';
 
 export interface TopicGroup {
   topic_name: string;
@@ -76,6 +76,11 @@ function extractKeywords(stories: Story[]): string {
 }
 
 export async function selectTopics(stories: Story[]): Promise<TopicGroup[]> {
+  if (stories.length < 30) {
+    console.log(`[SELECTOR] Pool too thin (${stories.length} stories) — expanding to 72h window`);
+    stories = await fetchStoriesForWindow(72);
+    console.log(`[SELECTOR] After 72h expansion: ${stories.length} stories`);
+  }
   console.log(`[SELECTOR] Received ${stories.length} stories for processing`);
   
   // 1. Group stories using keyword and title similarity
