@@ -21,7 +21,6 @@ interface BlockShell {
 // ---------------------------------------------------------------------------
 
 const MODEL_HAIKU = "claude-haiku-4-5-20251001" as const;
-const MODEL_SONNET = "claude-sonnet-4-6" as const;
 
 /**
  * Core system prompt.
@@ -34,6 +33,8 @@ const SYSTEM_PROMPT = `אסור בהחלט להשתמש במקף ארוך (—).
 אסור בהחלט לכתוב מספרים ספציפיים (מחירים, אחוזים, תאריכים, סכומים בדולר או בשקל) שלא מופיעים במפורש בטקסטי המקור שסופקו לך. אם מספר מסוים אינו במקורות — אל תכתוב אותו. השתמש בניסוחים כלליים כמו "עלו בשיעור ניכר" או "ירדו משמעותית" במקום מספרים שאינך בטוח לגביהם. זהו כלל מוחלט.
 
 כתוב אך ורק במילים עבריות קיימות ומוכרות. אסור להמציא מילים, לשלב שורשים בצורה לא נכונה, או להשתמש במילים שאינן קיימות בעברית תקנית. אם אינך בטוח במילה — השתמש בניסוח פשוט יותר. כותרות חייבות להיות ברורות, טבעיות, ומובנות לכל קורא ישראלי.
+
+כתוב פסקאות ארוכות ומפורטות. כל פסקה חייבת להכיל לפחות 4-5 משפטים. אל תקצר.
 
 You are a professional Hebrew financial journalist writing for calcala-news.co.il.
 
@@ -233,47 +234,7 @@ async function callHaiku(
   }
 }
 
-/**
- * Makes a Sonnet API call (no thinking, max_tokens: 1000) and returns the
- * cleaned, em-dash-free text. Retries once on failure.
- */
-async function callSonnet(
-  client: Anthropic,
-  userContent: string,
-  label: string
-): Promise<string> {
-  const attempt = async (): Promise<string> => {
-    const response = await client.messages.create({
-      model: MODEL_SONNET,
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: userContent,
-        },
-      ],
-    });
-    const raw = extractTextContent(response.content);
-    return banEmDash(raw);
-  };
-
-  try {
-    return await attempt();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn(`[WRITER] ${label} failed (attempt 1): ${message}. Retrying…`);
-    try {
-      return await attempt();
-    } catch (retryErr: unknown) {
-      const retryMessage =
-        retryErr instanceof Error ? retryErr.message : String(retryErr);
-      throw new Error(
-        `[WRITER] ${label} failed after retry: ${retryMessage}`
-      );
-    }
-  }
-}
+// callSonnet removed — all calls use callHaiku for cost optimisation.
 
 // ---------------------------------------------------------------------------
 // Main exported function
@@ -378,8 +339,7 @@ Return only the JSON array. No preamble, no markdown fences.`;
 
   // =========================================================================
   // STAGE 2 — Block-by-block generation
-  //   - header blocks  → Sonnet, no thinking, max_tokens: 1000
-  //   - paragraph blocks → Sonnet, no thinking, max_tokens: 1000
+  //   - ALL block types → Haiku, no thinking, max_tokens: 1000
   //   - H1 additionally validated by Haiku, regenerated if invalid
   // =========================================================================
   const completedBlocks: any[] = [];
@@ -421,8 +381,8 @@ Return ONLY a single Editor.js block as a JSON object. Examples:
 
 Do not write any text outside the JSON object. No markdown fences.`;
 
-    // Fix 1: All block types (headers and paragraphs) use Sonnet
-    const blockRaw = await callSonnet(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`);
+    // All block types use Haiku for cost optimisation
+    const blockRaw = await callHaiku(client, blockUserMessage, `BLOCK ${blockNum}/${totalBlocks}`);
 
     const blockCleaned = stripMarkdownFences(blockRaw);
 
@@ -465,7 +425,7 @@ Headline to check: ${headline}`;
 
           const regenMessage = blockUserMessage +
             `\n\nIMPORTANT: The previous attempt was rejected. Issue: "${issue}". Write a clear, natural Hebrew headline using only real, existing Hebrew words.`;
-          const regenRaw = await callSonnet(client, regenMessage, 'BLOCK 1 REGEN');
+          const regenRaw = await callHaiku(client, regenMessage, 'BLOCK 1 REGEN');
           const regenCleaned = stripMarkdownFences(regenRaw);
           const regenObj = repairAndParseJSON(regenCleaned, 'BLOCK 1 REGEN');
           if (regenObj.type && regenObj.data) {
