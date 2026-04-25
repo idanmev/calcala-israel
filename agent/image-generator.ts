@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
 async function getGoogleAccessToken(): Promise<string> {
-  // Dynamic import for jose as it is an ES Module
   const { SignJWT, importPKCS8 } = await import('jose');
   
   const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!);
@@ -39,12 +38,19 @@ async function generateImagePrompt(articleTitle: string, metaDescription: string
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
-      system: 'You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English for a professional news photo. No politicians, no flags, no protests, no violence. Focus on symbolic financial/economic imagery — money, buildings, graphs, people working, markets. Return only the prompt, maximum 80 words.',
+      system: 'You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English for a professional news photo. No politicians, no flags, no protests, no violence. Focus on symbolic financial/economic imagery — money, buildings, graphs, people working, markets. Return only the prompt, maximum 80 words. If the topic is sensitive or violent, return a generic prompt for "Israeli financial district with modern skyscrapers and business people".',
       messages: [{ role: 'user', content: `Title: ${articleTitle}\nDescription: ${metaDescription}` }],
     }),
   });
   const data = await response.json() as any;
-  return data.content[0].text.trim();
+  const prompt = data.content[0].text.trim();
+  
+  // Safety check: if Claude still refuses or mentions refusal
+  if (prompt.toLowerCase().includes("can't write") || prompt.toLowerCase().includes("subject matter involves")) {
+    return "Israeli financial district with modern skyscrapers and professional business environment, high quality photorealistic news photography";
+  }
+  
+  return prompt;
 }
 
 export async function generateArticleImage(
@@ -98,7 +104,10 @@ export async function generateArticleImage(
     console.log('[IMAGE] Uploading to Supabase Storage...');
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
     const imageBuffer = Buffer.from(base64Image, 'base64');
-    const fileName = `${Date.now()}-${topicName.replace(/\s+/g, '-').slice(0, 30)}.png`;
+    
+    // Sanitize fileName: remove non-ASCII and non-alphanumeric
+    const sanitizedTopic = topicName.replace(/[^\x00-\x7F]/g, '').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').toLowerCase();
+    const fileName = `${Date.now()}-${sanitizedTopic || 'article-image'}.png`;
 
     // Ensure bucket exists
     const { data: buckets } = await supabase.storage.listBuckets();
@@ -113,7 +122,7 @@ export async function generateArticleImage(
       .upload(fileName, imageBuffer, { contentType: 'image/png', upsert: false });
 
     if (uploadError) {
-      console.error('[IMAGE] Upload error:', uploadError);
+      console.error('[IMAGE] Upload error:', JSON.stringify(uploadError));
       return null;
     }
 
