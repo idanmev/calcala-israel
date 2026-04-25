@@ -164,7 +164,7 @@ async function renderGridArticles(force = false) {
             .select('*, categories(name, slug)')
             .eq('status', 'published')
             .order('publish_date', { ascending: false })
-            .limit(12);
+            .limit(13); // Fetch 13 to ensure we have 12 after filtering out hero
 
         if (error) {
             console.error('Grid articles error:', error);
@@ -184,8 +184,10 @@ async function renderGridArticles(force = false) {
 
         console.log('Rendering', data.length, 'articles to grid');
 
-        // Filter out featured articles
-        const articlesToShow = data.filter(a => !a.is_featured);
+        // Filter out ONLY the current hero article (to match ssg.js logic)
+        const heroContainer = document.getElementById('hero-article');
+        const heroId = heroContainer ? heroContainer.dataset.id : null;
+        const articlesToShow = data.filter(a => a.id !== heroId).slice(0, 12);
 
         // Keep the heading if it exists, replace everything else
         const heading = gridContainer.querySelector('h2');
