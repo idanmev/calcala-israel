@@ -30,16 +30,19 @@ async function extractSearchKeywords(articleTitle: string): Promise<string> {
       messages: [
         {
           role: 'system',
-          content: `Extract 2-3 English search keywords from this Hebrew article title for finding a relevant news photo. Return only keywords, nothing else. Rules:
-- For stories about Israeli economy/finance: include "Israel" as one keyword
-- For interest rates: use "interest rate bank"
-- For real estate: use "Israel apartment" or "Tel Aviv building"
-- For stock market: use "stock market trading"
-- For cost of living: use "supermarket prices Israel"
-- For pension/savings: use "retirement savings"
-- For tax: use "tax Israel"
+          content: `Extract 2-3 English search keywords from this Hebrew article title for finding a stock photo. Return only keywords, nothing else.
+Rules:
+- Keep it simple and broad — single common nouns work better than phrases
+- For stock market stories: "stock exchange" or "trading"
+- For real estate: "apartment building" or "housing"
+- For banking/interest rates: "bank" or "money"
+- For cost of living: "supermarket" or "shopping"
+- For pension/savings: "savings" or "retirement"
+- For tax: "taxes" or "documents"
+- For tech/startup: "technology" or "startup office"
 - Never return Hebrew characters
-- Maximum 4 words total`
+- Maximum 3 words total
+- Prefer words that appear in millions of stock photos`
         },
         {
           role: 'user',
@@ -65,23 +68,26 @@ async function searchPexels(query: string): Promise<string | null> {
     console.log('[IMAGE] PEXELS_API_KEY not set, skipping.');
     return null;
   }
-  try {
-    const response = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`,
-      { headers: { Authorization: apiKey } }
-    );
-    const data = await response.json() as any;
-    if (data.photos && data.photos.length > 0) {
-      const photo = data.photos[0];
-      console.log(`[IMAGE] Pexels found: ${photo.url}`);
-      return photo.src.large2x;
+  const queries = [query, query.split(' ').slice(0, 2).join(' ')].filter((q, i, arr) => arr.indexOf(q) === i);
+  for (const q of queries) {
+    try {
+      const response = await fetch(
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=5&orientation=landscape`,
+        { headers: { Authorization: apiKey } }
+      );
+      const data = await response.json() as any;
+      if (data.photos && data.photos.length > 0) {
+        const photo = data.photos[0];
+        console.log(`[IMAGE] Pexels found (query: "${q}"): ${photo.url}`);
+        return photo.src.large2x;
+      }
+      console.log(`[IMAGE] Pexels: no results for "${q}".`);
+    } catch (err: any) {
+      console.warn(`[IMAGE] Pexels error: ${err.message}`);
+      return null;
     }
-    console.log('[IMAGE] Pexels: no results found.');
-    return null;
-  } catch (err: any) {
-    console.warn(`[IMAGE] Pexels error: ${err.message}`);
-    return null;
   }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -121,23 +127,26 @@ async function searchUnsplash(query: string): Promise<string | null> {
     console.log('[IMAGE] UNSPLASH_ACCESS_KEY not set, skipping.');
     return null;
   }
-  try {
-    const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`,
-      { headers: { Authorization: `Client-ID ${accessKey}` } }
-    );
-    const data = await response.json() as any;
-    if (data.results && data.results.length > 0) {
-      const photo = data.results[0];
-      console.log(`[IMAGE] Unsplash found: ${photo.urls.regular}`);
-      return photo.urls.regular;
+  const queries = [query, query.split(' ').slice(0, 2).join(' ')].filter((q, i, arr) => arr.indexOf(q) === i);
+  for (const q of queries) {
+    try {
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=5&orientation=landscape`,
+        { headers: { Authorization: `Client-ID ${accessKey}` } }
+      );
+      const data = await response.json() as any;
+      if (data.results && data.results.length > 0) {
+        const photo = data.results[0];
+        console.log(`[IMAGE] Unsplash found (query: "${q}"): ${photo.urls.regular}`);
+        return photo.urls.regular;
+      }
+      console.log(`[IMAGE] Unsplash: no results for "${q}".`);
+    } catch (err: any) {
+      console.warn(`[IMAGE] Unsplash error: ${err.message}`);
+      return null;
     }
-    console.log('[IMAGE] Unsplash: no results found.');
-    return null;
-  } catch (err: any) {
-    console.warn(`[IMAGE] Unsplash error: ${err.message}`);
-    return null;
   }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -149,21 +158,24 @@ async function searchPixabay(query: string): Promise<string | null> {
     console.log('[IMAGE] PIXABAY_API_KEY not set, skipping.');
     return null;
   }
-  try {
-    const response = await fetch(
-      `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(query)}&image_type=photo&orientation=horizontal&per_page=5&safesearch=true`
-    );
-    const data = await response.json() as any;
-    if (data.hits && data.hits.length > 0) {
-      console.log(`[IMAGE] Pixabay found: ${data.hits[0].webformatURL}`);
-      return data.hits[0].largeImageURL;
+  const queries = [query, query.split(' ').slice(0, 2).join(' ')].filter((q, i, arr) => arr.indexOf(q) === i);
+  for (const q of queries) {
+    try {
+      const response = await fetch(
+        `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(q)}&image_type=photo&orientation=horizontal&per_page=5&safesearch=true`
+      );
+      const data = await response.json() as any;
+      if (data.hits && data.hits.length > 0) {
+        console.log(`[IMAGE] Pixabay found (query: "${q}"): ${data.hits[0].webformatURL}`);
+        return data.hits[0].largeImageURL;
+      }
+      console.log(`[IMAGE] Pixabay: no results for "${q}".`);
+    } catch (err: any) {
+      console.warn(`[IMAGE] Pixabay error: ${err.message}`);
+      return null;
     }
-    console.log('[IMAGE] Pixabay: no results found.');
-    return null;
-  } catch (err: any) {
-    console.warn(`[IMAGE] Pixabay error: ${err.message}`);
-    return null;
   }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +302,7 @@ async function generateWithAI(
 }
 
 // ---------------------------------------------------------------------------
-// Main export — waterfall: Pexels → Openverse → Unsplash → Pixabay → AI
+// Main export — waterfall: Pexels → Unsplash → Pixabay → Openverse → AI
 // ---------------------------------------------------------------------------
 export async function generateArticleImage(
   articleTitle: string,
@@ -311,15 +323,7 @@ export async function generateArticleImage(
       if (uploaded) return uploaded;
     }
 
-    // 2. Openverse (Creative Commons, no key needed)
-    console.log('[IMAGE] Trying Openverse...');
-    const openverseUrl = await searchOpenverse(searchQuery);
-    if (openverseUrl) {
-      const uploaded = await uploadImageFromUrl(openverseUrl, fileName);
-      if (uploaded) return uploaded;
-    }
-
-    // 3. Unsplash
+    // 2. Unsplash
     console.log('[IMAGE] Trying Unsplash...');
     const unsplashUrl = await searchUnsplash(searchQuery);
     if (unsplashUrl) {
@@ -327,11 +331,19 @@ export async function generateArticleImage(
       if (uploaded) return uploaded;
     }
 
-    // 4. Pixabay
+    // 3. Pixabay
     console.log('[IMAGE] Trying Pixabay...');
     const pixabayUrl = await searchPixabay(searchQuery);
     if (pixabayUrl) {
       const uploaded = await uploadImageFromUrl(pixabayUrl, fileName);
+      if (uploaded) return uploaded;
+    }
+
+    // 4. Openverse (Creative Commons, no key needed)
+    console.log('[IMAGE] Trying Openverse...');
+    const openverseUrl = await searchOpenverse(searchQuery);
+    if (openverseUrl) {
+      const uploaded = await uploadImageFromUrl(openverseUrl, fileName);
       if (uploaded) return uploaded;
     }
 
