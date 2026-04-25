@@ -196,8 +196,8 @@
             <h3 class="modal-title">מחיקת מאמר</h3>
             <p class="text-gray-600">האם אתה בטוח שברצונך למחוק את המאמר? פעולה זו אינה ניתנת לביטול.</p>
             <div class="modal-actions">
-                <button onclick="confirmDelete()" class="btn btn-danger">מחק</button>
-                <button onclick="closeDeleteModal()" class="btn btn-secondary">ביטול</button>
+                <button id="confirmDeleteBtn" class="btn btn-danger">מחק</button>
+                <button id="closeDeleteBtn" class="btn btn-secondary">ביטול</button>
             </div>
         </div>
     </div>
@@ -471,18 +471,34 @@
             }
         });
 
-        // Delete modal
+        // Delete modal functions
         window.openDeleteModal = function(articleId) {
+            console.log('[Dashboard] openDeleteModal called for ID:', articleId);
             articleToDelete = articleId;
-            deleteModal.classList.remove('hidden');
+            const el = document.getElementById('deleteModal');
+            if (el) {
+                console.log('[Dashboard] Modal element found. Removing hidden class.');
+                el.classList.remove('hidden');
+                el.style.display = 'flex'; // Force display
+                el.style.setProperty('display', 'flex', 'important');
+            } else {
+                console.error('[Dashboard] CRITICAL ERROR: deleteModal element NOT FOUND in DOM');
+            }
         };
 
         window.closeDeleteModal = function() {
+            console.log('[Dashboard] closeDeleteModal called');
             articleToDelete = null;
-            deleteModal.classList.add('hidden');
+            const el = document.getElementById('deleteModal');
+            if (el) {
+                el.classList.add('hidden');
+                el.style.display = 'none';
+            }
         };
 
-        window.confirmDelete = async function() {
+        // Bind modal buttons
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            console.log('[Dashboard] Confirm delete button clicked');
             if (!articleToDelete) return;
 
             try {
@@ -504,7 +520,11 @@
                 console.error('[Delete] Error deleting article:', error);
                 window.authUtils.showError('שגיאה במחיקת המאמר: ' + (error.message || JSON.stringify(error)));
             }
-        };
+        });
+
+        document.getElementById('closeDeleteBtn').addEventListener('click', () => {
+            window.closeDeleteModal();
+        });
 
         // Format date
         function formatDate(dateString) {
