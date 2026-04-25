@@ -212,7 +212,7 @@ async function callHaiku(
   const attempt = async (): Promise<string> => {
     const response = await client.messages.create({
       model: MODEL_HAIKU,
-      max_tokens: 1500,
+      max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [
         {
