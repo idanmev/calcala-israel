@@ -69,9 +69,9 @@ export async function generateArticleImage(
       return null;
     }
 
-    console.log(`[IMAGE] Calling Imagen 4...`);
+    console.log(`[IMAGE] Calling Imagen API...`);
 
-    // 2. Call Vertex AI Imagen 4
+    // 2. Call Vertex AI Imagen
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
       console.error("[IMAGE] Missing GOOGLE_SERVICE_ACCOUNT_JSON");
       return null;
@@ -90,7 +90,7 @@ export async function generateArticleImage(
       const parameters = helpers.toValue({
         sampleCount: 1,
         aspectRatio: "16:9",
-        personGeneration: "DONT_ALLOW"
+        personGeneration: "dont_allow"
       });
       
       const instances = [
@@ -105,27 +105,39 @@ export async function generateArticleImage(
         parameters,
       };
 
-      const [imagenResponse] = await predictionServiceClient.predict(request);
+      console.log(`[IMAGE] Sending prediction request to Vertex AI...`);
+      // Set a timeout of 60 seconds
+      const predictPromise = predictionServiceClient.predict(request);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Imagen API request timed out after 60s")), 60000)
+      );
+
+      const [imagenResponse] = await Promise.race([predictPromise, timeoutPromise]) as any;
       
-      if (!imagenResponse.predictions || imagenResponse.predictions.length === 0) {
-        throw new Error("No predictions returned from Imagen 4");
+      if (!imagenResponse || !imagenResponse.predictions || imagenResponse.predictions.length === 0) {
+        console.error("[IMAGE] No predictions returned from Imagen. Full response:", JSON.stringify(imagenResponse, null, 2));
+        throw new Error("No predictions returned from Imagen");
       }
       
-      // Extract base64. Try multiple paths as SDKs vary.
-      const prediction = imagenResponse.predictions[0] as any;
-      
+      // Extract base64. 
+      const prediction = imagenResponse.predictions[0];
+      console.log(`[IMAGE] Prediction structure keys: ${Object.keys(prediction)}`);
+
+      // In some environments, the prediction is a protobuf Value, in others it's a plain object
       if (prediction.bytesBase64Encoded) {
         base64Image = prediction.bytesBase64Encoded;
       } else if (prediction.structValue?.fields?.bytesBase64Encoded?.stringValue) {
         base64Image = prediction.structValue.fields.bytesBase64Encoded.stringValue;
       } else {
-        console.error("[IMAGE] Unexpected Imagen response format:", JSON.stringify(prediction, null, 2));
+        // Log the first few keys and structure to debug
+        console.error("[IMAGE] Could not find base64 image in prediction. Keys found:", Object.keys(prediction));
+        if (prediction.structValue) console.error("[IMAGE] structValue fields:", Object.keys(prediction.structValue.fields));
         throw new Error("Could not find base64 image in Imagen response");
       }
 
-      console.log(`[IMAGE] Image generated (base64 length: ${base64Image.length})`);
+      console.log(`[IMAGE] Image generated successfully (base64 length: ${base64Image.length})`);
     } catch (imagenErr) {
-      console.error("[IMAGE] Imagen 4 API call failed:", imagenErr);
+      console.error("[IMAGE] Imagen API call failed:", imagenErr);
       return null;
     }
 
@@ -185,7 +197,7 @@ export async function generateArticleImage(
     }
 
   } catch (error) {
-    console.error(`[IMAGE] Fatal error during image generation:`, error);
+    console.error(`[IMAGE] Fatal error in generateArticleImage:`, error);
     return null;
   }
 }
