@@ -84,17 +84,7 @@ export default async function handler(req: any, res: any) {
         console.log('Note: Could not update curated_widgets table.', widErr);
       }
 
-      // 3. Trigger SSG rebuild programmatically
-      try {
-        const host = req.headers.host || 'calcala-news.co.il';
-        const protocol = host.includes('localhost') ? 'http' : 'https';
-        console.log(`[WEBHOOK] Triggering SSG Rebuild at ${protocol}://${host}/api/rebuild-ssg...`);
-        fetch(`${protocol}://${host}/api/rebuild-ssg`, { method: 'POST' }).catch(e => {
-          console.error('[WEBHOOK] Background SSG fetch failed', e);
-        });
-      } catch (e) {
-        console.error('Failed to trigger SSG rebuild', e);
-      }
+      // 3. Note: SSG rebuild removed — homepage now uses dynamic client-side loading from Supabase
     }
   }
 
