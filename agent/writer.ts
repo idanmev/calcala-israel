@@ -20,7 +20,7 @@ interface BlockShell {
 // Model constants
 // ---------------------------------------------------------------------------
 
-const MODEL_HAIKU = "claude-haiku-4-5-20251001" as const;
+const MODEL_HAIKU = "claude-3-5-haiku-20241022" as const;
 
 /**
  * Core system prompt.
@@ -170,7 +170,7 @@ async function callHaikuStructure(
   const attempt = async (): Promise<string> => {
     const response = await client.messages.create({
       model: MODEL_HAIKU,
-      max_tokens: 3000,
+      max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [
         {
