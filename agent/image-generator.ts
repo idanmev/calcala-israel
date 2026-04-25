@@ -50,7 +50,7 @@ export async function generateArticleImage(
       const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
-        system: `You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English that would work as a professional news photo for this article. The image must be safe for work, non-violent, non-political (no politicians, no flags, no protests). Focus on symbolic, conceptual, or lifestyle imagery that represents the financial topic. Maximum 100 words. Return only the prompt, nothing else.`,
+        system: `You are an image prompt writer for a news website. Given a Hebrew article title and description, write a photorealistic image generation prompt in English that would work as a professional news photo for this article. The image must be safe for work, non-violent, non-political (no politicians, no flags, no protests). Focus on symbolic, conceptual, or lifestyle imagery that represents the financial topic. Maximum 100 words. Return only the prompt, nothing else. If you cannot generate a prompt due to safety reasons (e.g. violence), return a generic but relevant prompt about "Israeli economy" or "finance news" instead of a refusal.`,
         messages: [{
           role: 'user',
           content: `Title: ${articleTitle}\nDescription: ${metaDescription}\nTopic: ${topicName}`
@@ -58,6 +58,13 @@ export async function generateArticleImage(
       });
       const contentBlock: any = response.content[0];
       generatedPrompt = contentBlock.text ? contentBlock.text.trim() : '';
+      
+      // Basic check for Claude refusal
+      if (generatedPrompt.toLowerCase().includes("i can't") || generatedPrompt.toLowerCase().includes("sorry")) {
+        console.warn("[IMAGE] Claude refused, using fallback prompt");
+        generatedPrompt = "A professional, symbolic image representing the Israeli economy and financial news, high quality photorealistic, neutral corporate setting.";
+      }
+      
       console.log(`[IMAGE] Prompt: ${generatedPrompt}`);
     } catch (promptErr) {
       console.error("[IMAGE] Failed to generate prompt with Claude:", promptErr);
@@ -86,7 +93,9 @@ export async function generateArticleImage(
         credentials
       });
 
-      const endpoint = `projects/calcala-news/locations/us-central1/publishers/google/models/imagegeneration@006`;
+      // Using Imagen 3.0 (generate-001) as 3.0 is the current standard stable version.
+      // EOL for 006 (Imagen 2) was the issue.
+      const endpoint = `projects/calcala-news/locations/us-central1/publishers/google/models/imagen-3.0-generate-001`;
       const parameters = helpers.toValue({
         sampleCount: 1,
         aspectRatio: "16:9",
@@ -105,8 +114,7 @@ export async function generateArticleImage(
         parameters,
       };
 
-      console.log(`[IMAGE] Sending prediction request to Vertex AI...`);
-      // Set a timeout of 60 seconds
+      console.log(`[IMAGE] Sending prediction request to Vertex AI (Model: imagen-3.0-generate-001)...`);
       const predictPromise = predictionServiceClient.predict(request);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error("Imagen API request timed out after 60s")), 60000)
@@ -121,17 +129,17 @@ export async function generateArticleImage(
       
       // Extract base64. 
       const prediction = imagenResponse.predictions[0];
-      console.log(`[IMAGE] Prediction structure keys: ${Object.keys(prediction)}`);
-
-      // In some environments, the prediction is a protobuf Value, in others it's a plain object
+      
+      // Imagen 3.0 response format handling
       if (prediction.bytesBase64Encoded) {
         base64Image = prediction.bytesBase64Encoded;
       } else if (prediction.structValue?.fields?.bytesBase64Encoded?.stringValue) {
         base64Image = prediction.structValue.fields.bytesBase64Encoded.stringValue;
+      } else if (prediction.stringValue) {
+        // Fallback for some SDK versions where the string itself is the base64
+        base64Image = prediction.stringValue;
       } else {
-        // Log the first few keys and structure to debug
         console.error("[IMAGE] Could not find base64 image in prediction. Keys found:", Object.keys(prediction));
-        if (prediction.structValue) console.error("[IMAGE] structValue fields:", Object.keys(prediction.structValue.fields));
         throw new Error("Could not find base64 image in Imagen response");
       }
 
@@ -153,22 +161,6 @@ export async function generateArticleImage(
 
       const supabase = createClient(supabaseUrl, supabaseKey);
       const bucketName = 'article-images';
-
-      // Ensure bucket exists
-      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-      if (bucketError) {
-        console.error("[IMAGE] Error listing buckets:", bucketError);
-        throw bucketError;
-      }
-      
-      if (!buckets?.find(b => b.name === bucketName)) {
-        console.log(`[IMAGE] Creating bucket: ${bucketName}`);
-        const { error: createError } = await supabase.storage.createBucket(bucketName, { public: true });
-        if (createError) {
-          console.error("[IMAGE] Error creating bucket:", createError);
-          throw createError;
-        }
-      }
 
       const buffer = Buffer.from(base64Image, 'base64');
       const slug = createSlug(articleTitle);
