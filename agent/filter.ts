@@ -107,17 +107,17 @@ export async function filterTopics(
 
   // Fallback: If nothing approved, pick the best rejected one
   if (approved.length === 0 && rejectedWithScores.length > 0) {
-    console.log(`[FILTER] ⚠️ No topics approved — selecting best available fallback topic.`);
-    
     // Sort by score descending
     rejectedWithScores.sort((a, b) => b.score - a.score);
     const best = rejectedWithScores[0];
     
-    console.log(`[FILTER] ⚠️ Fallback selection: ${best.topic.topic_name} (Original reason: ${best.reason}, Score: ${best.score})`);
-    
-    // Optional: could update the topic_name or internal metadata if needed, 
-    // but the request just says to approve it.
-    approved.push(best.topic);
+    if (best.score >= 5) {
+      console.log(`[FILTER] ⚠️ Fallback approved (score: ${best.score}): ${best.topic.topic_name}`);
+      approved.push(best.topic);
+    } else {
+      console.log(`[FILTER] ❌ No acceptable topics today — skipping run to avoid low quality content and return empty array`);
+      return [];
+    }
   }
 
   console.log(`[FILTER] Finished. ${approved.length}/${topics.length} topic(s) approved.`);

@@ -42,7 +42,13 @@ const SOURCES: FeedSource[] = [
   { name: 'MarketWatch', url: 'https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines', language: 'en' },
   { name: 'Yahoo Finance', url: 'https://finance.yahoo.com/news/rssindex', language: 'en' },
   { name: 'Seeking Alpha', url: 'https://seekingalpha.com/feed.xml', language: 'en' },
-  { name: 'The Guardian Business', url: 'https://www.theguardian.com/us/business/rss', language: 'en' }
+  { name: 'The Guardian Business', url: 'https://www.theguardian.com/us/business/rss', language: 'en' },
+  { name: 'Reuters Israel', url: 'https://feeds.reuters.com/reuters/INeconomics', language: 'en' },
+  { name: 'MarketWatch Economy', url: 'https://feeds.marketwatch.com/marketwatch/economy-politics/', language: 'en' },
+  { name: 'Google News Economy', url: 'https://news.google.com/rss/search?q=%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C+%D7%A9%D7%95%D7%A7&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'Google News Prices', url: 'https://news.google.com/rss/search?q=%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D+%D7%99%D7%95%D7%A7%D7%A8+%D7%A6%D7%A8%D7%9B%D7%9F&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'Google News Tech', url: 'https://news.google.com/rss/search?q=%D7%94%D7%99%D7%99%D7%98%D7%A7+%D7%9B%D7%9C%D7%9B%D7%9C%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' },
+  { name: 'Google News Wages', url: 'https://news.google.com/rss/search?q=%D7%A9%D7%9B%D7%A8+%D7%9E%D7%99%D7%A0%D7%99%D7%9E%D7%95%D7%9D+%D7%AA%D7%A2%D7%A1%D7%95%D7%A7%D7%94+%D7%99%D7%A9%D7%A8%D7%90%D7%9C&hl=iw&gl=IL&ceid=IL:iw', language: 'he' }
 ];
 
 export async function fetchAllStories(): Promise<Story[]> {
@@ -151,7 +157,8 @@ async function fetchFromSources(parser: any, cutoff: Date): Promise<Story[]> {
       'MarketWatch', 
       'Yahoo Finance', 
       'The Guardian Business',
-      'Ynet כלכלה'
+      'Ynet כלכלה',
+      'MarketWatch Economy'
     ];
 
     if (cappedSources.includes(source.name)) {
