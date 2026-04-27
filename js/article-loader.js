@@ -223,7 +223,7 @@ async function renderEntryHook(categorySlug) {
     try {
         const { data: config, error } = await supabaseArt
             .from('quiz_configs')
-            .select('entry_hook_title, entry_hook_subtitle, button_a_label, button_a_value, button_b_label, button_b_value')
+            .select('id, entry_hook_title, entry_hook_subtitle, trust_text, button_a_label, button_a_value, button_b_label, button_b_value, entry_hook_buttons')
             .eq('category_slug', categorySlug)
             .single();
 
@@ -243,22 +243,58 @@ async function renderEntryHook(categorySlug) {
             return;
         }
 
-        // Vertical-specific entry hook with two buttons
+        let buttonsHtml = '';
+        let ehButtons = [];
+        if (config.entry_hook_buttons) {
+           try { ehButtons = typeof config.entry_hook_buttons === 'string' ? JSON.parse(config.entry_hook_buttons) : config.entry_hook_buttons; } catch(e){}
+        }
+        
+        if (ehButtons && ehButtons.length > 0) {
+            buttonsHtml = `<div class="grid grid-cols-2 gap-3 mt-4" dir="rtl">`;
+            ehButtons.forEach(btn => {
+                const bg = btn.bgColor || '#111827';
+                const text = btn.textColor || '#ffffff';
+                const logo = btn.logoUrl ? `<img src="${_h(btn.logoUrl)}" alt="${_h(btn.label)}" style="max-height: 20px; max-width: 32px; object-fit: contain;">` : '';
+                buttonsHtml += `
+                  <button onclick="openQuizModal('${categorySlug}', '${btn.value}', null, '${config.id}')"
+                          style="background-color: ${bg}; color: ${text}; border-radius: 999px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 48px; width: 100%; box-sizing: border-box; white-space: nowrap;"
+                          class="flex items-center justify-center gap-2 font-bold px-4 text-sm transition-all hover:scale-105 active:scale-95 border-none cursor-pointer">
+                    ${logo}
+                    <span>${_h(btn.label)}</span>
+                  </button>
+                `;
+            });
+            buttonsHtml += `</div>`;
+        } else if (config.button_a_label && config.button_b_label) {
+            buttonsHtml = `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <button onclick="openQuizModal('${categorySlug}', '${config.button_a_value}', null, '${config.id}')"
+                        style="border-radius: 999px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 48px; width: 100%; box-sizing: border-box; white-space: nowrap;"
+                        class="bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 text-sm transition-all hover:scale-105 active:scale-95 border-none flex items-center justify-center">
+                  ${config.button_a_label}
+                </button>
+                <button onclick="openQuizModal('${categorySlug}', '${config.button_b_value}', null, '${config.id}')"
+                        style="border-radius: 999px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 48px; width: 100%; box-sizing: border-box; white-space: nowrap;"
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 text-sm transition-all hover:scale-105 active:scale-95 border-none flex items-center justify-center">
+                  ${config.button_b_label}
+                </button>
+              </div>
+            `;
+        } else {
+            buttonsHtml = `
+              <button onclick="openQuizModal('${categorySlug}', null, null, '${config.id}')"
+                      class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors mt-4">
+                ← בדוק עכשיו בחינם
+              </button>
+            `;
+        }
+
         ctaEl.innerHTML = `
-      <p class="text-lg font-bold text-gray-900 mb-1">${config.entry_hook_title}</p>
-      ${config.entry_hook_subtitle ? `<p class="text-sm text-gray-600 mb-4">${config.entry_hook_subtitle}</p>` : ''}
-      <div class="grid grid-cols-2 gap-3 mt-4">
-        <button onclick="openQuizModal('${categorySlug}', '${config.button_a_value}')"
-                class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md">
-          ${config.button_a_label}
-        </button>
-        <button onclick="openQuizModal('${categorySlug}', '${config.button_b_value}')"
-                class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md">
-          ${config.button_b_label}
-        </button>
-      </div>
-      <p class="text-xs text-gray-600 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
-    `;
+          <p class="text-lg font-bold text-gray-900 mb-1">${config.entry_hook_title || 'האם מגיע לך החזר?'}</p>
+          ${config.entry_hook_subtitle ? `<p class="text-sm text-gray-600 mb-4">${config.entry_hook_subtitle}</p>` : ''}
+          ${buttonsHtml}
+          <p class="text-xs text-gray-600 mt-3">${_h(config.trust_text || '✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד')}</p>
+        `;
         ctaEl.classList.remove('hidden');
 
         // Update bottom bar CTA if exists
@@ -290,20 +326,55 @@ function renderEntryHookFromConfig(config, categorySlug) {
         return;
     }
 
+    let buttonsHtml = '';
+    let ehButtons = [];
+    if (config.entry_hook_buttons) {
+       try { ehButtons = typeof config.entry_hook_buttons === 'string' ? JSON.parse(config.entry_hook_buttons) : config.entry_hook_buttons; } catch(e){}
+    }
+    
+    if (ehButtons && ehButtons.length > 0) {
+        buttonsHtml = `<div class="grid grid-cols-2 gap-3 mt-4" dir="rtl">`;
+        ehButtons.forEach(btn => {
+            const bg = btn.bgColor || '#111827';
+            const text = btn.textColor || '#ffffff';
+            const logo = btn.logoUrl ? `<img src="${_h(btn.logoUrl)}" alt="${_h(btn.label)}" style="max-height: 24px; max-width: 40px; margin-right: 8px;">` : '';
+            buttonsHtml += `
+              <button onclick="openQuizModal('${categorySlug}', '${btn.value}', null, '${config.id}')"
+                      style="background-color: ${bg}; color: ${text};"
+                      class="flex items-center justify-between font-bold py-3 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md border border-gray-100">
+                <span>${_h(btn.label)}</span>
+                ${logo}
+              </button>
+            `;
+        });
+        buttonsHtml += `</div>`;
+    } else if (config.button_a_label && config.button_b_label) {
+        buttonsHtml = `
+          <div class="grid grid-cols-2 gap-3 mt-4">
+            <button onclick="openQuizModal('${categorySlug}', '${config.button_a_value}', null, '${config.id}')"
+                    class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md">
+              ${config.button_a_label}
+            </button>
+            <button onclick="openQuizModal('${categorySlug}', '${config.button_b_value}', null, '${config.id}')"
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md">
+              ${config.button_b_label}
+            </button>
+          </div>
+        `;
+    } else {
+        buttonsHtml = `
+          <button onclick="openQuizModal('${categorySlug}', null, null, '${config.id}')"
+                  class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors mt-4">
+            ← בדוק עכשיו בחינם
+          </button>
+        `;
+    }
+
     ctaEl.innerHTML = `
-    <p class="text-lg font-bold text-gray-900 mb-1">${config.entry_hook_title}</p>
+    <p class="text-lg font-bold text-gray-900 mb-1">${config.entry_hook_title || 'האם מגיע לך החזר?'}</p>
     ${config.entry_hook_subtitle ? `<p class="text-sm text-gray-600 mb-4">${config.entry_hook_subtitle}</p>` : ''}
-    <div class="grid grid-cols-2 gap-3 mt-4">
-      <button onclick="openQuizModal('${categorySlug}', '${config.button_a_value}', null, '${config.id}')"
-              class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md">
-        ${config.button_a_label}
-      </button>
-      <button onclick="openQuizModal('${categorySlug}', '${config.button_b_value}', null, '${config.id}')"
-              class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-4 rounded-xl text-lg transition-all hover:scale-105 shadow-md">
-        ${config.button_b_label}
-      </button>
-    </div>
-    <p class="text-xs text-gray-600 mt-3">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+    ${buttonsHtml}
+    <p class="text-xs text-gray-600 mt-3">${'✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד'}</p>
   `;
     ctaEl.classList.remove('hidden');
 }
@@ -322,37 +393,121 @@ function renderSidebarQuizCta(quizConfig, categorySlug) {
     const title = _h(quizConfig.display_name || quizConfig.entry_hook_title || 'בדוק זכאות');
     const quizId = quizConfig.id;
 
+    let buttonsHtml = '';
+    let ehButtons = [];
+    if (quizConfig.entry_hook_buttons) {
+       try { ehButtons = typeof quizConfig.entry_hook_buttons === 'string' ? JSON.parse(quizConfig.entry_hook_buttons) : quizConfig.entry_hook_buttons; } catch(e){}
+    }
+    
+    if (ehButtons && ehButtons.length > 0) {
+        buttonsHtml = `<div class="grid grid-cols-2 gap-2 mb-4" dir="rtl">`;
+        ehButtons.forEach(btn => {
+            const bg = btn.bgColor || '#111827';
+            const text = btn.textColor || '#ffffff';
+            buttonsHtml += `
+              <button onclick="openQuizModal('${categorySlug || ''}', '${btn.value}', null, '${quizId}')"
+                      style="background-color: ${bg}; color: ${text}; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+                      class="flex items-center justify-center font-bold py-2.5 px-2 text-sm transition-all border-none cursor-pointer hover:scale-105 active:scale-95">
+                  ${_h(btn.label)}
+              </button>
+            `;
+        });
+        buttonsHtml += `</div>`;
+    } else if (quizConfig.button_a_label && quizConfig.button_b_label) {
+        buttonsHtml = `
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_a_value || ''}', null, '${quizId}')"
+                        style="border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); height: 44px; width: 100%; box-sizing: border-box; white-space: nowrap;"
+                        class="bg-gray-900 hover:bg-gray-800 text-white font-bold px-2 text-sm transition-all border-none flex items-center justify-center">
+                    ${_h(quizConfig.button_a_label)}
+                </button>
+                <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_b_value || ''}', null, '${quizId}')"
+                        style="border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); height: 44px; width: 100%; box-sizing: border-box; white-space: nowrap;"
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold px-2 text-sm transition-all border-none flex items-center justify-center">
+                    ${_h(quizConfig.button_b_label)}
+                </button>
+            </div>
+        `;
+    } else {
+        buttonsHtml = `
+            <button onclick="openQuizModal('${categorySlug || ''}', null, null, '${quizId}')"
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors mb-4">
+                ← בדוק זכאות עכשיו
+            </button>
+        `;
+    }
+
+    const sidebarTitle    = _h(quizConfig.entry_hook_title || quizConfig.display_name || 'בדוק את הזכאות שלך');
+    const sidebarSubtitle = quizConfig.entry_hook_subtitle ? `<p class="text-sm opacity-90 mt-0.5">${_h(quizConfig.entry_hook_subtitle)}</p>` : '';
+
     sidebarCta.innerHTML = `
         <div class="bg-red-600 text-white text-center py-4 px-4">
-            <p class="font-bold text-lg leading-snug">💰 הבנק שלך אולי חייב לך כסף</p>
-            <p class="text-sm opacity-90 mt-0.5">בדוק תוך 60 שניות כמה מגיע לך בחזרה</p>
+            <p class="font-bold text-lg leading-snug">${sidebarTitle}</p>
+            ${sidebarSubtitle}
         </div>
         <div class="p-5">
-            <!-- Social proof -->
-            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:0.625rem;padding:0.5rem 0.75rem;margin-bottom:0.875rem;font-size:0.75rem;color:#92400e;text-align:center;">
-                🏆 <strong>14,000+ ישראלים</strong> כבר קיבלו את הכסף שלהם השנה
-            </div>
-            ${quizConfig.button_a_label && quizConfig.button_b_label ? `
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_a_value || ''}', null, '${quizId}')"
-                            class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-3 rounded-lg text-base transition-all">
-                        ${_h(quizConfig.button_a_label)}
-                    </button>
-                    <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_b_value || ''}', null, '${quizId}')"
-                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-3 rounded-lg text-base transition-all">
-                        ${_h(quizConfig.button_b_label)}
-                    </button>
-                </div>
-            ` : `
-                <button onclick="openQuizModal('${categorySlug || ''}', null, null, '${quizId}')"
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors mb-4">
-                    ← בדוק זכאות עכשיו
-                </button>
-            `}
-            <p class="text-xs text-gray-600 text-center">✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+            ${buttonsHtml}
+            <p class="text-xs text-gray-600 text-center">${_h(quizConfig.trust_text || '✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד')}</p>
         </div>
     `;
     sidebarCta.classList.remove('hidden');
+}
+
+// Populate the bottom-of-article red CTA block from quiz config
+function renderBottomCta(quizConfig, categorySlug) {
+    const block = document.getElementById('article-bottom-cta-block');
+    if (!block) return;
+    if (!quizConfig) return; // keep static HTML fallback visible
+
+    const quizId = quizConfig.id;
+    const hookTitle    = _h(quizConfig.entry_hook_title || quizConfig.display_name || 'בדוק את הזכאות שלך');
+    const hookSubtitle = quizConfig.entry_hook_subtitle ? `<p class="text-base mb-6 opacity-80">${_h(quizConfig.entry_hook_subtitle)}</p>` : '<p class="text-base mb-6 opacity-80">בדיקה חינמית, 60 שניות, ללא התחייבות.</p>';
+
+    let ehButtons = [];
+    if (quizConfig.entry_hook_buttons) {
+        try { ehButtons = typeof quizConfig.entry_hook_buttons === 'string' ? JSON.parse(quizConfig.entry_hook_buttons) : quizConfig.entry_hook_buttons; } catch(e) {}
+    }
+
+    let buttonsHtml = '';
+    if (ehButtons && ehButtons.length > 0) {
+        buttonsHtml = `<div style="display:grid;grid-template-columns:repeat(${Math.min(ehButtons.length, 4)},1fr);gap:0.75rem;max-width:480px;margin:0 auto 1rem;" dir="rtl">`;
+        ehButtons.forEach(btn => {
+            const bg    = btn.bgColor   || '#111827';
+            const color = btn.textColor || '#ffffff';
+            buttonsHtml += `
+              <button onclick="openQuizModal('${categorySlug || ''}', '${btn.value}', null, '${quizId}')"
+                      style="background:${bg};color:${color};border:none;border-radius:9999px;height:52px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:transform 0.15s;"
+                      onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                ${_h(btn.label)}
+              </button>`;
+        });
+        buttonsHtml += `</div>`;
+    } else if (quizConfig.button_a_label && quizConfig.button_b_label) {
+        buttonsHtml = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;max-width:400px;margin:0 auto 1rem;" dir="rtl">
+            <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_a_value || ''}', null, '${quizId}')"
+                    style="background:#111827;color:#fff;border:none;border-radius:9999px;height:52px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+              ${_h(quizConfig.button_a_label)}
+            </button>
+            <button onclick="openQuizModal('${categorySlug || ''}', '${quizConfig.button_b_value || ''}', null, '${quizId}')"
+                    style="background:#fff;color:#dc2626;border:none;border-radius:9999px;height:52px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+              ${_h(quizConfig.button_b_label)}
+            </button>
+          </div>`;
+    } else {
+        buttonsHtml = `
+          <button onclick="openQuizModal('${categorySlug || ''}', null, null, '${quizId}')"
+                  class="bg-white text-red-700 font-bold py-4 px-10 rounded-lg text-xl hover:bg-gray-100 transition-colors shadow-lg" style="margin-bottom:1rem;">
+            ← בדוק עכשיו בחינם
+          </button>`;
+    }
+
+    block.innerHTML = `
+        <h3 class="text-2xl font-bold mb-2">${hookTitle}</h3>
+        ${hookSubtitle}
+        ${buttonsHtml}
+        <p class="text-sm mt-2 opacity-70">${_h(quizConfig.trust_text || '✓ ללא עלות ✓ ללא התחייבות ✓ תוצאה מיידית')}</p>
+    `;
 }
 
 // Convert Editor.js JSON Blocks to Tailwind HTML
@@ -428,7 +583,7 @@ function renderBlocksToHtml(blocks) {
                             <p style="font-size: 22px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">❓ בדוק את הזכאות שלך</p>
                             <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">ענה על מספר שאלות קצרות וגלה אם מגיע לך החזר</p>
                             <div class="quiz-inline-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 420px; margin: 0 auto;"></div>
-                            <p style="font-size: 12px; color: #9ca3af; margin-top: 12px;">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
+                            <p class="quiz-inline-trust" style="font-size: 12px; color: #9ca3af; margin-top: 12px;">✓ בחינם ✓ ללא התחייבות ✓ 60 שניות בלבד</p>
                         </div>
                     </div>
                 `;
@@ -516,7 +671,7 @@ async function loadArticle() {
             try {
                 const { data: qc } = await supabaseArt
                     .from('quiz_configs')
-                    .select('id, display_name, entry_hook_title, entry_hook_subtitle, button_a_label, button_a_value, button_b_label, button_b_value')
+                    .select('id, display_name, entry_hook_title, entry_hook_subtitle, trust_text, button_a_label, button_a_value, button_b_label, button_b_value, entry_hook_buttons')
                     .eq('id', article.quiz_id)
                     .single();
                 quizConfig = qc;
@@ -678,28 +833,60 @@ async function loadArticle() {
                 try {
                     const { data: qCfg } = await supabaseArt
                         .from('quiz_configs')
-                        .select('id, display_name, entry_hook_title, entry_hook_subtitle, button_a_label, button_a_value, button_b_label, button_b_value')
+                        .select('id, display_name, entry_hook_title, entry_hook_subtitle, trust_text, button_a_label, button_a_value, button_b_label, button_b_value, entry_hook_buttons')
                         .eq('id', qId)
                         .single();
 
                     const catSlug = article.categories?.slug || '';
-                    const titleEl = quizEl.querySelector('p');
+                    const titleEls = quizEl.querySelectorAll('p');
+                    const titleEl = titleEls[0];
+                    const subtitleEl = titleEls[1];
                     const btnContainer = quizEl.querySelector('.quiz-inline-buttons');
 
                     if (qCfg && titleEl) {
-                        titleEl.textContent = qCfg.entry_hook_title || 'בדוק את הזכאות שלך';
+                        titleEl.textContent = qCfg.entry_hook_title || '❓ בדוק את הזכאות שלך';
                     }
+                    if (qCfg && subtitleEl) {
+                        subtitleEl.textContent = qCfg.entry_hook_subtitle || 'ענה על מספר שאלות קצרות וגלה אם מגיע לך החזר';
+                    }
+                    const trustEl = quizEl.querySelector('.quiz-inline-trust');
+                    if (qCfg && trustEl && qCfg.trust_text) {
+                        trustEl.textContent = qCfg.trust_text;
+                    }
+
                     if (qCfg && btnContainer) {
-                        btnContainer.innerHTML = `
-                            <button onclick="openQuizModal('${catSlug}', '${qCfg.button_a_value}', null, '${qCfg.id}')"
-                                    style="background: #111827; color: white; font-weight: 700; padding: 14px 16px; border-radius: 12px; font-size: 17px; border: none; cursor: pointer; transition: transform 0.2s;">
-                                ${_h(qCfg.button_a_label)}
-                            </button>
-                            <button onclick="openQuizModal('${catSlug}', '${qCfg.button_b_value}', null, '${qCfg.id}')"
-                                    style="background: #dc2626; color: white; font-weight: 700; padding: 14px 16px; border-radius: 12px; font-size: 17px; border: none; cursor: pointer; transition: transform 0.2s;">
-                                ${_h(qCfg.button_b_label)}
-                            </button>
-                        `;
+                        let ehButtons = [];
+                        if (qCfg.entry_hook_buttons) {
+                           try { ehButtons = typeof qCfg.entry_hook_buttons === 'string' ? JSON.parse(qCfg.entry_hook_buttons) : qCfg.entry_hook_buttons; } catch(e){}
+                        }
+                        
+                        if (ehButtons && ehButtons.length > 0) {
+                            btnContainer.innerHTML = '';
+                            ehButtons.forEach(btn => {
+                                const bg = btn.bgColor || '#111827';
+                                const text = btn.textColor || '#ffffff';
+                                const logo = btn.logoUrl ? `<img src="${_h(btn.logoUrl)}" alt="${_h(btn.label)}" style="max-height: 20px; max-width: 32px; object-fit: contain;">` : '';
+                                btnContainer.innerHTML += `
+                                    <button onclick="openQuizModal('${catSlug}', '${btn.value}', null, '${qCfg.id}')"
+                                            style="background: ${bg}; color: ${text}; font-weight: 700; padding: 0 12px; border-radius: 999px; font-size: 15px; border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 46px; width: 100%; box-sizing: border-box; white-space: nowrap;"
+                                            onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                                        ${logo}
+                                        <span>${_h(btn.label)}</span>
+                                    </button>
+                                `;
+                            });
+                        } else if (qCfg.button_a_label && qCfg.button_b_label) {
+                            btnContainer.innerHTML = `
+                                <button onclick="openQuizModal('${catSlug}', '${qCfg.button_a_value}', null, '${qCfg.id}')"
+                                        style="background: #111827; color: white; font-weight: 700; padding: 0 12px; border-radius: 999px; font-size: 15px; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 46px; width: 100%; box-sizing: border-box; white-space: nowrap; display: flex; align-items: center; justify-content: center;">
+                                    ${_h(qCfg.button_a_label)}
+                                </button>
+                                <button onclick="openQuizModal('${catSlug}', '${qCfg.button_b_value}', null, '${qCfg.id}')"
+                                        style="background: #dc2626; color: white; font-weight: 700; padding: 0 12px; border-radius: 999px; font-size: 15px; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 46px; width: 100%; box-sizing: border-box; white-space: nowrap; display: flex; align-items: center; justify-content: center;">
+                                    ${_h(qCfg.button_b_label)}
+                                </button>
+                            `;
+                        }
                     } else if (btnContainer) {
                         // Fallback: generic single button
                         btnContainer.style.gridTemplateColumns = '1fr';
@@ -745,30 +932,23 @@ async function loadArticle() {
                 // Article has a specific quiz assigned
                 window.currentArticleQuizId = article.quiz_id;
                 window.currentArticleCategory = article.categories?.slug;
+                window.currentQuizExitHeadline = quizConfig.entry_hook_title || quizConfig.display_name || null;
+                window.currentQuizEntryButtons = quizConfig.entry_hook_buttons || null;
+                window.currentQuizButtonA = { label: quizConfig.button_a_label, value: quizConfig.button_a_value };
+                window.currentQuizButtonB = { label: quizConfig.button_b_label, value: quizConfig.button_b_value };
                 renderEntryHookFromConfig(quizConfig, article.categories?.slug);
                 renderSidebarQuizCta(quizConfig, article.categories?.slug);
+                renderBottomCta(quizConfig, article.categories?.slug);
             } else if (article.categories?.slug) {
                 // Fallback: use category-based lookup
                 window.currentArticleCategory = article.categories.slug;
                 renderEntryHook(article.categories.slug);
-                // No specific quiz — sidebar CTA stays hidden
                 renderSidebarQuizCta(null, article.categories.slug);
-
-                // Hide bottom CTA block since no quiz is assigned
-                const bottomCtaBlock = document.getElementById('article-bottom-cta-block');
-                if (bottomCtaBlock) bottomCtaBlock.style.display = 'none';
-                const inlineCta = document.getElementById('article-inline-cta');
-                if (inlineCta) inlineCta.style.display = 'none';
+                // Bottom CTA stays visible with static HTML fallback
             }
         } else {
-            // No category — sidebar CTA stays hidden
             renderSidebarQuizCta(null, null);
-
-            // Hide bottom CTA block since no quiz is assigned
-            const bottomCtaBlock = document.getElementById('article-bottom-cta-block');
-            if (bottomCtaBlock) bottomCtaBlock.style.display = 'none';
-            const inlineCta = document.getElementById('article-inline-cta');
-            if (inlineCta) inlineCta.style.display = 'none';
+            // Bottom CTA stays visible with static HTML fallback
         }
 
         // 9. Sidebar most read

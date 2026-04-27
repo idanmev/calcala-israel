@@ -177,6 +177,30 @@
     function renderEditForm(quiz) {
       // Initialize localQuestions with deep copy
       localQuestions = quiz ? (Array.isArray(quiz.questions) ? JSON.parse(JSON.stringify(quiz.questions)) : JSON.parse(quiz.questions || '[]')) : [];
+      
+      let parsedEHB = typeof quiz?.entry_hook_buttons === 'string' ? JSON.parse(quiz.entry_hook_buttons) : (quiz?.entry_hook_buttons || []);
+      localEntryHookButtons = JSON.parse(JSON.stringify(parsedEHB));
+      
+      if (localEntryHookButtons.length === 0 && quiz && quiz.button_a_label) {
+         localEntryHookButtons.push({ label: quiz.button_a_label, value: quiz.button_a_value || 'option_a', bgColor: '#111827', textColor: '#ffffff', logoUrl: '', successTitle: '', successSubtitle: '', successRange: '' });
+         if (quiz.button_b_label) {
+            localEntryHookButtons.push({ label: quiz.button_b_label, value: quiz.button_b_value || 'option_b', bgColor: '#dc2626', textColor: '#ffffff', logoUrl: '', successTitle: '', successSubtitle: '', successRange: '' });
+         }
+      }
+
+      // Hydrate per-button success screens from saved results_routing
+      const savedRouting = typeof quiz?.results_routing === 'string' ? JSON.parse(quiz.results_routing || '{}') : (quiz?.results_routing || {});
+      if (savedRouting.screens) {
+        localEntryHookButtons.forEach(btn => {
+          const screenKey = btn.value + '_screen';
+          const screen = savedRouting.screens[screenKey];
+          if (screen) {
+            btn.successTitle = screen.title || '';
+            btn.successSubtitle = screen.subtitle || '';
+            btn.successRange = screen.range || '';
+          }
+        });
+      }
 
       document.getElementById('edit-modal-body').innerHTML = `
         <div class="space-y-5">
@@ -185,7 +209,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">שם החידון *</label>
-              <input type="text" id="f-display-name" value="${quiz?.display_name || ''}" 
+              <input type="text" id="f-display-name" value="${quiz?.display_name || ''}"
                      placeholder="לדוגמה: החזר מס - שכירים"
                      class="w-full border rounded-lg px-3 py-2 text-sm">
             </div>
@@ -197,10 +221,34 @@
             </div>
           </div>
 
+          <!-- Advisor image -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">📸 תמונת יועץ</label>
+            <div class="flex items-center gap-3">
+              <div id="f-advisor-preview" style="width:52px;height:52px;border-radius:9999px;overflow:hidden;border:2px solid #e5e7eb;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;">
+                ${quiz?.advisor_image_url
+                  ? `<img src="${quiz.advisor_image_url}" style="width:100%;height:100%;object-fit:cover;">`
+                  : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`}
+              </div>
+              <div class="flex-1">
+                <label class="cursor-pointer inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-lg text-sm transition-colors">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  העלה תמונה
+                  <input type="file" id="f-advisor-upload" accept="image/jpeg,image/png,image/webp" class="hidden">
+                </label>
+                <p id="f-advisor-status" class="text-xs text-gray-400 mt-1">JPG/PNG/WEBP · מקסימום 2MB</p>
+              </div>
+            </div>
+            <!-- Hidden URL field (populated after upload) -->
+            <input type="hidden" id="f-advisor-image" value="${quiz?.advisor_image_url || ''}">
+          </div>
+
           <!-- Entry Hook -->
           <div class="bg-amber-50 rounded-xl p-4 border border-amber-200">
-            <h4 class="font-bold text-gray-800 mb-3 text-sm">🎯 כפתורי כניסה לחידון</h4>
-            <div class="space-y-3">
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="font-bold text-gray-800 text-sm">🎯 כפתורי כניסה לחידון (Inline)</h4>
+            </div>
+            <div class="space-y-3 mb-4">
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">כותרת</label>
                 <input type="text" id="f-hook-title" value="${quiz?.entry_hook_title || ''}"
@@ -213,57 +261,95 @@
                        placeholder="בדוק תוך 60 שניות"
                        class="w-full border rounded-lg px-3 py-2 text-sm">
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-bold text-gray-600 mb-1">כפתור א׳</label>
-                  <input type="text" id="f-btn-a-label" value="${quiz?.button_a_label || ''}"
-                         placeholder="מעל גיל 30"
-                         class="w-full border rounded-lg px-3 py-2 text-sm">
-                  <input type="hidden" id="f-btn-a-value" value="${quiz?.button_a_value || 'option_a'}">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-gray-600 mb-1">כפתור ב׳</label>
-                  <input type="text" id="f-btn-b-label" value="${quiz?.button_b_label || ''}"
-                         placeholder="מתחת לגיל 30"
-                         class="w-full border rounded-lg px-3 py-2 text-sm">
-                  <input type="hidden" id="f-btn-b-value" value="${quiz?.button_b_value || 'option_b'}">
-                </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">שורת אמון (Trust line)</label>
+                <input type="text" id="f-trust-text" value="${quiz?.trust_text || ''}"
+                       placeholder="✓ ללא עלות ✓ ללא התחייבות ✓ 60 שניות בלבד"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
               </div>
             </div>
+            <div id="entry-hook-buttons-container" class="space-y-4">
+              <!-- Rendered by JS -->
+            </div>
+            <button onclick="addEntryHookButton()" class="mt-3 w-full border-2 border-dashed border-amber-400 hover:border-amber-600 text-amber-700 hover:bg-amber-100 font-bold py-2 rounded-xl text-sm transition-colors">
+              + הוסף כפתור (עד 6)
+            </button>
           </div>
 
-          <!-- Questions -->
-          <div>
+          <!-- Step Builder -->
+          <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
             <div class="flex justify-between items-center mb-3">
-              <h4 class="font-bold text-gray-800 text-sm">❓ שאלות (${localQuestions.length})</h4>
-              <button onclick="addQuestion()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">+ הוסף שאלה</button>
+              <h4 class="font-bold text-gray-800 text-sm">🔄 בונה שלבים (Flow Builder)</h4>
+              <div class="flex gap-2 items-center">
+                <select id="step-type-select" class="border border-indigo-300 rounded-lg px-2 py-1 text-xs bg-white">
+                  <option value="name_input">👤 שאלת שם</option>
+                  <option value="question">❓ שאלה</option>
+                  <option value="eligibility_result">✅ תוצאת זכאות</option>
+                  <option value="phone_input">📞 שאלת טלפון</option>
+                  <option value="thank_you">🎉 מסך תודה</option>
+                </select>
+                <button id="add-step-btn" onclick="addStep()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-xs font-bold">+ הוסף שלב</button>
+              </div>
             </div>
-            <div id="questions-container" class="space-y-3">
-              <!-- Questions rendered by separate function -->
+            <p class="text-xs text-gray-500 mb-3">גרור שלבים לשינוי סדר. כל שלב מוצג ליוזר בסדר שמופיע כאן.</p>
+            <div id="steps-builder-container" class="space-y-2">
+              <!-- Rendered by JS -->
             </div>
           </div>
 
-          <!-- Success Screen -->
+          <!-- Default Success Screen -->
           <div class="bg-green-50 rounded-xl p-4 border border-green-200">
-            <h4 class="font-bold text-gray-800 mb-3 text-sm">✅ מסך תוצאות</h4>
+            <h4 class="font-bold text-gray-800 mb-1 text-sm">✅ מסך תוצאות ברירת מחדל</h4>
+            <p class="text-xs text-gray-500 mb-3">יוצג אם לא הוגדר מסך ייעודי לכפתור שנלחץ.</p>
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">כותרת</label>
-                <input type="text" id="f-success-title" value="${quiz?.success_title || ''}"
-                       placeholder="בשורות מצוינות!"
-                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="text" id="f-success-title" value="${quiz?.success_title || ''}" placeholder="בשורות מצוינות!" class="w-full border rounded-lg px-3 py-2 text-sm">
               </div>
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">תת-כותרת</label>
-                <input type="text" id="f-success-subtitle" value="${quiz?.success_subtitle || ''}"
-                       placeholder="על פי הנתונים, מגיע לך:"
-                       class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="text" id="f-success-subtitle" value="${quiz?.success_subtitle || ''}" placeholder="נציג שלנו יחזור אליך בהקדם" class="w-full border rounded-lg px-3 py-2 text-sm">
               </div>
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">טווח סכום</label>
-                <input type="text" id="f-success-range" value="${quiz?.success_range || ''}"
-                       placeholder="₪2,000 - ₪12,000"
+                <input type="text" id="f-success-range" value="${quiz?.success_range || ''}" placeholder="₪2,000 – ₪8,000" class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+            </div>
+          </div>
+
+          <!-- Affiliate API Config -->
+          <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <h4 class="font-bold text-gray-800 mb-3 text-sm">🔗 Affiliate API — שליחת ליד לרשת שותפים</h4>
+            <div class="space-y-3">
+              <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
+                <input type="checkbox" id="f-affiliate-enabled" ${quiz?.affiliate_config?.enabled ? 'checked' : ''} class="rounded">
+                פעיל
+              </label>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Endpoint URL</label>
+                <input type="url" id="f-affiliate-url" value="${quiz?.affiliate_config?.url || ''}"
+                       dir="ltr" placeholder="https://api.affiliate-network.com/lead"
                        class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Authorization Header Value</label>
+                <input type="text" id="f-affiliate-auth" value="${quiz?.affiliate_config?.auth_header || ''}"
+                       dir="ltr" placeholder="Bearer token123 — or leave empty"
+                       class="w-full border rounded-lg px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-600 mb-2">Field Mapping <span class="text-gray-400 font-normal">(שם השדה שלהם ← השדה שלנו)</span></label>
+                <div class="space-y-1.5 bg-white rounded-lg p-3 border border-purple-100">
+                  ${['name','phone','email','category_slug','utm_source','utm_campaign','article_slug'].map(f => `
+                  <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500 w-28 shrink-0 font-mono">${f}</span>
+                    <span class="text-gray-300">→</span>
+                    <input type="text" id="f-map-${f}" dir="ltr"
+                           value="${quiz?.affiliate_config?.field_mapping?.[f === 'name' ? 'name' : f] || ''}"
+                           placeholder="${f}" class="flex-1 border rounded px-2 py-1 text-xs font-mono">
+                  </div>`).join('')}
+                </div>
+                <p class="text-xs text-gray-400 mt-1">השאר ריק אם לא צריך לשלוח שדה זה. ללא מיפוי — נשלחים כל השדות בשמות ברירת המחדל.</p>
               </div>
             </div>
           </div>
@@ -284,6 +370,149 @@
       `;
 
       refreshQuestionsContainer();
+      renderEntryHookButtons();
+
+      // Init steps from quiz.steps, or migrate from quiz.questions
+      const rawSteps = quiz?.steps;
+      if (rawSteps && Array.isArray(rawSteps) && rawSteps.length > 0) {
+        localSteps = JSON.parse(JSON.stringify(rawSteps));
+      } else if (typeof rawSteps === 'string') {
+        try { localSteps = JSON.parse(rawSteps); } catch { localSteps = migrateQuestionsToSteps(localQuestions); }
+      } else {
+        localSteps = migrateQuestionsToSteps(localQuestions);
+      }
+      refreshStepsBuilder();
+
+      // Attach event listeners after innerHTML is set
+      document.getElementById('add-step-btn')?.addEventListener('click', addStep);
+      document.getElementById('f-advisor-upload')?.addEventListener('change', uploadAdvisorImage);
+    }
+
+    function renderEntryHookButtons() {
+      const container = document.getElementById('entry-hook-buttons-container');
+      if (!container) return;
+      
+      if (localEntryHookButtons.length === 0) {
+        container.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">לחץ על "+ הוסף כפתור" כדי להתחיל</p>';
+        return;
+      }
+      
+      container.innerHTML = localEntryHookButtons.map((btn, i) => {
+        const previewBg = btn.bgColor || '#111827';
+        const previewText = btn.textColor || '#ffffff';
+        const previewLabel = btn.label || 'כפתור ' + (i+1);
+        return `
+        <div class="border-2 border-amber-200 bg-white rounded-3xl overflow-hidden shadow-sm">
+          <!-- Button Preview Bar -->
+          <div class="flex items-center justify-center px-4 relative" style="background:${previewBg}; border-radius: 999px; margin: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 44px; box-sizing: border-box; white-space: nowrap;">
+            <span style="color:${previewText};font-weight:700;font-size:0.9rem;text-align:center;">${previewLabel}</span>
+            <button onclick="removeEntryHookButton(${i})" style="color:${previewText};opacity:0.7;background:none;border:none;cursor:pointer;font-size:0.9rem;position:absolute;left:15px;top:50%;transform:translateY(-50%);" title="הסר">✕</button>
+          </div>
+          <!-- Button Config -->
+          <div class="p-4 space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">טקסט הכפתור</label>
+                <input type="text" value="${btn.label || ''}" oninput="updateEHB(${i}, 'label', this.value); refreshButtonPreview(${i}, this.closest('.border-2'))" class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="כללית">
+              </div>
+              <div>
+                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">ערך פנימי</label>
+                <input type="text" value="${btn.value || ''}" oninput="updateEHB(${i}, 'value', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="clalit">
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">צבע רקע</label>
+                <div class="flex items-center gap-1 border rounded-lg px-2 py-1">
+                  <input type="color" value="${btn.bgColor || '#111827'}"
+                    oninput="updateEHB(${i}, 'bgColor', this.value); this.nextElementSibling.value=this.value; refreshButtonPreview(${i}, this.closest('.border-2'))"
+                    class="w-7 h-7 cursor-pointer rounded border-0 p-0 flex-shrink-0">
+                  <input type="text" value="${btn.bgColor || '#111827'}" maxlength="7" dir="ltr"
+                    oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){updateEHB(${i},'bgColor',this.value);this.previousElementSibling.value=this.value;refreshButtonPreview(${i},this.closest('.border-2'))}"
+                    class="w-full text-xs font-mono border-0 outline-none" placeholder="#111827">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">צבע טקסט</label>
+                <div class="flex items-center gap-1 border rounded-lg px-2 py-1">
+                  <input type="color" value="${btn.textColor || '#ffffff'}"
+                    oninput="updateEHB(${i}, 'textColor', this.value); this.nextElementSibling.value=this.value; refreshButtonPreview(${i}, this.closest('.border-2'))"
+                    class="w-7 h-7 cursor-pointer rounded border-0 p-0 flex-shrink-0">
+                  <input type="text" value="${btn.textColor || '#ffffff'}" maxlength="7" dir="ltr"
+                    oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){updateEHB(${i},'textColor',this.value);this.previousElementSibling.value=this.value;refreshButtonPreview(${i},this.closest('.border-2'))}"
+                    class="w-full text-xs font-mono border-0 outline-none" placeholder="#ffffff">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">URL לוגו</label>
+                <input type="text" value="${btn.logoUrl || ''}" oninput="updateEHB(${i}, 'logoUrl', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-xs" dir="ltr" placeholder="https://...">
+              </div>
+            </div>
+            <!-- Per-button success screen -->
+            <div class="bg-green-50 rounded-xl p-3 border border-green-200 mt-1">
+              <p class="text-[10px] uppercase font-bold text-green-700 mb-2">✅ מסך הצלחה לכפתור זה (אופציונלי)</p>
+              <div class="space-y-2">
+                <input type="text" value="${btn.successTitle || ''}" oninput="updateEHB(${i}, 'successTitle', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="כותרת — לדוגמה: בשורות טובות למבוטחי כללית!">
+                <input type="text" value="${btn.successSubtitle || ''}" oninput="updateEHB(${i}, 'successSubtitle', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="תת-כותרת — לדוגמה: מגיע לכם סבסוד מוגדל">
+                <input type="text" value="${btn.successRange || ''}" oninput="updateEHB(${i}, 'successRange', this.value)" class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="טווח סכום — לדוגמה: ₪0 – ₪1,000">
+              </div>
+            </div>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    function refreshButtonPreview(i, card) {
+      if (!card) return;
+      const btn = localEntryHookButtons[i];
+      if (!btn) return;
+      const bar = card.querySelector('div[style*="background"]');
+      if (bar) {
+        bar.style.background = btn.bgColor || '#111827';
+        const label = bar.querySelector('span');
+        if (label) { 
+          label.style.color = btn.textColor || '#ffffff'; 
+          label.textContent = btn.label || 'כפתור ' + (i+1); 
+        }
+        const removeBtn = bar.querySelector('button');
+        if (removeBtn) {
+          removeBtn.style.color = btn.textColor || '#ffffff';
+        }
+      }
+    }
+
+    function addEntryHookButton() {
+      if (localEntryHookButtons.length >= 6) { alert('מקסימום 6 כפתורים'); return; }
+      localEntryHookButtons.push({ label: '', value: '', bgColor: '#111827', textColor: '#ffffff', logoUrl: '', successTitle: '', successSubtitle: '', successRange: '' });
+      renderEntryHookButtons();
+    }
+    
+    function removeEntryHookButton(i) {
+      localEntryHookButtons.splice(i, 1);
+      renderEntryHookButtons();
+    }
+
+    function updateEHB(i, field, val) {
+      if (localEntryHookButtons[i]) localEntryHookButtons[i][field] = val;
+    }
+
+    function buildResultsRouting() {
+      const rules = [];
+      const screens = {};
+      localEntryHookButtons.forEach(btn => {
+        if (!btn.value) return;
+        const hasCustomScreen = btn.successTitle || btn.successSubtitle || btn.successRange;
+        if (hasCustomScreen) {
+          const screenKey = btn.value + '_screen';
+          rules.push({ if_answer: [btn.value], show: screenKey });
+          screens[screenKey] = {
+            title: btn.successTitle || '',
+            subtitle: btn.successSubtitle || '',
+            range: btn.successRange || ''
+          };
+        }
+      });
+      return { rules, screens };
     }
 
     function renderQuestionRow(q, index) {
@@ -319,6 +548,7 @@
     }
 
     let localQuestions = [];
+    let localSteps = [];
 
     function addQuestion() {
       localQuestions.push({ id: 'q' + Date.now(), text: '', options: [] });
@@ -381,6 +611,184 @@
       draggedQuestionIndex = null;
     }
 
+    // ── Step Builder ────────────────────────────────────────────
+
+    async function uploadAdvisorImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        alert('הקובץ גדול מדי — מקסימום 2MB');
+        return;
+      }
+
+      const statusEl = document.getElementById('f-advisor-status');
+      const previewEl = document.getElementById('f-advisor-preview');
+      if (statusEl) statusEl.textContent = 'מעלה...';
+
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const fileName = `advisor_${Date.now()}.${ext}`;
+
+        const { data, error } = await supabaseClient.storage
+          .from('quiz-images')
+          .upload(fileName, file, { upsert: true, contentType: file.type });
+
+        if (error) throw error;
+
+        const { data: urlData } = supabaseClient.storage
+          .from('quiz-images')
+          .getPublicUrl(fileName);
+
+        const publicUrl = urlData.publicUrl;
+        document.getElementById('f-advisor-image').value = publicUrl;
+
+        if (previewEl) previewEl.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+        if (statusEl) statusEl.textContent = '✅ הועלה בהצלחה';
+      } catch (err) {
+        console.error('Upload failed:', err);
+        if (statusEl) statusEl.textContent = '❌ שגיאה בהעלאה: ' + (err.message || err);
+      }
+    }
+
+    function migrateQuestionsToSteps(questions) {
+      const steps = [];
+      steps.push({ type: 'name_input', question_text: 'מה שמך?' });
+      (questions || []).forEach(q => {
+        steps.push({ type: 'question', id: q.id || ('q_' + Date.now()), text: q.text || '', options: q.options || [] });
+      });
+      steps.push({ type: 'eligibility_result', eligible_title: 'בשורות מצוינות!', eligible_subtitle: 'נציג שלנו יצור איתך קשר בהקדם.', not_eligible_title: 'לא נמצאה זכאות', not_eligible_subtitle: 'תודה על פנייתך.', eligible_conditions: [], show_phone_if_not_eligible: true });
+      steps.push({ type: 'phone_input', question_text: 'מספר טלפון לחזרה — נציג ייצור איתך קשר.' });
+      steps.push({ type: 'thank_you', title: 'תודה!', subtitle: 'נציג שלנו יחזור אליך בהקדם.' });
+      return steps;
+    }
+
+    function addStep() {
+      const type = document.getElementById('step-type-select')?.value || 'question';
+      const defaults = {
+        name_input:        { type: 'name_input', question_text: 'מה שמך?' },
+        question:          { type: 'question', id: 'q_' + Date.now(), text: '', options: [] },
+        eligibility_result:{ type: 'eligibility_result', eligible_title: 'בשורות מצוינות!', eligible_subtitle: '', not_eligible_title: 'לא נמצאה זכאות', not_eligible_subtitle: '', eligible_conditions: [], show_phone_if_not_eligible: true },
+        phone_input:       { type: 'phone_input', question_text: 'מספר טלפון לחזרה.' },
+        thank_you:         { type: 'thank_you', title: 'תודה!', subtitle: 'נציג שלנו יחזור אליך בהקדם.' },
+      };
+      localSteps.push({ ...defaults[type] });
+      refreshStepsBuilder();
+    }
+
+    function removeStep(i) { localSteps.splice(i, 1); refreshStepsBuilder(); }
+
+    function updateStepField(i, field, value) {
+      if (localSteps[i]) localSteps[i][field] = value;
+    }
+
+    function updateEligibilityConditions(i, raw) {
+      if (!localSteps[i]) return;
+      const values = raw.split(',').map(v => v.trim()).filter(Boolean);
+      if (values.length === 0) {
+        localSteps[i].eligible_conditions = [];
+      } else {
+        localSteps[i].eligible_conditions = [{ question_id: 'entry_hook', answers: values }];
+      }
+    }
+
+    const STEP_LABELS = { name_input: '👤 שם', question: '❓ שאלה', eligibility_result: '✅ תוצאת זכאות', phone_input: '📞 טלפון', thank_you: '🎉 מסך תודה' };
+
+    function renderStepRow(step, i) {
+      const label = STEP_LABELS[step.type] || step.type;
+      let fields = '';
+      if (step.type === 'name_input' || step.type === 'phone_input') {
+        fields = `<div>
+          <label class="block text-[10px] font-bold text-gray-500 mb-1">טקסט שאלה</label>
+          <input type="text" value="${step.question_text || ''}" onchange="updateStepField(${i},'question_text',this.value)"
+            class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="מה שמך?">
+        </div>`;
+      } else if (step.type === 'question') {
+        fields = `<div class="space-y-2">
+          <input type="text" value="${step.text || ''}" onchange="updateStepField(${i},'text',this.value)"
+            class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="טקסט השאלה">
+          <label class="block text-[10px] font-bold text-gray-500">תשובות (אחת בשורה)</label>
+          <textarea onchange="updateStepField(${i},'options',this.value.split('\\n').filter(x=>x.trim()))"
+            class="w-full border rounded-lg px-2 py-1.5 text-sm h-16 resize-none">${(step.options||[]).join('\n')}</textarea>
+        </div>`;
+      } else if (step.type === 'eligibility_result') {
+        fields = `<div class="grid grid-cols-2 gap-2">
+          <div><label class="block text-[10px] font-bold text-green-600 mb-1">✅ כותרת — זכאי</label>
+            <input type="text" value="${step.eligible_title||''}" onchange="updateStepField(${i},'eligible_title',this.value)"
+              class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="בשורות מצוינות!"></div>
+          <div><label class="block text-[10px] font-bold text-red-500 mb-1">❌ כותרת — לא זכאי</label>
+            <input type="text" value="${step.not_eligible_title||''}" onchange="updateStepField(${i},'not_eligible_title',this.value)"
+              class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="לא נמצאה זכאות"></div>
+          <div><label class="block text-[10px] font-bold text-gray-500 mb-1">תת-כותרת — זכאי</label>
+            <input type="text" value="${step.eligible_subtitle||''}" onchange="updateStepField(${i},'eligible_subtitle',this.value)"
+              class="w-full border rounded-lg px-2 py-1.5 text-sm"></div>
+          <div><label class="block text-[10px] font-bold text-gray-500 mb-1">תת-כותרת — לא זכאי</label>
+            <input type="text" value="${step.not_eligible_subtitle||''}" onchange="updateStepField(${i},'not_eligible_subtitle',this.value)"
+              class="w-full border rounded-lg px-2 py-1.5 text-sm"></div>
+        </div>
+        <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <label class="block text-[10px] font-bold text-yellow-700 mb-1">🎯 זכאי אם ה-Entry Hook value הוא (ריק = תמיד זכאי) — השתמש ב-value הפנימי, לא בטקסט הכפתור</label>
+          <input type="text"
+            value="${(step.eligible_conditions?.find(c=>c.question_id==='entry_hook')?.answers||[]).join(',')}"
+            onchange="updateEligibilityConditions(${i}, this.value)"
+            class="w-full border rounded-lg px-2 py-1.5 text-xs font-mono" dir="ltr"
+            placeholder="לדוג׳: maccabi,leumit — ה-value הפנימי של הכפתור, מופרד בפסיקים">
+        </div>
+        <label class="flex items-center gap-2 text-xs text-gray-600 mt-2 cursor-pointer">
+          <input type="checkbox" ${step.show_phone_if_not_eligible!==false?'checked':''} onchange="updateStepField(${i},'show_phone_if_not_eligible',this.checked)">
+          בקש טלפון גם מלא-זכאים
+        </label>`;
+      } else if (step.type === 'thank_you') {
+        fields = `<div class="grid grid-cols-2 gap-2">
+          <div><label class="block text-[10px] font-bold text-gray-500 mb-1">כותרת</label>
+            <input type="text" value="${step.title||''}" onchange="updateStepField(${i},'title',this.value)"
+              class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="תודה!"></div>
+          <div><label class="block text-[10px] font-bold text-gray-500 mb-1">תת-כותרת</label>
+            <input type="text" value="${step.subtitle||''}" onchange="updateStepField(${i},'subtitle',this.value)"
+              class="w-full border rounded-lg px-2 py-1.5 text-sm" placeholder="נציג שלנו יחזור אליך בהקדם."></div>
+        </div>`;
+      }
+      return `<div class="border border-indigo-200 rounded-xl bg-white overflow-hidden shadow-sm"
+          draggable="true"
+          ondragstart="handleStepDragStart(event,${i})"
+          ondragover="handleStepDragOver(event)"
+          ondrop="handleStepDrop(event,${i})"
+          ondragend="handleStepDragEnd(event)">
+        <div class="flex items-center justify-between px-3 py-2 bg-indigo-50 border-b border-indigo-100">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-400 cursor-move">⋮⋮</span>
+            <span class="text-xs font-bold text-indigo-700">${label}</span>
+            <span class="text-xs text-gray-400">#${i+1}</span>
+          </div>
+          <button onclick="removeStep(${i})" class="text-red-400 hover:text-red-600 text-xs">🗑️</button>
+        </div>
+        <div class="p-3">${fields}</div>
+      </div>`;
+    }
+
+    function refreshStepsBuilder() {
+      const c = document.getElementById('steps-builder-container');
+      if (!c) return;
+      if (localSteps.length === 0) {
+        c.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-3">לחץ "+ הוסף שלב" כדי להתחיל לבנות את הזרימה</p>';
+        return;
+      }
+      c.innerHTML = localSteps.map((s, i) => renderStepRow(s, i)).join('');
+    }
+
+    // Steps drag-drop
+    let draggedStepIndex = null;
+    function handleStepDragStart(e, i) { draggedStepIndex = i; e.target.style.opacity='0.4'; e.dataTransfer.effectAllowed='move'; }
+    function handleStepDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+    function handleStepDrop(e, targetIndex) {
+      e.preventDefault(); e.stopPropagation();
+      if (draggedStepIndex === null || draggedStepIndex === targetIndex) return;
+      const item = localSteps.splice(draggedStepIndex, 1)[0];
+      localSteps.splice(targetIndex, 0, item);
+      refreshStepsBuilder();
+    }
+    function handleStepDragEnd(e) { e.target.style.opacity='1'; draggedStepIndex = null; }
+
     async function saveQuiz() {
       const displayName = document.getElementById('f-display-name')?.value?.trim();
       const verticalName = document.getElementById('f-vertical-name')?.value?.trim();
@@ -397,20 +805,47 @@
         options: Array.isArray(q.options) ? q.options.filter(o => o.trim()) : []
       })).filter(q => q.text && q.options.length > 0);
 
+      const resultsRouting = buildResultsRouting();
+
+      // Build affiliate config
+      const affiliateFieldMapping = {};
+      ['name','phone','email','category_slug','utm_source','utm_campaign','article_slug'].forEach(ourField => {
+        const theirField = document.getElementById(`f-map-${ourField}`)?.value?.trim();
+        if (theirField) affiliateFieldMapping[theirField] = ourField;
+      });
+      const affiliateConfig = {
+        enabled: document.getElementById('f-affiliate-enabled')?.checked || false,
+        url: document.getElementById('f-affiliate-url')?.value?.trim() || '',
+        auth_header: document.getElementById('f-affiliate-auth')?.value?.trim() || '',
+        field_mapping: affiliateFieldMapping,
+      };
+
+      // Extract questions from steps for backward compat
+      const questionsFromSteps = localSteps
+        .filter(s => s.type === 'question')
+        .map(s => ({ id: s.id, text: s.text, options: Array.isArray(s.options) ? s.options : [] }))
+        .filter(q => q.text && q.options.length > 0);
+
       const payload = {
         display_name: displayName,
         vertical_name: verticalName || displayName,
         category_slug: verticalName?.toLowerCase().replace(/\s+/g, '-') || 'general',
         entry_hook_title: document.getElementById('f-hook-title')?.value || '',
         entry_hook_subtitle: document.getElementById('f-hook-subtitle')?.value || '',
-        button_a_label: document.getElementById('f-btn-a-label')?.value || '',
-        button_a_value: document.getElementById('f-btn-a-value')?.value || 'option_a',
-        button_b_label: document.getElementById('f-btn-b-label')?.value || '',
-        button_b_value: document.getElementById('f-btn-b-value')?.value || 'option_b',
-        questions: questions,
+        trust_text: document.getElementById('f-trust-text')?.value || '',
+        button_a_label: localEntryHookButtons[0] ? localEntryHookButtons[0].label : '-',
+        button_a_value: localEntryHookButtons[0] ? localEntryHookButtons[0].value : 'option_a',
+        button_b_label: localEntryHookButtons[1] ? localEntryHookButtons[1].label : '-',
+        button_b_value: localEntryHookButtons[1] ? localEntryHookButtons[1].value : 'option_b',
+        entry_hook_buttons: localEntryHookButtons,
+        steps: localSteps,
+        questions: questionsFromSteps,
         success_title: document.getElementById('f-success-title')?.value || '',
         success_subtitle: document.getElementById('f-success-subtitle')?.value || '',
         success_range: document.getElementById('f-success-range')?.value || '',
+        results_routing: resultsRouting,
+        advisor_image_url: document.getElementById('f-advisor-image')?.value?.trim() || '',
+        affiliate_config: affiliateConfig,
         is_active: true,
         updated_at: new Date().toISOString()
       };

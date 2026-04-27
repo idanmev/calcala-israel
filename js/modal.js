@@ -1,668 +1,571 @@
-// modal.js - Vertical-aware quiz modal for Calcala-News
+// modal.js — Step-based quiz modal for Calcala-News
 
 const MODAL_SB_URL = 'https://gtuxstslzsiuinxjvfdj.supabase.co';
 const MODAL_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0dXhzdHNsenNpdWlueGp2ZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTU2NjIsImV4cCI6MjA4Njc5MTY2Mn0.ZYbL9PVGUdehVEtg18bi-Uyw-iy857KVM7Yceh7NMaM';
 const SUBMIT_LEAD_URL = `${MODAL_SB_URL}/functions/v1/submit-lead`;
 
-// Shortcut for escapeHtml
 const _e = (s) => window.CalcalaSanitize ? window.CalcalaSanitize.escapeHtml(s) : String(s || '');
 
 let supabaseModal = null;
-
 function getSupabaseModal() {
   if (!supabaseModal) {
-    if (!window.supabase) {
-      console.error('Supabase library not loaded yet');
-      return null;
-    }
+    if (!window.supabase) { console.error('Supabase not loaded'); return null; }
     supabaseModal = window.supabase.createClient(MODAL_SB_URL, MODAL_SB_KEY);
   }
   return supabaseModal;
 }
 
-// State
+// ── State ──────────────────────────────────────────────────────
 let currentConfig = null;
-let currentStep = 0;
+let currentSteps = [];
+let currentStepIndex = 0;
 let userAnswers = {};
-let currentVertical = 'taxation'; // default
-let entryHookAnswer = null;
+let isEligible = true;
+let collectedName = '';
+let currentVertical = 'taxation';
 
-// Default fallback config if Supabase fails
+const DEFAULT_ADVISOR_IMG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23e5e7eb'/%3E%3Ccircle cx='40' cy='30' r='14' fill='%239ca3af'/%3E%3Cellipse cx='40' cy='68' rx='22' ry='16' fill='%239ca3af'/%3E%3C/svg%3E`;
+
 const DEFAULT_CONFIG = {
+  display_name: 'בדיקת זכאות חינמית',
   vertical_name: 'כללי',
   questions: [
-    { id: 'employment', text: 'מה מצבך התעסוקתי?', options: ['שכיר/ת', 'עצמאי/ת', 'שכיר/ת וגם עצמאי/ת', 'לא עובד/ת'] },
-    { id: 'salary', text: 'מה טווח ההכנסה החודשית שלך?', options: ['עד 8,000 ₪', '8,000-15,000 ₪', '15,000-25,000 ₪', 'מעל 25,000 ₪'] }
+    { id: 'q1', text: 'מה מצבך התעסוקתי?', options: ['שכיר/ת', 'עצמאי/ת', 'לא עובד/ת'] }
   ],
   success_title: 'בשורות טובות!',
   success_subtitle: 'נציג שלנו יצור איתך קשר בהקדם',
-  success_range: ''
 };
 
-// ============================================================
-// OPEN MODAL - Entry point from article page
-// ============================================================
-window.openQuizModal = function (vertical = null, prefillAnswer = null, fallbackCategory = null, quizId = null) {
-  currentVertical = vertical || fallbackCategory || getCurrentVerticalFromPage();
-  entryHookAnswer = prefillAnswer;
-  userAnswers = {};
-  currentStep = 0;
+// ── CSS (injected once) ────────────────────────────────────────
+function injectModalStyles() {
+  if (document.getElementById('qm-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'qm-styles';
+  s.textContent = `
+    .qm-shell{background:#f8f9fa;border-radius:1.25rem;max-width:560px;width:100%;margin:0 auto;position:relative;font-family:inherit;}
+    .qm-close{position:absolute;top:0.85rem;left:0.85rem;z-index:20;background:rgba(0,0,0,0.08);border:none;border-radius:9999px;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7280;font-size:0.85rem;transition:background 0.15s;}
+    .qm-close:hover{background:rgba(0,0,0,0.14);color:#111827;}
+    .qm-header{padding:1.25rem 3rem 0.75rem;text-align:center;}
+    .qm-title{font-size:1rem;font-weight:700;color:#111827;line-height:1.5;margin-bottom:0.65rem;}
+    .qm-progress-track{height:4px;background:#e5e7eb;border-radius:9999px;overflow:hidden;}
+    .qm-progress-fill{height:100%;background:#111827;border-radius:9999px;transform-origin:right;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);}
+    .qm-advisor{display:flex;justify-content:center;margin-bottom:-2rem;position:relative;z-index:2;}
+    .qm-advisor-img{width:76px;height:76px;border-radius:9999px;border:3px solid #fff;box-shadow:0 2px 14px rgba(0,0,0,0.13);object-fit:cover;background:#e5e7eb;}
+    .qm-card-wrapper{position:relative;padding:0 3rem 0 1.1rem;}
+    .qm-card{background:#fff;border:1.5px solid #e5e7eb;border-radius:1.1rem;padding:2.75rem 1.5rem 1.5rem;min-height:220px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+    .qm-arrow{position:absolute;right:0.6rem;top:50%;transform:translateY(-50%);width:2.5rem;height:2.5rem;border-radius:9999px;background:#111827;color:#fff;border:none;cursor:pointer;font-size:1.05rem;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.2);transition:transform 0.15s,box-shadow 0.15s;z-index:3;}
+    .qm-arrow:hover{transform:translateY(-50%) scale(1.08);box-shadow:0 4px 14px rgba(0,0,0,0.25);}
+    .qm-ssl-footer{display:flex;align-items:center;justify-content:center;gap:0.35rem;font-size:0.7rem;color:#9ca3af;padding:0.7rem 1rem 0.85rem;text-align:center;}
+    .qm-question{text-align:center;font-size:1.05rem;font-weight:700;color:#111827;line-height:1.5;margin-bottom:1.5rem;}
+    .qm-circles{display:flex;flex-wrap:wrap;gap:0.7rem;justify-content:center;align-items:center;}
+    .qm-circle{border:2px solid #d1d5db;background:#fff;border-radius:9999px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;font-size:0.85rem;font-weight:600;color:#374151;transition:all 0.18s;line-height:1.25;padding:0.5rem;word-break:break-word;}
+    .qm-circle:hover{border-color:#6b7280;background:#f9fafb;}
+    .qm-circle.selected{background:#111827 !important;border-color:#111827 !important;color:#fff !important;}
+    .qm-input-label{text-align:center;font-size:0.9rem;color:#374151;line-height:1.55;margin-bottom:1.25rem;}
+    .qm-input-wrap{position:relative;margin-bottom:0.75rem;}
+    .qm-input{width:100%;border:2px solid #d1d5db;border-radius:9999px;padding:0.85rem 1.25rem 0.85rem 3rem;font-size:1rem;outline:none;transition:border-color 0.2s;box-sizing:border-box;background:#fff;color:#111827;text-align:right;}
+    .qm-input:focus{border-color:#111827;}
+    .qm-input[dir="ltr"]{text-align:left;}
+    .qm-input-icon{position:absolute;left:1.1rem;top:50%;transform:translateY(-50%);color:#9ca3af;line-height:0;}
+    .qm-continue-btn{width:100%;background:#111827;color:#fff;font-weight:700;font-size:1rem;padding:0.9rem 1.5rem;border-radius:9999px;border:none;cursor:pointer;transition:opacity 0.18s;display:flex;align-items:center;justify-content:center;gap:0.4rem;}
+    .qm-continue-btn:hover{opacity:0.85;}
+    .qm-continue-btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .qm-input-error{color:#dc2626;font-size:0.78rem;margin-bottom:0.5rem;display:none;text-align:center;}
+    .qm-elig-icon{width:3rem;height:3rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;}
+    .qm-elig-title{font-size:1.15rem;font-weight:800;color:#111827;margin-bottom:0.4rem;text-align:center;}
+    .qm-elig-sub{font-size:0.88rem;color:#6b7280;line-height:1.55;text-align:center;}
+    .qm-ty-icon{width:3.5rem;height:3.5rem;background:#f0fdf4;border-radius:9999px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;}
+    .qm-ty-title{font-size:1.2rem;font-weight:800;color:#111827;margin-bottom:0.4rem;text-align:center;}
+    .qm-ty-sub{font-size:0.88rem;color:#6b7280;text-align:center;line-height:1.55;}
+    .qm-close-btn{background:#f3f4f6;color:#374151;font-weight:700;padding:0.7rem 2rem;border-radius:9999px;border:none;cursor:pointer;font-size:0.9rem;margin-top:1.25rem;transition:background 0.15s;}
+    .qm-close-btn:hover{background:#e5e7eb;}
+    @keyframes qm-spin{to{transform:rotate(360deg)}}
+  `;
+  document.head.appendChild(s);
+}
 
-  if (prefillAnswer) {
-    userAnswers['entry_hook'] = prefillAnswer;
-    currentStep = 0;
-  }
+// ── Open / Close ───────────────────────────────────────────────
+window.openQuizModal = function (vertical = null, prefillAnswer = null, fallbackCategory = null, quizId = null) {
+  currentVertical = vertical || fallbackCategory || getCurrentVertical();
+  userAnswers = {};
+  currentStepIndex = 0;
+  isEligible = true;
+  collectedName = '';
+  _eligibilityHandledPhone = false;
+
+  if (prefillAnswer) userAnswers['entry_hook'] = prefillAnswer;
 
   const modal = document.getElementById('quiz-modal');
-  if (!modal) {
-    console.error('Quiz modal not found');
-    return;
+  if (!modal) return;
+
+  // Reset inner card
+  const inner = modal.querySelector(':scope > div');
+  if (inner) {
+    inner.className = '';
+    inner.style.cssText = '';
   }
+
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Inject hook bar into the modal shell (once)
-  injectHookBar();
+  injectModalStyles();
+  renderLoadingShell();
 
-  renderLoadingState();
-
-  if (quizId) {
-    loadQuizConfigById(quizId);
-  } else {
-    loadQuizConfig(currentVertical);
-  }
+  if (quizId) loadConfigById(quizId);
+  else loadConfig(currentVertical);
 };
 
-// ============================================================
-// INJECT PERSISTENT HOOK BAR (top of modal)
-// ============================================================
-function injectHookBar() {
-  const shell = document.querySelector('#quiz-modal > div');
-  if (!shell) return;
-
-  // Remove existing hook bar if any
-  const existing = shell.querySelector('.quiz-hook-bar');
-  if (existing) existing.remove();
-
-  const bar = document.createElement('div');
-  bar.className = 'quiz-hook-bar';
-  bar.innerHTML = `
-    <div class="hook-badge">💰 כלי בדיקת זכאות חינמי</div>
-    <div class="hook-title">גלה כמה כסף מגיע לך בחזרה</div>
-    <div class="hook-sub">3 שאלות · 60 שניות · תוצאה מיידית</div>
-  `;
-
-  shell.insertBefore(bar, shell.firstChild);
-
-  // Ensure close button is inside shell and visible
-  let closeBtn = shell.querySelector('.quiz-close-btn');
-  if (!closeBtn) {
-    closeBtn = document.createElement('button');
-    closeBtn.className = 'quiz-close-btn';
-    closeBtn.setAttribute('aria-label', 'סגור');
-    closeBtn.style.cssText = 'position:absolute;top:0.75rem;left:0.75rem;z-index:20;background:rgba(255,255,255,0.2);border:none;border-radius:9999px;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:1rem;line-height:1;';
-    closeBtn.innerHTML = '✕';
-    closeBtn.addEventListener('click', closeQuizModal);
-    shell.style.position = 'relative';
-    shell.insertBefore(closeBtn, shell.firstChild);
-  }
-}
-
-
-// ============================================================
-// CLOSE MODAL
-// ============================================================
 window.closeQuizModal = function () {
   const modal = document.getElementById('quiz-modal');
-  if (modal) {
-    // Remove hook bar so it re-renders fresh on next open
-    const shell = modal.querySelector(':scope > div');
-    if (shell) {
-      const bar = shell.querySelector('.quiz-hook-bar');
-      if (bar) bar.remove();
-      const closeBtn = shell.querySelector('.quiz-close-btn');
-      if (closeBtn) closeBtn.remove();
-    }
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
+  if (!modal) return;
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  const inner = modal.querySelector(':scope > div');
+  if (inner) inner.innerHTML = '<div id="quiz-modal-content"></div>';
 };
 
-
-// ============================================================
-// GET VERTICAL FROM CURRENT PAGE
-// ============================================================
-function getCurrentVerticalFromPage() {
-  // Try to get from article-loader (article page)
+function getCurrentVertical() {
   if (window.currentArticleCategory) return window.currentArticleCategory;
-
-  // Try to get from URL
-  const slug = new URLSearchParams(window.location.search).get('slug');
-  if (slug) return 'taxation'; // default for article pages
-
-  // Homepage default
   return 'taxation';
 }
 
-// ============================================================
-// LOAD QUIZ CONFIG FROM SUPABASE
-// ============================================================
-async function loadQuizConfigById(quizId) {
+// ── Load config ────────────────────────────────────────────────
+async function loadConfigById(quizId) {
   try {
     const { data, error } = await getSupabaseModal()
-      .from('quiz_configs')
-      .select('*')
-      .eq('id', quizId)
-      .eq('is_active', true)
-      .single();
-
-    if (error || !data) {
-      console.warn('Quiz config not found for id:', quizId, '— using default');
-      currentConfig = DEFAULT_CONFIG;
-    } else {
-      currentConfig = data;
-    }
-
-    renderCurrentStep();
-  } catch (err) {
-    console.error('Error loading quiz config by id:', err);
-    currentConfig = DEFAULT_CONFIG;
-    renderCurrentStep();
-  }
+      .from('quiz_configs').select('*').eq('id', quizId).eq('is_active', true).single();
+    currentConfig = (error || !data) ? DEFAULT_CONFIG : data;
+  } catch { currentConfig = DEFAULT_CONFIG; }
+  initFlow();
 }
 
-// ============================================================
-// LOAD QUIZ CONFIG FROM SUPABASE
-// ============================================================
-async function loadQuizConfig(categorySlug) {
+async function loadConfig(slug) {
   try {
     const { data, error } = await getSupabaseModal()
-      .from('quiz_configs')
-      .select('*')
-      .eq('category_slug', categorySlug)
-      .eq('is_active', true)
-      .single();
-
-    if (error || !data) {
-      console.warn('No quiz config found for:', categorySlug, '— using default');
-      currentConfig = DEFAULT_CONFIG;
-    } else {
-      currentConfig = data;
-    }
-
-    renderCurrentStep();
-  } catch (err) {
-    console.error('Error loading quiz config:', err);
-    currentConfig = DEFAULT_CONFIG;
-    renderCurrentStep();
-  }
+      .from('quiz_configs').select('*').eq('category_slug', slug).eq('is_active', true).single();
+    currentConfig = (error || !data) ? DEFAULT_CONFIG : data;
+  } catch { currentConfig = DEFAULT_CONFIG; }
+  initFlow();
 }
 
-// ============================================================
-// RENDER LOADING STATE
-// ============================================================
-function renderLoadingState() {
-  const content = document.getElementById('quiz-modal-content');
-  if (!content) return;
-  content.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 2rem;">
-      <div style="width:3rem;height:3rem;border-radius:9999px;border:3px solid #fee2e2;border-top-color:#dc2626;animation:spin 0.7s linear infinite;margin-bottom:1rem;"></div>
-      <p style="color:#9ca3af;font-size:0.875rem;">טוען שאלות...</p>
-    </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-  `;
-}
-
-
-// ============================================================
-// RENDER CURRENT STEP
-// ============================================================
-function renderCurrentStep() {
-  const questions = currentConfig.questions || [];
-  const totalSteps = questions.length + 1; // +1 for lead form
-
-  if (currentStep < questions.length) {
-    renderQuestionStep(questions[currentStep], currentStep, totalSteps);
+// ── Init step flow ─────────────────────────────────────────────
+function initFlow() {
+  const raw = currentConfig.steps;
+  if (raw && Array.isArray(raw) && raw.length > 0) {
+    currentSteps = raw;
+  } else if (typeof raw === 'string') {
+    try { currentSteps = JSON.parse(raw); } catch { currentSteps = buildLegacySteps(); }
   } else {
-    renderLeadForm(totalSteps);
+    currentSteps = buildLegacySteps();
   }
+
+  setupShell();
+  renderStep();
 }
 
-// ============================================================
-// RENDER QUESTION STEP
-// ============================================================
-function renderQuestionStep(question, stepIndex, totalSteps) {
-  const content = document.getElementById('quiz-modal-content');
-  if (!content) return;
+function buildLegacySteps() {
+  const c = currentConfig;
+  const steps = [];
 
-  const answered = totalSteps - 1; // total questions (no lead form)
-  const progressPercent = Math.round(((stepIndex) / answered) * 100);
+  steps.push({ type: 'name_input', question_text: 'מה שמך?' });
 
-  // Step dots
-  const dots = Array.from({length: answered}, (_, i) => {
-    const done = i < stepIndex;
-    const active = i === stepIndex;
-    return `<div style="width:${active ? '1.5rem' : '0.5rem'};height:0.5rem;border-radius:9999px;background:${done ? '#dc2626' : active ? '#dc2626' : '#e5e7eb'};transition:all 0.3s;"></div>`;
-  }).join('');
+  (c.questions || []).forEach(q => {
+    steps.push({ type: 'question', id: q.id, text: q.text, options: q.options || [] });
+  });
 
-  content.innerHTML = `
-    <!-- Progress -->
-    <div style="padding:1.25rem 1.5rem 0;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
-        <div class="quiz-step-pill">שאלה ${stepIndex + 1} מתוך ${answered}</div>
-        <div style="display:flex;gap:0.3rem;align-items:center;">${dots}</div>
+  steps.push({
+    type: 'eligibility_result',
+    eligible_title: c.success_title || 'בשורות מצוינות!',
+    eligible_subtitle: c.success_subtitle || 'נראה כי מגיע לך לבדוק זכאות מלאה.',
+    not_eligible_title: 'לא נמצאה זכאות',
+    not_eligible_subtitle: 'על פי הנתונים שהזנת, לא נמצאה זכאות כרגע.',
+    eligible_conditions: [],
+    show_phone_if_not_eligible: true,
+  });
+
+  steps.push({ type: 'phone_input', question_text: 'מספר טלפון לחזרה — נציג ייצור איתך קשר בהקדם.' });
+  steps.push({ type: 'thank_you', title: c.success_title || 'תודה!', subtitle: c.success_subtitle || 'נציג שלנו יחזור אליך בהקדם.' });
+
+  return steps;
+}
+
+// ── Modal shell (persistent wrapper) ──────────────────────────
+function setupShell() {
+  const modal = document.getElementById('quiz-modal');
+  if (!modal) return;
+  const inner = modal.querySelector(':scope > div');
+  if (!inner) return;
+
+  const title = _e(currentConfig.display_name || currentConfig.vertical_name || 'בדיקת זכאות');
+  const advisorSrc = currentConfig.advisor_image_url || DEFAULT_ADVISOR_IMG;
+
+  inner.innerHTML = `
+    <div class="qm-shell" dir="rtl">
+      <button class="qm-close" id="qm-close-btn" aria-label="סגור">✕</button>
+
+      <div class="qm-header">
+        <h2 class="qm-title" id="qm-title">${title}</h2>
+        <div class="qm-progress-track">
+          <div class="qm-progress-fill" id="qm-fill" style="transform:scaleX(0)"></div>
+        </div>
       </div>
-      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="transform:scaleX(${progressPercent / 100})"></div></div>
-    </div>
 
-    <!-- Question -->
-    <div style="padding:1.25rem 1.5rem 0;">
-      <h3 style="font-size:1.2rem;font-weight:800;color:#111827;line-height:1.4;text-align:center;margin-bottom:1.25rem;">${_e(question.text)}</h3>
-
-      <!-- Options -->
-      <div style="display:flex;flex-direction:column;gap:0.6rem;" id="quiz-options-container">
-        ${question.options.map((option, idx) => `
-          <button 
-            data-question-id="${_e(question.id)}"
-            data-option-value="${_e(option)}"
-            class="quiz-option-btn"
-            style="width:100%;text-align:right;padding:0.9rem 1.1rem;border:2px solid #e5e7eb;border-radius:0.875rem;font-size:1rem;font-weight:600;color:#374151;background:white;display:flex;align-items:center;justify-content:space-between;"
-          >
-            <span>${_e(option)}</span>
-            <span style="width:1.4rem;height:1.4rem;border-radius:9999px;border:2px solid #d1d5db;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></span>
-          </button>
-        `).join('')}
+      <div class="qm-advisor">
+        <img class="qm-advisor-img" id="qm-advisor-img" src="${_e(advisorSrc)}" alt="יועץ"
+          onerror="this.onerror=null;this.src='${DEFAULT_ADVISOR_IMG}'" />
       </div>
 
-      ${currentStep > 0 ? `
-        <button id="quiz-back-btn" style="margin-top:0.75rem;font-size:0.8rem;color:#9ca3af;background:none;border:none;cursor:pointer;width:100%;text-align:center;padding:0.4rem;">
-          → חזור
-        </button>
-      ` : ''}
+      <div class="qm-card-wrapper">
+        <div class="qm-card" id="qm-step-content"></div>
+        <button class="qm-arrow" id="qm-arrow" style="display:none;">→</button>
+      </div>
 
-      <!-- Trust micro-copy -->
-      <div class="quiz-trust-row" style="margin-top:1rem;padding-bottom:1.25rem;">
-        <span>🔒 פרטיות מלאה</span>
-        <span>✅ ללא התחייבות</span>
-        <span>⚡ תוצאה מיידית</span>
+      <div class="qm-ssl-footer">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        פרטיך מוגנים באמצעות הצפנת SSL
       </div>
     </div>
   `;
 
-  // Event delegation for option buttons
-  const optionsContainer = document.getElementById('quiz-options-container');
-  if (optionsContainer) {
-    optionsContainer.addEventListener('click', (e) => {
-      const btn = e.target.closest('.quiz-option-btn');
-      if (btn) {
-        // Visual feedback before advancing
-        btn.style.borderColor = '#dc2626';
-        btn.style.background = '#fef2f2';
-        const circle = btn.querySelector('span:last-child');
-        if (circle) {
-          circle.style.background = '#dc2626';
-          circle.style.borderColor = '#dc2626';
-          circle.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        }
-        setTimeout(() => {
-          selectAnswer(btn.dataset.questionId, btn.dataset.optionValue);
-        }, 220);
-      }
-    });
-  }
+  document.getElementById('qm-close-btn')?.addEventListener('click', closeQuizModal);
+}
 
-  const backBtn = document.getElementById('quiz-back-btn');
-  if (backBtn) {
-    backBtn.addEventListener('click', goToPreviousStep);
+// ── Step rendering ─────────────────────────────────────────────
+function renderStep() {
+  if (!currentSteps.length) return;
+  const step = currentSteps[currentStepIndex];
+  if (!step) return;
+
+  updateProgress();
+
+  const arrow = document.getElementById('qm-arrow');
+  if (arrow) { arrow.style.display = 'none'; arrow.onclick = null; }
+
+  switch (step.type) {
+    case 'name_input':        renderNameInput(step); break;
+    case 'question':          renderQuestion(step);  break;
+    case 'eligibility_result':renderEligibility(step); break;
+    case 'phone_input':       renderPhoneInput(step); break;
+    case 'thank_you':         renderThankYou(step);  break;
+    default: advance(); break;
   }
 }
 
+function updateProgress() {
+  const fill = document.getElementById('qm-fill');
+  if (!fill || currentSteps.length < 2) return;
+  const pct = currentStepIndex / (currentSteps.length - 1);
+  fill.style.transform = `scaleX(${Math.min(1, pct)})`;
+}
 
-// ============================================================
-// RENDER CALCULATING SCREEN (pre-commitment)
-// ============================================================
-function renderCalculatingScreen() {
-  const content = document.getElementById('quiz-modal-content');
-  if (!content) return;
+function advance() {
+  currentStepIndex++;
+  if (currentStepIndex >= currentSteps.length) return;
 
-  content.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 1.5rem;text-align:center;">
-      
-      <!-- Spinner + icon -->
-      <div style="position:relative;margin-bottom:1.5rem;">
-        <div style="width:5rem;height:5rem;border-radius:9999px;border:4px solid #fee2e2;border-top-color:#dc2626;animation:spin 0.8s linear infinite;"></div>
-        <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.6rem;">🧮</span>
-      </div>
+  const next = currentSteps[currentStepIndex];
 
-      <h3 style="font-size:1.3rem;font-weight:800;color:#111827;margin-bottom:0.5rem;">מחשב את הזכאות שלך...</h3>
-      <p style="font-size:0.85rem;color:#6b7280;margin-bottom:1.5rem;">בודק מול נתוני רשות המסים</p>
-      
-      <!-- Steps -->
-      <div style="width:100%;max-width:18rem;display:flex;flex-direction:column;gap:0.6rem;">
-        <div id="calc-step-1" style="display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:#9ca3af;">
-          <div style="width:1rem;height:1rem;border-radius:9999px;background:#e5e7eb;flex-shrink:0;"></div>
-          <span>בודק נתוני הכנסה</span>
-        </div>
-        <div id="calc-step-2" style="display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:#9ca3af;">
-          <div style="width:1rem;height:1rem;border-radius:9999px;background:#e5e7eb;flex-shrink:0;"></div>
-          <span>מחשב ניכויים וזיכויים</span>
-        </div>
-        <div id="calc-step-3" style="display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:#9ca3af;">
-          <div style="width:1rem;height:1rem;border-radius:9999px;background:#e5e7eb;flex-shrink:0;"></div>
-          <span>מאמת מול נתוני רשות המסים</span>
-        </div>
-      </div>
+  // Skip phone if not eligible and step opts out
+  if (next.type === 'phone_input' && !isEligible) {
+    const show = next.show_phone_if_not_eligible !== false;
+    if (!show) { currentStepIndex++; renderStep(); return; }
+  }
+
+  renderStep();
+}
+
+function goBack() {
+  if (currentStepIndex <= 0) return;
+  currentStepIndex--;
+  renderStep();
+}
+
+// ── Name input ─────────────────────────────────────────────────
+function renderNameInput(step) {
+  const el = document.getElementById('qm-step-content');
+  if (!el) return;
+  const label = _e(step.question_text || 'מה שמך?');
+
+  el.innerHTML = `
+    <p class="qm-input-label">${label}</p>
+    <div class="qm-input-wrap">
+      <input type="text" class="qm-input" id="qm-name" placeholder="שם מלא" autocomplete="given-name" />
+      <span class="qm-input-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
     </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    <p class="qm-input-error" id="qm-name-err"></p>
+    <button class="qm-continue-btn" id="qm-name-btn">המשך ←</button>
   `;
 
-  const activateStep = (id, delay) => setTimeout(() => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.color = '#111827';
-    el.style.fontWeight = '600';
-    const dot = el.querySelector('div');
-    if (dot) {
-      dot.style.background = '#16a34a';
-      dot.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      dot.style.display = 'flex';
-      dot.style.alignItems = 'center';
-      dot.style.justifyContent = 'center';
+  const go = () => {
+    const val = document.getElementById('qm-name')?.value?.trim();
+    const errEl = document.getElementById('qm-name-err');
+    if (!val || val.length < 2) {
+      if (errEl) { errEl.textContent = 'נא להזין שם תקין'; errEl.style.display = 'block'; }
+      return;
     }
-  }, delay);
-
-  activateStep('calc-step-1', 350);
-  activateStep('calc-step-2', 850);
-  activateStep('calc-step-3', 1350);
-
-  setTimeout(() => renderResultsScreen(), 2100);
-}
-
-
-// ============================================================
-// RENDER RESULTS SCREEN (pre-commitment)
-// ============================================================
-function renderResultsScreen() {
-  const content = document.getElementById('quiz-modal-content');
-  if (!content) return;
-
-  const config = currentConfig || DEFAULT_CONFIG;
-  const range = _e(config.success_range || '₪2,000 – ₪12,000');
-
-  // Urgency countdown (10 minutes)
-  let countdown = 10 * 60;
-
-  content.innerHTML = `
-    <div style="padding:1.5rem 1.5rem 0;text-align:center;">
-
-      <!-- Success icon -->
-      <div style="width:3.5rem;height:3.5rem;background:#dcfce7;border-radius:9999px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-      </div>
-
-      <h3 style="font-size:1.3rem;font-weight:800;color:#111827;margin-bottom:0.3rem;">${_e(config.success_title || 'בשורות מצוינות!')}</h3>
-      <p style="font-size:0.85rem;color:#6b7280;margin-bottom:1.1rem;">${_e(config.success_subtitle || 'על פי הנתונים שהזנת, סביר שמגיע לך:')}</p>
-
-      <!-- Amount box -->
-      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #4ade80;border-radius:1rem;padding:1.1rem;margin-bottom:1rem;">
-        <p style="font-size:0.75rem;color:#6b7280;margin-bottom:0.2rem;">סכום משוער לפי הנתונים שלך:</p>
-        <p style="font-size:2.2rem;font-weight:900;color:#15803d;line-height:1.1;margin-bottom:0.2rem;">${range}</p>
-        <p style="font-size:0.7rem;color:#9ca3af;">הסכום המדויק ייקבע לאחר בדיקה מקצועית</p>
-      </div>
-
-      <!-- Social proof -->
-      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:0.75rem;padding:0.6rem 1rem;margin-bottom:1rem;font-size:0.8rem;color:#92400e;">
-        🏆 <strong>14,000+ ישראלים</strong> כבר קיבלו את הכסף שלהם השנה
-      </div>
-
-      <!-- Live availability signal (replaces fake countdown) -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.78rem;color:#374151;font-weight:600;margin-bottom:0.85rem;background:#f0fdf4;border:1px solid #86efac;border-radius:9999px;padding:0.35rem 0.85rem;">
-        <span style="width:0.55rem;height:0.55rem;border-radius:9999px;background:#16a34a;display:inline-block;animation:live-pulse 1.8s ease-in-out infinite;"></span>
-        מומחים פנויים עכשיו · <span id="quiz-active-count">23</span> אנשים בודקים זכאות כרגע
-      </div>
-      <style>@keyframes live-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}</style>
-
-      <!-- CTA -->
-      <button id="proceed-to-lead-btn"
-        class="quiz-cta-pulse"
-        style="width:100%;background:#dc2626;color:white;font-weight:800;font-size:1.1rem;padding:1rem 1.5rem;border-radius:0.875rem;border:none;cursor:pointer;margin-bottom:0.6rem;letter-spacing:-0.01em;">
-        ← שלחו לי את הפרטים המלאים
-      </button>
-
-      <div class="quiz-trust-row" style="padding-bottom:1.5rem;">
-        <span>✓ ללא עלות</span>
-        <span>✓ ללא התחייבות</span>
-        <span>✓ נציג תוך 24 שעות</span>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('proceed-to-lead-btn')?.addEventListener('click', proceedToLeadForm);
-
-  // Animate the active user count slightly to feel live (honest — just fluctuates, not fake countdown)
-  const activeCountEl = document.getElementById('quiz-active-count');
-  if (activeCountEl) {
-    const base = 20 + Math.floor(Math.random() * 10);
-    activeCountEl.textContent = base;
-    setInterval(() => {
-      const delta = Math.random() < 0.5 ? -1 : 1;
-      const current = parseInt(activeCountEl.textContent, 10);
-      const next = Math.max(15, Math.min(35, current + delta));
-      activeCountEl.textContent = next;
-    }, 4500);
-  }
-}
-
-
-// ============================================================
-// PROCEED TO LEAD FORM
-// ============================================================
-window.proceedToLeadForm = function () {
-  renderLeadForm();
-};
-
-// ============================================================
-// RENDER LEAD FORM (final step)
-// ============================================================
-function renderLeadForm() {
-  const content = document.getElementById('quiz-modal-content');
-  if (!content) return;
-
-  content.innerHTML = `
-    <!-- Progress: almost done -->
-    <div style="padding:1.25rem 1.5rem 0;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-        <div class="quiz-step-pill">שלב אחרון 🎯</div>
-        <span style="font-size:0.75rem;color:#6b7280;">95% הושלם</span>
-      </div>
-      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="transform:scaleX(0.95)"></div></div>
-    </div>
-
-    <div style="padding:1.1rem 1.5rem;">
-      <!-- Header -->
-      <div style="text-align:center;margin-bottom:1.1rem;">
-        <h3 style="font-size:1.2rem;font-weight:800;color:#111827;margin-bottom:0.2rem;">כמעט שם — תוצאה אחת מחכה לך</h3>
-        <p style="font-size:0.82rem;color:#6b7280;">יועץ מוסמך (ולא הבנק שלך) יחזור אליך תוך מספר שעות</p>
-      </div>
-
-      <!-- Phone (BIG — most important) -->
-      <div style="margin-bottom:0.75rem;">
-        <label style="display:block;font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">📱 טלפון נייד *</label>
-        <input 
-          type="tel" 
-          id="lead-phone"
-          placeholder="050-0000000"
-          dir="ltr"
-          style="width:100%;border:2px solid #d1d5db;border-radius:0.875rem;padding:0.9rem 1rem;font-size:1.1rem;outline:none;transition:border-color 0.2s;box-sizing:border-box;"
-          onfocus="this.style.borderColor='#dc2626'"
-          onblur="this.style.borderColor='#d1d5db'"
-          required>
-      </div>
-
-      <div style="margin-bottom:0.75rem;">
-        <label style="display:block;font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.3rem;">👤 שם מלא *</label>
-        <input 
-          type="text" 
-          id="lead-name"
-          placeholder="ישראל ישראלי"
-          style="width:100%;border:2px solid #d1d5db;border-radius:0.875rem;padding:0.9rem 1rem;font-size:1.05rem;outline:none;transition:border-color 0.2s;box-sizing:border-box;"
-          onfocus="this.style.borderColor='#dc2626'"
-          onblur="this.style.borderColor='#d1d5db'"
-          required>
-      </div>
-
-      <!-- Honeypot -->
-      <div style="position:absolute;left:-9999px;" aria-hidden="true">
-        <input type="text" id="lead-company" name="company" tabindex="-1" autocomplete="off">
-      </div>
-
-      <div id="lead-error" style="color:#dc2626;font-size:0.82rem;margin-bottom:0.5rem;display:none;"></div>
-
-      <!-- Submit CTA -->
-      <button 
-        id="submit-btn"
-        class="quiz-cta-pulse"
-        style="width:100%;background:#dc2626;color:white;font-weight:800;font-size:1.1rem;padding:1rem 1.5rem;border-radius:0.875rem;border:none;cursor:pointer;margin-top:0.25rem;letter-spacing:-0.01em;">
-        ← שלח לי את הניתוח המלא
-      </button>
-
-      <div class="quiz-trust-row" style="margin-top:0.75rem;padding-bottom:0.5rem;">
-        <span>🔒 מאובטח SSL</span>
-        <span>✓ ללא דואר זבל</span>
-        <span>✓ ניתן לביטול בכל עת</span>
-      </div>
-    </div>
-  `;
-
-  // Attach submit handler
-  document.getElementById('submit-btn')?.addEventListener('click', submitLead);
-
-  // Show error helper
-  window._showLeadError = (msg) => {
-    const el = document.getElementById('lead-error');
-    if (el) { el.textContent = msg; el.style.display = 'block'; }
+    collectedName = val;
+    userAnswers['name'] = val;
+    advance();
   };
+
+  document.getElementById('qm-name-btn')?.addEventListener('click', go);
+  document.getElementById('qm-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  setTimeout(() => document.getElementById('qm-name')?.focus(), 80);
 }
 
+// ── Question (circular buttons) ────────────────────────────────
+function renderQuestion(step) {
+  const el = document.getElementById('qm-step-content');
+  if (!el) return;
+  const opts = step.options || [];
+  const n = opts.length;
+  const diameter = n <= 2 ? '110px' : n <= 4 ? '92px' : '76px';
+  const fontSize = n <= 2 ? '0.95rem' : n <= 4 ? '0.84rem' : '0.78rem';
 
-// ============================================================
-// RENDER SUCCESS SCREEN
-// ============================================================
-function renderSuccessScreen() {
-  const content = document.getElementById('quiz-modal-content');
-  if (!content) return;
-
-  const config = currentConfig || DEFAULT_CONFIG;
-
-  content.innerHTML = `
-    <div style="text-align:center;padding:2rem 1.5rem 2rem;">
-
-      <!-- Big green check -->
-      <div style="width:5rem;height:5rem;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-radius:9999px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-      </div>
-
-      <!-- Confetti emoji row -->
-      <p style="font-size:1.5rem;margin-bottom:0.5rem;">🎉 🎊 🎉</p>
-
-      <h3 style="font-size:1.4rem;font-weight:900;color:#111827;margin-bottom:0.4rem;">${_e(config.success_title)}</h3>
-      <p style="font-size:0.9rem;color:#4b5563;margin-bottom:1rem;">${_e(config.success_subtitle || 'נציג שלנו יצור איתך קשר בהקדם')}</p>
-
-      ${config.success_range ? `
-        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #4ade80;border-radius:1rem;padding:1rem;margin-bottom:1.25rem;">
-          <p style="font-size:0.75rem;color:#6b7280;">סכום משוער:</p>
-          <p style="font-size:2rem;font-weight:900;color:#15803d;">${_e(config.success_range)}</p>
-        </div>
-      ` : ''}
-
-      <!-- What happens next -->
-      <div style="background:#f9fafb;border-radius:0.875rem;padding:1rem;margin-bottom:1.25rem;text-align:right;">
-        <p style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.5rem;">מה קורה עכשיו?</p>
-        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem;color:#6b7280;">
-          <span>📞 נציג מומחה יתקשר אליך תוך 24 שעות</span>
-          <span>📋 נבצע בדיקה מלאה ומקצועית בחינם</span>
-          <span>💰 אם מגיע לך — נטפל בהחזר עבורך</span>
-        </div>
-      </div>
-
-      <button id="close-success-btn"
-        style="background:#f3f4f6;color:#374151;font-weight:700;padding:0.75rem 2rem;border-radius:0.875rem;border:none;cursor:pointer;font-size:0.95rem;">
-        סגור
-      </button>
+  el.innerHTML = `
+    <p class="qm-question">${_e(step.text)}</p>
+    <div class="qm-circles" id="qm-circles">
+      ${opts.map(opt => `
+        <button class="qm-circle"
+          data-value="${_e(opt)}"
+          data-qid="${_e(step.id || 'q')}"
+          style="width:${diameter};height:${diameter};font-size:${fontSize};">
+          ${_e(opt)}
+        </button>
+      `).join('')}
     </div>
   `;
 
-  document.getElementById('close-success-btn')?.addEventListener('click', closeQuizModal);
+  document.getElementById('qm-circles')?.addEventListener('click', e => {
+    const btn = e.target.closest('.qm-circle');
+    if (!btn) return;
+    document.querySelectorAll('#qm-circles .qm-circle').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    setTimeout(() => {
+      userAnswers[btn.dataset.qid] = btn.dataset.value;
+      advance();
+    }, 200);
+  });
+
+  // Arrow visible on non-first question steps — navigates to previous step
+  const arrow = document.getElementById('qm-arrow');
+  if (arrow) {
+    if (currentStepIndex > 0) {
+      arrow.style.display = 'flex';
+      arrow.onclick = () => goBack();
+    } else {
+      arrow.style.display = 'none';
+      arrow.onclick = null;
+    }
+  }
 }
 
+// ── Eligibility result (loading → result + phone on same screen) ─
+function renderEligibility(step) {
+  const el = document.getElementById('qm-step-content');
+  if (!el) return;
 
-// ============================================================
-// SELECT ANSWER AND ADVANCE
-// ============================================================
-window.selectAnswer = function (questionId, answer) {
-  userAnswers[questionId] = answer;
-  currentStep++;
-
-  const questions = currentConfig?.questions || [];
-
-  if (currentStep >= questions.length) {
-    // All questions answered — show calculating screen first
-    renderCalculatingScreen();
+  // Compute eligibility from conditions
+  const conditions = step.eligible_conditions || [];
+  if (conditions.length > 0) {
+    isEligible = conditions.every(c => {
+      const ans = userAnswers[c.question_id];
+      return Array.isArray(c.answers) ? c.answers.includes(ans) : ans === c.answer;
+    });
   } else {
-    // More questions to go
-    renderCurrentStep();
+    isEligible = true;
   }
-};
 
-// ============================================================
-// GO BACK
-// ============================================================
-window.goToPreviousStep = function () {
-  if (currentStep > 0) {
-    currentStep--;
-    renderCurrentStep();
-  }
-};
+  // Hide arrow during loading/result screen
+  const arrow = document.getElementById('qm-arrow');
+  if (arrow) arrow.style.display = 'none';
 
-// ============================================================
-// SUBMIT LEAD
-// ============================================================
-window.submitLead = async function () {
-  const phone = document.getElementById('lead-phone')?.value?.trim();
-  const name = document.getElementById('lead-name')?.value?.trim();
-  const email = document.getElementById('lead-email')?.value?.trim();
-  const honeypot = document.getElementById('lead-company')?.value?.trim();
-  const errorEl = document.getElementById('lead-error');
-  const submitBtn = document.getElementById('submit-btn');
+  // Step 1: loading animation
+  el.innerHTML = `
+    <div id="qm-elig-loading" style="text-align:center;padding:1.5rem 0;">
+      <div style="width:3rem;height:3rem;border-radius:9999px;border:3px solid #e5e7eb;border-top-color:#111827;animation:qm-spin 0.7s linear infinite;margin:0 auto 1rem;"></div>
+      <p style="font-size:0.9rem;font-weight:600;color:#374151;">בודק זכאות...</p>
+    </div>
+  `;
 
-  // Client-side validation
-  if (!phone || phone.replace(/[\s-]/g, '').length < 9) {
-    const msg = 'נא להזין מספר טלפון תקין';
-    if (window._showLeadError) window._showLeadError(msg);
-    else if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+  // Step 2: after 1.6s show result + phone input on same screen
+  setTimeout(() => {
+    const title = isEligible
+      ? _e(step.eligible_title || 'חדשות טובות!')
+      : _e(step.not_eligible_title || 'לא נמצאה זכאות');
+    const sub = isEligible
+      ? _e(step.eligible_subtitle || '')
+      : _e(step.not_eligible_subtitle || '');
+
+    const iconBg = isEligible ? '#f0fdf4' : '#fef2f2';
+    const iconColor = isEligible ? '#16a34a' : '#dc2626';
+    const iconPath = isEligible
+      ? '<path d="M5 13l4 4L19 7"/>'
+      : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+
+    // Look for next phone_input step config for custom text
+    const nextPhoneStep = currentSteps.slice(currentStepIndex + 1).find(s => s.type === 'phone_input');
+    const showPhone = isEligible || (step.show_phone_if_not_eligible !== false);
+    const phoneLabel = _e(nextPhoneStep?.question_text || 'הזינו מספר טלפון ונציג ייצור איתכם קשר בהקדם.');
+    const needsName = !collectedName;
+
+    el.innerHTML = `
+      <div style="text-align:center;margin-bottom:1.25rem;">
+        <div class="qm-elig-icon" style="background:${iconBg};">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>
+        </div>
+        <p class="qm-elig-title">${title}</p>
+        ${sub ? `<p class="qm-elig-sub">${sub}</p>` : ''}
+      </div>
+
+      ${showPhone ? `
+        <div style="border-top:1px solid #f3f4f6;padding-top:1.1rem;">
+          <p class="qm-input-label" style="margin-bottom:1rem;">${phoneLabel}</p>
+          ${needsName ? `
+          <div class="qm-input-wrap">
+            <input type="text" class="qm-input" id="qm-ph-name" placeholder="שם מלא" autocomplete="given-name" />
+            <span class="qm-input-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+          </div>` : ''}
+          <div class="qm-input-wrap">
+            <input type="tel" class="qm-input" id="qm-phone" placeholder="050-0000000" dir="ltr" autocomplete="tel" />
+            <span class="qm-input-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.78a16 16 0 0 0 5.99 6l.85-.85a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.61 17l.31-.08Z"/></svg>
+            </span>
+          </div>
+          <!-- Honeypot -->
+          <div style="position:absolute;left:-9999px;" aria-hidden="true">
+            <input type="text" id="qm-honeypot" name="company" tabindex="-1" autocomplete="off">
+          </div>
+          <p class="qm-input-error" id="qm-phone-err"></p>
+          <button class="qm-continue-btn" id="qm-phone-btn">שלח ←</button>
+        </div>
+      ` : `
+        <div style="text-align:center;margin-top:1rem;">
+          <button class="qm-close-btn" id="qm-close-elig">סגור</button>
+        </div>
+      `}
+    `;
+
+    if (showPhone) {
+      document.getElementById('qm-phone-btn')?.addEventListener('click', submitQuizLead);
+      document.getElementById('qm-phone')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitQuizLead(); });
+      setTimeout(() => document.getElementById(needsName ? 'qm-ph-name' : 'qm-phone')?.focus(), 80);
+    } else {
+      document.getElementById('qm-close-elig')?.addEventListener('click', closeQuizModal);
+    }
+
+    // Mark phone step as already handled so advance() skips it
+    _eligibilityHandledPhone = true;
+
+    // Update progress to near-end
+    const fill = document.getElementById('qm-fill');
+    if (fill) fill.style.transform = 'scaleX(0.9)';
+  }, 1600);
+}
+
+// Flag so advance() skips phone_input if eligibility already embedded it
+let _eligibilityHandledPhone = false;
+
+// ── Phone input ────────────────────────────────────────────────
+function renderPhoneInput(step) {
+  const el = document.getElementById('qm-step-content');
+  if (!el) return;
+  const label = _e(step.question_text || 'מספר טלפון לחזרה');
+
+  // If name was never collected, show name field too
+  const needsName = !collectedName;
+
+  el.innerHTML = `
+    <p class="qm-input-label">${label}</p>
+    ${needsName ? `
+    <div class="qm-input-wrap">
+      <input type="text" class="qm-input" id="qm-ph-name" placeholder="שם מלא" autocomplete="given-name" />
+      <span class="qm-input-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+    </div>
+    ` : ''}
+    <div class="qm-input-wrap">
+      <input type="tel" class="qm-input" id="qm-phone" placeholder="050-0000000" dir="ltr" autocomplete="tel" />
+      <span class="qm-input-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.78a16 16 0 0 0 5.99 6l.85-.85a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.61 17l.31-.08Z"/></svg>
+      </span>
+    </div>
+    <!-- Honeypot -->
+    <div style="position:absolute;left:-9999px;" aria-hidden="true">
+      <input type="text" id="qm-honeypot" name="company" tabindex="-1" autocomplete="off">
+    </div>
+    <p class="qm-input-error" id="qm-phone-err"></p>
+    <button class="qm-continue-btn" id="qm-phone-btn">המשך ←</button>
+  `;
+
+  document.getElementById('qm-phone-btn')?.addEventListener('click', submitQuizLead);
+  document.getElementById('qm-phone')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitQuizLead(); });
+  setTimeout(() => {
+    const focus = needsName ? 'qm-ph-name' : 'qm-phone';
+    document.getElementById(focus)?.focus();
+  }, 80);
+}
+
+// ── Thank you ──────────────────────────────────────────────────
+function renderThankYou(step) {
+  const el = document.getElementById('qm-step-content');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="qm-ty-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <p class="qm-ty-title">${_e(step.title || 'תודה!')}</p>
+    <p class="qm-ty-sub">${_e(step.subtitle || 'נציג שלנו יחזור אליך בהקדם.')}</p>
+    <div style="text-align:center;">
+      <button class="qm-close-btn" id="qm-close-final">סגור</button>
+    </div>
+  `;
+
+  document.getElementById('qm-close-final')?.addEventListener('click', closeQuizModal);
+  const arrow = document.getElementById('qm-arrow');
+  if (arrow) arrow.style.display = 'none';
+}
+
+// ── Submit lead ────────────────────────────────────────────────
+async function submitQuizLead() {
+  const phoneEl = document.getElementById('qm-phone');
+  const nameEl = document.getElementById('qm-ph-name');
+  const honeypot = document.getElementById('qm-honeypot')?.value?.trim();
+  const errEl = document.getElementById('qm-phone-err');
+  const btn = document.getElementById('qm-phone-btn');
+
+  const phone = phoneEl?.value?.trim() || '';
+  const name = collectedName || nameEl?.value?.trim() || userAnswers['name'] || '';
+
+  if (!name || name.length < 2) {
+    if (errEl) { errEl.textContent = 'נא להזין שם מלא'; errEl.style.display = 'block'; }
+    nameEl?.focus();
     return;
   }
-  if (!name) {
-    const msg = 'נא להזין שם מלא';
-    if (window._showLeadError) window._showLeadError(msg);
-    else if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+  const phoneClean = phone.replace(/[\s\-]/g, '');
+  if (!/^05\d{8}$/.test(phoneClean)) {
+    if (errEl) { errEl.textContent = 'נא להזין מספר נייד תקין (לדוגמה: 0501234567)'; errEl.style.display = 'block'; }
+    phoneEl?.focus();
     return;
   }
-  if (errorEl) { errorEl.style.display = 'none'; }
+  if (errEl) errEl.style.display = 'none';
 
-  // Disable button
-  submitBtn.textContent = 'שולח...';
-  submitBtn.disabled = true;
+  if (btn) { btn.textContent = 'שולח...'; btn.disabled = true; }
 
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const leadPayload = {
+    const payload = {
       vertical: currentConfig?.vertical_name || 'כללי',
-      category_slug: currentVertical || 'taxation',
-      name: name,
-      phone: phone,
-      email: email || null,
-      company: honeypot || '', // honeypot — edge function rejects if filled
+      category_slug: currentVertical || 'general',
+      name,
+      phone: phoneClean,
+      email: null,
+      company: honeypot || '',
       answers: userAnswers,
       source_url: window.location.href,
       article_slug: urlParams.get('slug'),
@@ -670,46 +573,50 @@ window.submitLead = async function () {
       utm_campaign: urlParams.get('utm_campaign'),
     };
 
-    // Submit via edge function (server-side insert + webhook dispatch)
-    const response = await fetch(SUBMIT_LEAD_URL, {
+    const res = await fetch(SUBMIT_LEAD_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(leadPayload),
+      body: JSON.stringify(payload),
     });
 
-    const result = await response.json();
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'שגיאה בשליחת הטופס');
 
-    if (!response.ok) {
-      throw new Error(result.error || 'שגיאה בשליחת הטופס');
-    }
+    // Find and render thank_you step
+    const tyStep = currentSteps.find(s => s.type === 'thank_you')
+      || { title: 'תודה!', subtitle: 'נציג שלנו יחזור אליך בהקדם.' };
 
-    renderSuccessScreen();
+    const fill = document.getElementById('qm-fill');
+    if (fill) fill.style.transform = 'scaleX(1)';
+
+    renderThankYou(tyStep);
 
   } catch (err) {
-    console.error('Lead submission failed:', err);
-    errorEl.textContent = err.message || 'שגיאה — נסה שוב';
-    errorEl.classList.remove('hidden');
-
-    submitBtn.textContent = '← קבל את התוצאה שלך';
-    submitBtn.disabled = false;
+    console.error('Lead submit failed:', err);
+    if (errEl) { errEl.textContent = err.message || 'שגיאה — נסה שוב'; errEl.style.display = 'block'; }
+    if (btn) { btn.textContent = 'המשך ←'; btn.disabled = false; }
   }
-};
+}
 
-// ============================================================
-// CLOSE ON OVERLAY CLICK + ESC KEY
-// ============================================================
+// ── Loading shell ──────────────────────────────────────────────
+function renderLoadingShell() {
+  const modal = document.getElementById('quiz-modal');
+  if (!modal) return;
+  const inner = modal.querySelector(':scope > div');
+  if (!inner) return;
+  inner.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;padding:4rem 2rem;background:#fff;border-radius:1.25rem;">
+      <div style="width:2.5rem;height:2.5rem;border-radius:9999px;border:3px solid #e5e7eb;border-top-color:#111827;animation:qm-spin 0.7s linear infinite;"></div>
+      <style>@keyframes qm-spin{to{transform:rotate(360deg)}}</style>
+    </div>
+  `;
+}
+
+// ── Overlay + ESC close ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('quiz-modal');
-
   if (modal) {
-    // Close on overlay click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeQuizModal();
-    });
+    modal.addEventListener('click', e => { if (e.target === modal) closeQuizModal(); });
   }
-
-  // Close on ESC
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeQuizModal();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQuizModal(); });
 });

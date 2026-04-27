@@ -7,18 +7,12 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-// Israeli phone regex: 05X-XXXXXXX, 05XXXXXXXX, +9725XXXXXXXX, etc.
-const PHONE_REGEX = /^(\+972|0)5\d[\s-]?\d{3}[\s-]?\d{4}$/;
-
-// Rate limit window: reject same phone within this period
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_MS = 5 * 60 * 1000;
 
 serve(async (req: Request) => {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: CORS_HEADERS });
   }
-
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -33,24 +27,21 @@ serve(async (req: Request) => {
 
     const body = await req.json();
 
-    // ----- 1. HONEYPOT CHECK -----
-    // The "company" field is hidden via CSS on the frontend.
-    // Legitimate users never fill it. Bots auto-fill all fields.
+    // ----- 1. HONEYPOT -----
     if (body.company && body.company.trim().length > 0) {
-      console.warn("[submit-lead] Honeypot triggered, rejecting");
-      // Return 200 to not tip off the bot
+      console.warn("[submit-lead] Honeypot triggered");
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
 
-    // ----- 2. EXTRACT & VALIDATE FIELDS -----
+    // ----- 2. EXTRACT & VALIDATE -----
     const phone = (body.phone || "").trim();
     const name = (body.name || "").trim();
     const email = (body.email || "").trim() || null;
     const vertical = body.vertical || "כללי";
-    const categorySlug = body.category_slug || "taxation";
+    const categorySlug = body.category_slug || "general";
     const answers = body.answers || {};
     const sourceUrl = body.source_url || null;
     const articleSlug = body.article_slug || null;
@@ -58,162 +49,160 @@ serve(async (req: Request) => {
     const utmCampaign = body.utm_campaign || null;
 
     if (!name || name.length < 2) {
-      return new Response(
-        JSON.stringify({ error: "שם מלא הוא שדה חובה" }),
-        {
-          status: 400,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "שם מלא הוא שדה חובה" }), {
+        status: 400,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
     }
-
-    // Normalize phone: remove spaces and dashes for validation
     const phoneNormalized = phone.replace(/[\s-]/g, "");
     if (!phone || phoneNormalized.length < 9) {
-      return new Response(
-        JSON.stringify({ error: "מספר טלפון אינו תקין" }),
-        {
-          status: 400,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "מספר טלפון אינו תקין" }), {
+        status: 400,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
     }
 
-    // ----- 3. RATE LIMITING (same phone within 5 minutes) -----
+    // ----- 3. RATE LIMIT -----
     const rateLimitCutoff = new Date(Date.now() - RATE_LIMIT_MS).toISOString();
-
     const { data: recentLeads } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("phone", phone)
-      .gte("created_at", rateLimitCutoff)
-      .limit(1);
+      .from("leads").select("id").eq("phone", phone).gte("created_at", rateLimitCutoff).limit(1);
 
     if (recentLeads && recentLeads.length > 0) {
-      return new Response(
-        JSON.stringify({
-          error: "הבקשה כבר נשלחה. נציג יחזור אליך בהקדם.",
-        }),
-        {
-          status: 429,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "הבקשה כבר נשלחה. נציג יחזור אליך בהקדם." }), {
+        status: 429,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
     }
 
-    // ----- 4. INSERT LEAD (database-first — lead is safe before webhook) -----
-    const leadData = {
-      vertical,
-      category_slug: categorySlug,
-      name,
-      phone,
-      email,
-      answers,
-      source_url: sourceUrl,
-      article_slug: articleSlug,
-      utm_source: utmSource,
-      utm_campaign: utmCampaign,
-      status: "new",
-      webhook_status: "pending",
-    };
-
+    // ----- 4. INSERT LEAD -----
     const { data: insertedLead, error: insertError } = await supabase
       .from("leads")
-      .insert(leadData)
+      .insert({
+        vertical, category_slug: categorySlug, name, phone, email, answers,
+        source_url: sourceUrl, article_slug: articleSlug,
+        utm_source: utmSource, utm_campaign: utmCampaign,
+        status: "new", webhook_status: "pending", affiliate_status: "pending",
+      })
       .select("id")
       .single();
 
     if (insertError) {
       console.error("[submit-lead] Insert error:", insertError);
-      return new Response(
-        JSON.stringify({ error: "שגיאה בשליחת הטופס. נסה שוב." }),
-        {
-          status: 500,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "שגיאה בשליחת הטופס. נסה שוב." }), {
+        status: 500,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
     }
 
     const leadId = insertedLead.id;
-    console.log(`[submit-lead] Lead ${leadId} saved successfully`);
+    console.log(`[submit-lead] Lead ${leadId} saved`);
 
-    // ----- 5. FETCH WEBHOOK URL (server-side, never exposed to client) -----
-    let webhookStatus = "no_webhook";
-
+    // ----- 5. LOAD QUIZ CONFIG (for affiliate_config + webhook_url) -----
     const { data: quizConfig } = await supabase
       .from("quiz_configs")
-      .select("webhook_url")
+      .select("webhook_url, affiliate_config")
       .eq("category_slug", categorySlug)
       .eq("is_active", true)
       .single();
 
-    if (quizConfig?.webhook_url) {
-      // ----- 6. DISPATCH WEBHOOK (server-side) -----
+    // ----- 6. PER-QUIZ AFFILIATE API -----
+    let affiliateStatus = "no_config";
+
+    const affiliateCfg = quizConfig?.affiliate_config;
+    if (affiliateCfg?.enabled && affiliateCfg?.url) {
       try {
-        const webhookPayload = {
-          lead_id: leadId,
-          name,
-          phone,
-          email,
-          vertical,
-          category_slug: categorySlug,
-          answers,
-          source_url: sourceUrl,
-          article_slug: articleSlug,
-          utm_source: utmSource,
-          utm_campaign: utmCampaign,
-          timestamp: new Date().toISOString(),
+        // Build payload using field_mapping: { theirField: ourField }
+        const mapping: Record<string, string> = affiliateCfg.field_mapping || {};
+        const ourData: Record<string, string | null> = {
+          name, phone, email, vertical, category_slug: categorySlug,
+          article_slug: articleSlug, utm_source: utmSource, utm_campaign: utmCampaign,
+          source_url: sourceUrl, lead_id: leadId,
         };
 
-        const webhookResponse = await fetch(quizConfig.webhook_url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(webhookPayload),
+        const affiliatePayload: Record<string, string | null> = {};
+        if (Object.keys(mapping).length > 0) {
+          for (const [theirField, ourField] of Object.entries(mapping)) {
+            affiliatePayload[theirField] = ourData[ourField] ?? null;
+          }
+        } else {
+          // No mapping defined — send our standard fields
+          Object.assign(affiliatePayload, ourData);
+        }
+
+        const affiliateHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (affiliateCfg.auth_header) {
+          affiliateHeaders["Authorization"] = affiliateCfg.auth_header;
+        }
+
+        const affiliateRes = await fetch(affiliateCfg.url, {
+          method: affiliateCfg.method || "POST",
+          headers: affiliateHeaders,
+          body: JSON.stringify(affiliatePayload),
         });
 
-        if (webhookResponse.ok) {
-          webhookStatus = "sent";
-          console.log(`[submit-lead] Webhook dispatched for lead ${leadId}`);
-        } else {
-          webhookStatus = "failed";
-          console.error(
-            `[submit-lead] Webhook failed for lead ${leadId}: HTTP ${webhookResponse.status}`
-          );
-        }
-      } catch (webhookErr) {
-        webhookStatus = "failed";
-        console.error(
-          `[submit-lead] Webhook exception for lead ${leadId}:`,
-          webhookErr
-        );
+        affiliateStatus = affiliateRes.ok ? "sent" : `failed_${affiliateRes.status}`;
+        console.log(`[submit-lead] Affiliate dispatch: ${affiliateStatus} for lead ${leadId}`);
+      } catch (e) {
+        affiliateStatus = "error";
+        console.error(`[submit-lead] Affiliate dispatch error for lead ${leadId}:`, e);
+      }
+    } else {
+      // Fallback: global AFFILIATE_WEBHOOK_URL env var
+      const globalAffiliateUrl = Deno.env.get("AFFILIATE_WEBHOOK_URL");
+      if (globalAffiliateUrl) {
+        fetch(globalAffiliateUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, phone, category_slug: categorySlug, utm_source: utmSource }),
+        }).then(r => {
+          console.log(`[submit-lead] Global affiliate dispatch: HTTP ${r.status}`);
+        }).catch(e => {
+          console.error(`[submit-lead] Global affiliate dispatch failed:`, e);
+        });
+        affiliateStatus = "dispatched_global";
       }
     }
 
-    // ----- 7. UPDATE WEBHOOK STATUS -----
+    // ----- 7. LEGACY WEBHOOK -----
+    let webhookStatus = "no_webhook";
+    if (quizConfig?.webhook_url) {
+      try {
+        const webhookRes = await fetch(quizConfig.webhook_url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lead_id: leadId, name, phone, email, vertical, category_slug: categorySlug,
+            answers, source_url: sourceUrl, article_slug: articleSlug,
+            utm_source: utmSource, utm_campaign: utmCampaign,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+        webhookStatus = webhookRes.ok ? "sent" : "failed";
+        console.log(`[submit-lead] Webhook: ${webhookStatus} for lead ${leadId}`);
+      } catch {
+        webhookStatus = "failed";
+      }
+    }
+
+    // ----- 8. UPDATE STATUSES -----
     await supabase
       .from("leads")
-      .update({ webhook_status: webhookStatus })
+      .update({ webhook_status: webhookStatus, affiliate_status: affiliateStatus })
       .eq("id", leadId);
 
-    // ----- 8. RETURN SUCCESS (no sensitive data exposed) -----
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "הטופס נשלח בהצלחה",
-      }),
-      {
-        status: 200,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-      }
-    );
+    // ----- 9. SUCCESS -----
+    return new Response(JSON.stringify({ success: true, message: "הטופס נשלח בהצלחה" }), {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+
   } catch (err: any) {
     console.error("[submit-lead] Unhandled error:", err);
-    return new Response(
-      JSON.stringify({ error: "שגיאה פנימית. נסה שוב מאוחר יותר." }),
-      {
-        status: 500,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ error: "שגיאה פנימית. נסה שוב מאוחר יותר." }), {
+      status: 500,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
   }
 });

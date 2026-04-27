@@ -96,7 +96,48 @@
     if (stale) stale.remove();
 
     const catSlug  = window.currentArticleCategory || '';
-    const headline = resolveHeadline(catSlug);
+    const quizId   = window.currentArticleQuizId   || '';
+    const headline = window.currentQuizExitHeadline || resolveHeadline(catSlug);
+
+    // Build entry-hook buttons (same buttons as the inline CTA)
+    let ehButtons = [];
+    if (window.currentQuizEntryButtons) {
+      try {
+        ehButtons = typeof window.currentQuizEntryButtons === 'string'
+          ? JSON.parse(window.currentQuizEntryButtons)
+          : window.currentQuizEntryButtons;
+      } catch (e) {}
+    }
+
+    let buttonsHtml = '';
+    if (ehButtons && ehButtons.length > 0) {
+      buttonsHtml = `<div class="exit-quiz-btn-grid" dir="rtl">`;
+      ehButtons.forEach((btn, i) => {
+        const bg    = btn.bgColor   || '#111827';
+        const color = btn.textColor || '#ffffff';
+        buttonsHtml += `
+          <button class="exit-quiz-entry-btn" data-idx="${i}"
+                  style="background-color:${bg};color:${color};">
+            ${btn.label}
+          </button>`;
+      });
+      buttonsHtml += `</div>`;
+    } else if (window.currentQuizButtonA?.label && window.currentQuizButtonB?.label) {
+      buttonsHtml = `
+        <div class="exit-quiz-btn-grid">
+          <button class="exit-quiz-entry-btn" data-idx="0" style="background:#111827;color:#fff;">
+            ${window.currentQuizButtonA.label}
+          </button>
+          <button class="exit-quiz-entry-btn" data-idx="1" style="background:#dc2626;color:#fff;">
+            ${window.currentQuizButtonB.label}
+          </button>
+        </div>`;
+    } else {
+      buttonsHtml = `
+        <button id="exit-popup-cta" class="exit-popup-cta-btn quiz-cta-pulse">
+          ← בדוק עכשיו בחינם
+        </button>`;
+    }
 
     const overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
@@ -104,7 +145,6 @@
     overlay.innerHTML = `
       <div id="${POPUP_ID}" role="dialog" aria-modal="true" aria-labelledby="exit-popup-headline">
 
-        <!-- Red header (matches quiz modal style) -->
         <div class="exit-popup-header">
           <button id="exit-popup-close" aria-label="סגור חלונית" class="exit-popup-x">✕</button>
           <div class="exit-popup-badge">⏱️ רגע לפני שאתה עוזב</div>
@@ -112,11 +152,8 @@
           <p class="exit-popup-sub">לוקח 60 שניות. בחינם לחלוטין.</p>
         </div>
 
-        <!-- White body -->
         <div class="exit-popup-body">
-          <button id="exit-popup-cta" class="exit-popup-cta-btn quiz-cta-pulse" data-quiz-id="${window.currentArticleQuizId || ''}">
-            ← בדוק עכשיו בחינם
-          </button>
+          ${buttonsHtml}
           <button id="exit-popup-dismiss" class="exit-popup-dismiss-link">
             לא תודה, לא מעניין אותי
           </button>
@@ -134,15 +171,37 @@
     });
     document.addEventListener('keydown', handleEscKey);
 
-    document.getElementById('exit-popup-cta').addEventListener('click', function () {
-      sessionStorage.setItem('quiz_cta_clicked', '1');
-      hidePopup();
-      const quizId   = window.currentArticleQuizId   || null;
-      const catSlugV = window.currentArticleCategory  || null;
-      if (typeof window.openQuizModal === 'function') {
-        window.openQuizModal(catSlugV, null, null, quizId);
-      }
+    // Wire up dynamic buttons
+    overlay.querySelectorAll('.exit-quiz-entry-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const idx = parseInt(btn.dataset.idx, 10);
+        let value = null;
+        if (ehButtons && ehButtons.length > 0) {
+          value = ehButtons[idx]?.value || null;
+        } else if (idx === 0) {
+          value = window.currentQuizButtonA?.value || null;
+        } else {
+          value = window.currentQuizButtonB?.value || null;
+        }
+        sessionStorage.setItem('quiz_cta_clicked', '1');
+        hidePopup();
+        if (typeof window.openQuizModal === 'function') {
+          window.openQuizModal(catSlug || null, value, null, quizId || null);
+        }
+      });
     });
+
+    // Fallback single CTA button (no configured buttons)
+    const singleCta = document.getElementById('exit-popup-cta');
+    if (singleCta) {
+      singleCta.addEventListener('click', function () {
+        sessionStorage.setItem('quiz_cta_clicked', '1');
+        hidePopup();
+        if (typeof window.openQuizModal === 'function') {
+          window.openQuizModal(catSlug || null, null, null, quizId || null);
+        }
+      });
+    }
   }
 
   /* ──────────────────────────────────────────────
@@ -540,8 +599,8 @@
       /* Red CTA button */
       .exit-popup-cta-btn {
         width: 100%;
-        background: #dc2626;
-        color: white;
+        background: #dc2626 !important;
+        color: #ffffff !important;
         font-weight: 800;
         font-size: 1.1rem;
         padding: 1rem 1.5rem;
@@ -570,6 +629,29 @@
         cursor: not-allowed;
         transform: none;
       }
+
+      /* Quiz entry-hook buttons grid */
+      .exit-quiz-btn-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        direction: rtl;
+      }
+
+      .exit-quiz-entry-btn {
+        border: none;
+        border-radius: 9999px;
+        height: 48px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: transform 0.15s, opacity 0.15s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        width: 100%;
+      }
+
+      .exit-quiz-entry-btn:hover { opacity: 0.88; transform: scale(1.03); }
+      .exit-quiz-entry-btn:active { transform: scale(0.97); }
 
       /* Dismiss link */
       .exit-popup-dismiss-link {

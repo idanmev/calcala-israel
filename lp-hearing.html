@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שמיעה צלולה - המומחים לפתרונות שמיעה</title>
+    <meta name="description" content="מכשירי שמיעה מתקדמים בהתאמה אישית. פתרונות טכנולוגיים מתקדמים לסבסוד קופות חולים.">
+    <style>
+        :root {
+            --primary: #004b87;
+            --primary-light: #e1effe;
+            --secondary: #ff8c00;
+            --secondary-hover: #e67e00;
+            --text-dark: #2d3748;
+            --text-light: #ffffff;
+            --bg-light: #f7fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .phone-btn {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 75, 135, 0.8), rgba(0, 75, 135, 0.9)), url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2000&auto=format&fit=crop') center/cover;
+            color: var(--text-light);
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .hero-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .hero-content {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero h2 {
+            font-size: 1.5rem;
+            font-weight: normal;
+            margin-bottom: 30px;
+            color: #e2e8f0;
+        }
+
+        .bullets {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .bullets li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .bullets li::before {
+            content: '✔';
+            color: var(--secondary);
+            margin-left: 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .hero-form-wrapper {
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            color: var(--text-dark);
+        }
+
+        .hero-form-wrapper h3 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .hero-form-wrapper p {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #718096;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(255, 140, 0, 0.3);
+        }
+
+        .btn-submit:hover {
+            background: var(--secondary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Sections */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-light {
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            color: var(--primary);
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+
+        .content-block {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #4a5568;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: var(--bg-light);
+            padding: 40px 30px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+            border-color: var(--primary-light);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        /* Testimonials */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-right: 5px solid var(--secondary);
+            position: relative;
+        }
+
+        .testimonial::before {
+            content: '"';
+            font-size: 4rem;
+            color: var(--primary-light);
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-family: serif;
+            line-height: 1;
+        }
+
+        .testimonial p {
+            font-style: italic;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial h4 {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .footer h4 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .footer ul {
+            list-style: none;
+        }
+
+        .footer ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer a {
+            color: #a0aec0;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        .disclaimer {
+            border-top: 1px solid #2d3748;
+            padding-top: 30px;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        /* Accessibility Tools Placeholder */
+        .accessibility-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .section {
+                padding: 50px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="#" class="logo">שמיעה צלולה</a>
+            <a href="tel:*1234" class="phone-btn">
+                📞 חייגו עכשיו: *1234
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h1>הדור הבא של מכשירי השמיעה כבר כאן</h1>
+                <h2>טכנולוגיה חכמה להבנת דיבור מעולה בכל סביבה - עכשיו בסבסוד מיוחד</h2>
+                <ul class="bullets">
+                    <li>טכנולוגיית סינון רעשים מבוססת בינה מלאכותית</li>
+                    <li>החזרים גבוהים לחברי כל קופות החולים</li>
+                    <li>עד 30 ימי התנסות ללא התחייבות</li>
+                    <li>ליווי מקצועי של קלינאי תקשורת מוסמכים</li>
+                    <li>פריסה ארצית של מכוני שמיעה מתקדמים</li>
+                </ul>
+            </div>
+            
+            <div class="hero-form-wrapper">
+                <h3>בדקו זכאותכם להטבה</h3>
+                <p>מלאו את הפרטים ונחזור אליכם בהקדם לייעוץ ראשוני ללא עלות</p>
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="שם מלא" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" name="phone" placeholder="מספר טלפון" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="דואר אלקטרוני (לא חובה)">
+                    </div>
+                    <button type="submit" class="btn-submit">לבדיקת זכאות עכשיו »</button>
+                    <p style="font-size: 0.8rem; margin-top: 15px; color: #a0aec0;">* פרטיותכם חשובה לנו. המידע מאובטח.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Intro Section -->
+    <section class="section section-light">
+        <div class="container">
+            <h2 class="section-title">איכות החיים שלכם מתחילה בשמיעה טובה</h2>
+            <div class="content-block">
+                <p style="margin-bottom: 20px;">ירידה בשמיעה היא תהליך טבעי, אך היא עלולה לגרום לניתוק חברתי, קשיי תקשורת עם הקרובים לנו ואפילו לירידה קוגניטיבית. הפתרון נמצא בהישג יד.</p>
+                <p>מכשירי השמיעה החדשים שלנו מתוכננים להחזיר לכם את צלילי החיים. בין אם במסעדה רועשת, בארוחה משפחתית או בשיחה אינטימית, הטכנולוגיה שלנו מאפשרת לכם לשמוע בבירור ולהשתתף באופן פעיל בכל סיטואציה.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">למה לבחור במכשירי השמיעה שלנו?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>מנוע בינה מלאכותית</h3>
+                    <p>המכשיר לומד את סביבת השמע שלכם ומתאים את עצמו בזמן אמת, מנקה רעשי רקע ומדגיש את קולות הדיבור החשובים.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔋</div>
+                    <h3>נטענים וידידותיים</h3>
+                    <p>שכחו מהחלפת סוללות קטנות. המכשירים שלנו מגיעים עם סוללה נטענת עוצמתית המספיקה ליום שלם של שמיעה איכותית.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>קישוריות חכמה</h3>
+                    <p>חיבור ישיר לטלפון הנייד, לטלוויזיה ולמכשירים חכמים אחרים. שיחות טלפון ומוזיקה מוזרמים ישירות למכשירי השמיעה.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>התאמה אישית מושלמת</h3>
+                    <p>מדידות מדויקות בתעלת האוזן (Real Ear Measurement) מבטיחות שכל תדר מותאם בדיוק לירידת השמיעה הספציפית שלכם.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="section section-light">
+        <div class="container">
+            <h2 class="section-title">לקוחות משתפים מהשטח</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial">
+                    <p>"אחרי שנים שהתביישתי לבקש מאנשים לחזור על דבריהם, המכשיר החדש שינה את חיי. אני שוב נהנה לשבת בבתי קפה עם חברים."</p>
+                    <h4>- חיים כהן, גמלאי</h4>
+                </div>
+                <div class="testimonial">
+                    <p>"השירות שקיבלתי במכון היה יוצא מן הכלל. הקלינאית הייתה סבלנית והסבירה לי כל שלב. המכשיר נטען בלילה ומוכן בבוקר - פשוט מושלם."</p>
+                    <h4>- שרה אהרוני, מורה לשעבר</h4>
+                </div>
+                <div class="testimonial">
+                    <p>"לא האמנתי כמה קטן ולא נראה המכשיר יכול להיות. הילדים בקושי שמו לב שאני מרכיב אותו, אבל הם מיד שמו לב שאני מקשיב יותר טוב."</p>
+                    <h4>- דוד לוי, מהנדס</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>שמיעה צלולה</h4>
+                    <p>המומחים שלכם לפתרונות שמיעה מתקדמים. אנו מציעים אבחון מקיף, התאמה אישית וליווי צמוד לאורך כל הדרך.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>קישורים מהירים</h4>
+                    <ul>
+                        <li><a href="#">אודותינו</a></li>
+                        <li><a href="#">מכוני שמיעה</a></li>
+                        <li><a href="#">צור קשר</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>מידע משפטי</h4>
+                    <ul>
+                        <li><a href="#">תקנון האתר</a></li>
+                        <li><a href="#">מדיניות פרטיות</a></li>
+                        <li><a href="#">הצהרת נגישות</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="disclaimer">
+                <strong>הבהרה חשובה:</strong> המידע המופיע בדף זה הינו כללי בלבד ואינו מהווה תחליף לייעוץ רפואי מקצועי, אבחון או טיפול. כל התאמת מכשיר שמיעה מתבצעת על ידי קלינאי תקשורת מוסמך לאחר בדיקת שמיעה מקיפה. הזכאות לסבסוד והיקף ההחזרים כפופים לתנאי הפוליסה של קופות החולים והביטוחים המשלימים. תקופת ההתנסות עשויה להשתנות בהתאם לתנאי הרכישה והמבצעים התקפים. התמונות להמחשה בלבד. ט.ל.ח.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Accessibility Button -->
+    <div class="accessibility-btn" title="כלי נגישות">
+        ♿
+    </div>
+
+</body>
+</html>
