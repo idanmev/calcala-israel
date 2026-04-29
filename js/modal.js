@@ -398,11 +398,21 @@ function renderEligibility(step) {
       ? _e(step.eligible_subtitle || '')
       : _e(step.not_eligible_subtitle || '');
 
-    const iconBg = isEligible ? '#f0fdf4' : '#fef2f2';
-    const iconColor = isEligible ? '#16a34a' : '#dc2626';
+    // Icon: eligible always gets check. Ineligible respects `not_eligible_icon` field:
+    //   'check' → green ✓,  'x' → red X,  'none' → hidden (default)
+    const notEligIcon = step.not_eligible_icon || 'none';
+    const iconBg = isEligible
+      ? '#f0fdf4'
+      : (notEligIcon === 'check' ? '#f0fdf4' : '#fef2f2');
+    const iconColor = isEligible
+      ? '#16a34a'
+      : (notEligIcon === 'check' ? '#16a34a' : '#dc2626');
     const iconPath = isEligible
       ? '<path d="M5 13l4 4L19 7"/>'
-      : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+      : (notEligIcon === 'check'
+          ? '<path d="M5 13l4 4L19 7"/>'
+          : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+    const showIcon = isEligible || notEligIcon !== 'none';
 
     // Look for next phone_input step config for custom text
     const nextPhoneStep = currentSteps.slice(currentStepIndex + 1).find(s => s.type === 'phone_input');
@@ -412,9 +422,9 @@ function renderEligibility(step) {
 
     el.innerHTML = `
       <div style="text-align:center;margin-bottom:1.25rem;">
-        <div class="qm-elig-icon" style="background:${iconBg};">
+        ${showIcon ? `<div class="qm-elig-icon" style="background:${iconBg};">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>
-        </div>
+        </div>` : ''}
         <p class="qm-elig-title">${title}</p>
         ${sub ? `<p class="qm-elig-sub">${sub}</p>` : ''}
       </div>

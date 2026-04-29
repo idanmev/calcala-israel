@@ -668,7 +668,7 @@
       const defaults = {
         name_input:        { type: 'name_input', question_text: 'מה שמך?' },
         question:          { type: 'question', id: 'q_' + Date.now(), text: '', options: [] },
-        eligibility_result:{ type: 'eligibility_result', eligible_title: 'בשורות מצוינות!', eligible_subtitle: '', not_eligible_title: 'לא נמצאה זכאות', not_eligible_subtitle: '', eligible_conditions: [], show_phone_if_not_eligible: true },
+        eligibility_result:{ type: 'eligibility_result', eligible_title: 'בשורות מצוינות!', eligible_subtitle: '', not_eligible_title: 'לא נמצאה זכאות', not_eligible_subtitle: '', eligible_conditions: [], show_phone_if_not_eligible: true, not_eligible_icon: 'x' },
         phone_input:       { type: 'phone_input', question_text: 'מספר טלפון לחזרה.' },
         thank_you:         { type: 'thank_you', title: 'תודה!', subtitle: 'נציג שלנו יחזור אליך בהקדם.' },
       };
@@ -737,7 +737,16 @@
         <label class="flex items-center gap-2 text-xs text-gray-600 mt-2 cursor-pointer">
           <input type="checkbox" ${step.show_phone_if_not_eligible!==false?'checked':''} onchange="updateStepField(${i},'show_phone_if_not_eligible',this.checked)">
           בקש טלפון גם מלא-זכאים
-        </label>`;
+        </label>
+        <div class="mt-2">
+          <label class="block text-[10px] font-bold text-gray-500 mb-1">🔴 אייקון — לא זכאי</label>
+          <select onchange="updateStepField(${i},'not_eligible_icon',this.value)"
+            class="border rounded-lg px-2 py-1.5 text-xs w-full">
+            <option value="x" ${(step.not_eligible_icon||'x')==='x'?'selected':''}>❌ X אדום (ברירת מחדל)</option>
+            <option value="check" ${step.not_eligible_icon==='check'?'selected':''}>✅ וי ירוק (לתוצאה חיובית)</option>
+            <option value="none" ${step.not_eligible_icon==='none'?'selected':''}>⬜ ללא אייקון</option>
+          </select>
+        </div>`;
       } else if (step.type === 'thank_you') {
         fields = `<div class="grid grid-cols-2 gap-2">
           <div><label class="block text-[10px] font-bold text-gray-500 mb-1">כותרת</label>
