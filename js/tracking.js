@@ -22,6 +22,11 @@
     // ─── Helpers ───────────────────────────────────────────────
     window.dataLayer = window.dataLayer || [];
 
+    // gtag polyfill — ensures GTM custom HTML tags that call gtag() work
+    // even before Google Analytics loads its own definition.
+    // GA4 will override this once it loads; this just prevents "gtag is not defined".
+    window.gtag = window.gtag || function gtag() { window.dataLayer.push(arguments); };
+
     // Enable debug mode via URL param (?debug=1) or explicit flag
     if (new URLSearchParams(window.location.search).get('debug') === '1') {
         window.__TRACKING_DEBUG__ = true;
