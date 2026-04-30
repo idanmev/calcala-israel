@@ -22,11 +22,19 @@
     // ─── Helpers ───────────────────────────────────────────────
     window.dataLayer = window.dataLayer || [];
 
+    // Enable debug mode via URL param (?debug=1) or explicit flag
+    if (new URLSearchParams(window.location.search).get('debug') === '1') {
+        window.__TRACKING_DEBUG__ = true;
+    }
+
     function push(eventName, params) {
         const payload = Object.assign({ event: eventName }, params || {});
         window.dataLayer.push(payload);
         if (window.__TRACKING_DEBUG__) {
-            console.log('[CalcalaTracking]', eventName, payload);
+            console.group('%c[CalcalaTracking] ' + eventName, 'color:#6366f1;font-weight:bold');
+            console.log('payload:', payload);
+            console.log('dataLayer length:', window.dataLayer.length);
+            console.groupEnd();
         }
     }
 
