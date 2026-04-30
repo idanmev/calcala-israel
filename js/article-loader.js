@@ -788,11 +788,17 @@ async function loadArticle() {
         // 4. Article meta
         const metaEl = document.getElementById('article-meta');
         if (metaEl) {
-            metaEl.innerHTML = `
+            let metaHtml = `
         ${article.author ? `<span class="font-medium">✍️ ${_h(article.author)}</span>` : ''}
         <span>📅 ${formatDateHebrew(article.publish_date)}</span>
         <span>⏱️ ${estimateReadTime(article.body)}</span>
       `;
+            
+            if (article.quiz_id) {
+                metaHtml += `<span class="mr-auto font-bold text-gray-500">Advertorial</span>`;
+            }
+            
+            metaEl.innerHTML = metaHtml;
         }
 
         // 5. Article body
