@@ -97,6 +97,20 @@
         });
     }
 
+    // ─── Expose public API immediately ───────────────────────────
+    window.CalcalaTracking = {
+        trackEvent: trackEvent,
+        trackConversion: trackConversion,
+        trackPageView: trackPageView,
+        trackQuizOpen: trackQuizOpen,
+        trackQuizStep: trackQuizStep,
+        trackQuizComplete: trackQuizComplete,
+        trackLeadFormView: trackLeadFormView,
+        trackLeadSubmitAttempt: trackLeadSubmitAttempt,
+        trackLeadSuccess: trackLeadSuccess,
+        push: push,
+    };
+
     // ─── Scroll Depth ────────────────────────────────────────────
     (function initScrollDepth() {
         const thresholds = [25, 50, 75, 90];
@@ -129,86 +143,7 @@
         });
     })();
 
-    // ─── Hook into modal.js functions ───────────────────────────
-    // We wrap the global functions AFTER they are defined.
-    // Using a small observer pattern to handle async script loading.
-    (function hookModalFunctions() {
-        function tryHook() {
-            // --- openQuizModal ---
-            if (window.openQuizModal && !window.openQuizModal.__tracked__) {
-                var _orig = window.openQuizModal;
-                window.openQuizModal = function (vertical, prefillAnswer, fallbackCategory, quizId) {
-                    trackQuizOpen(vertical || fallbackCategory || 'unknown');
-                    return _orig.apply(this, arguments);
-                };
-                window.openQuizModal.__tracked__ = true;
-            }
 
-            // --- selectAnswer ---
-            if (window.selectAnswer && !window.selectAnswer.__tracked__) {
-                var _origSelect = window.selectAnswer;
-                window.selectAnswer = function (questionId, answer) {
-                    // Capture step index and vertical before calling original
-                    var stepIndex = (typeof currentStep !== 'undefined' ? currentStep : -1);
-                    var vertical = (typeof currentVertical !== 'undefined' ? currentVertical : 'unknown');
-                    // Call original first so state updates
-                    var result = _origSelect.apply(this, arguments);
-                    trackQuizStep(stepIndex, questionId, answer, vertical);
-                    return result;
-                };
-                window.selectAnswer.__tracked__ = true;
-            }
-
-            // --- proceedToLeadForm ---
-            if (window.proceedToLeadForm && !window.proceedToLeadForm.__tracked__) {
-                var _origProceed = window.proceedToLeadForm;
-                window.proceedToLeadForm = function () {
-                    var vertical = (typeof currentVertical !== 'undefined' ? currentVertical : 'unknown');
-                    var answers = (typeof userAnswers !== 'undefined' ? userAnswers : {});
-                    trackQuizComplete(answers, vertical);
-                    trackLeadFormView(vertical);
-                    return _origProceed.apply(this, arguments);
-                };
-                window.proceedToLeadForm.__tracked__ = true;
-            }
-
-            // --- submitLead ---
-            if (window.submitLead && !window.submitLead.__tracked__) {
-                var _origSubmit = window.submitLead;
-                window.submitLead = async function () {
-                    var vertical = (typeof currentVertical !== 'undefined' ? currentVertical : 'unknown');
-                    trackLeadSubmitAttempt(vertical);
-                    // Wrap to detect success: push success event after original resolves
-                    var answers = (typeof userAnswers !== 'undefined' ? userAnswers : {});
-                    // We detect success by watching for renderSuccessScreen call,
-                    // so we fire lead_success optimistically after no error is thrown.
-                    try {
-                        await _origSubmit.apply(this, arguments);
-                        // If we reach here without throwing, submission succeeded
-                        trackLeadSuccess(vertical, answers);
-                    } catch (e) {
-                        // Original function handles its own error display
-                        throw e;
-                    }
-                };
-                window.submitLead.__tracked__ = true;
-            }
-        }
-
-        // Try immediately (if modal.js loaded before this file)
-        tryHook();
-
-        // Also try after DOM content loaded (covers deferred scripts)
-        document.addEventListener('DOMContentLoaded', tryHook);
-
-        // Fallback: poll for 3 seconds in case scripts load async
-        var attempts = 0;
-        var poll = setInterval(function () {
-            tryHook();
-            attempts++;
-            if (attempts >= 6) clearInterval(poll);
-        }, 500);
-    })();
 
     // ─── CTA / Button click tracking ────────────────────────────
     document.addEventListener('click', function (e) {
@@ -221,18 +156,6 @@
         }
     });
 
-    // ─── Expose public API ───────────────────────────────────────
-    window.CalcalaTracking = {
-        trackEvent: trackEvent,
-        trackConversion: trackConversion,
-        trackPageView: trackPageView,
-        trackQuizOpen: trackQuizOpen,
-        trackQuizStep: trackQuizStep,
-        trackQuizComplete: trackQuizComplete,
-        trackLeadFormView: trackLeadFormView,
-        trackLeadSubmitAttempt: trackLeadSubmitAttempt,
-        trackLeadSuccess: trackLeadSuccess,
-        push: push,
-    };
+
 
 })();

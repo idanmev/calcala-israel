@@ -93,6 +93,10 @@ window.openQuizModal = function (vertical = null, prefillAnswer = null, fallback
   collectedName = '';
   _eligibilityHandledPhone = false;
 
+  if (window.CalcalaTracking) {
+    window.CalcalaTracking.trackQuizOpen(currentVertical);
+  }
+
   if (prefillAnswer) userAnswers['entry_hook'] = prefillAnswer;
 
   const modal = document.getElementById('quiz-modal');
