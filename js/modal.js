@@ -344,6 +344,10 @@ function renderQuestion(step) {
     btn.classList.add('selected');
     setTimeout(() => {
       userAnswers[btn.dataset.qid] = btn.dataset.value;
+      // Track quiz_step via GTM
+      if (window.CalcalaTracking) {
+        window.CalcalaTracking.trackQuizStep(currentStepIndex, btn.dataset.qid, btn.dataset.value, currentVertical);
+      }
       advance();
     }, 200);
   });
@@ -467,6 +471,12 @@ function renderEligibility(step) {
       document.getElementById('qm-close-elig')?.addEventListener('click', closeQuizModal);
     }
 
+    // Track quiz_complete + lead_form_view via GTM
+    if (window.CalcalaTracking) {
+      window.CalcalaTracking.trackQuizComplete(userAnswers, currentVertical);
+      if (showPhone) window.CalcalaTracking.trackLeadFormView(currentVertical);
+    }
+
     // Mark phone step as already handled so advance() skips it
     _eligibilityHandledPhone = true;
 
@@ -567,6 +577,11 @@ async function submitQuizLead() {
 
   if (btn) { btn.textContent = 'שולח...'; btn.disabled = true; }
 
+  // Track lead_submit_attempt via GTM
+  if (window.CalcalaTracking) {
+    window.CalcalaTracking.trackLeadSubmitAttempt(currentVertical);
+  }
+
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const payload = {
@@ -598,6 +613,11 @@ async function submitQuizLead() {
 
     const fill = document.getElementById('qm-fill');
     if (fill) fill.style.transform = 'scaleX(1)';
+
+    // Track lead_success via GTM (fires Outbrain, Meta, GA4 etc.)
+    if (window.CalcalaTracking) {
+      window.CalcalaTracking.trackLeadSuccess(currentVertical, userAnswers);
+    }
 
     renderThankYou(tyStep);
 
