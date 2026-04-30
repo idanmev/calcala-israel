@@ -589,6 +589,7 @@ async function submitQuizLead() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const payload = {
+      quiz_id: currentConfig?.id || null,
       vertical: currentConfig?.vertical_name || 'כללי',
       category_slug: currentVertical || 'general',
       name,

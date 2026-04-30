@@ -42,6 +42,7 @@ serve(async (req: Request) => {
     const email = (body.email || "").trim() || null;
     const vertical = body.vertical || "כללי";
     const categorySlug = body.category_slug || "general";
+    const quizId = body.quiz_id || null;
     const answers = body.answers || {};
     const sourceUrl = body.source_url || null;
     const articleSlug = body.article_slug || null;
@@ -98,12 +99,26 @@ serve(async (req: Request) => {
     console.log(`[submit-lead] Lead ${leadId} saved`);
 
     // ----- 5. LOAD QUIZ CONFIG (for affiliate_config + webhook_url) -----
-    const { data: quizConfig } = await supabase
-      .from("quiz_configs")
-      .select("webhook_url, affiliate_config")
-      .eq("category_slug", categorySlug)
-      .eq("is_active", true)
-      .single();
+    // Prefer lookup by quiz_id (when quiz was opened by ID), fall back to category_slug
+    let quizConfig: { webhook_url?: string; affiliate_config?: any } | null = null;
+    if (quizId) {
+      const { data } = await supabase
+        .from("quiz_configs")
+        .select("webhook_url, affiliate_config")
+        .eq("id", quizId)
+        .eq("is_active", true)
+        .single();
+      quizConfig = data;
+    }
+    if (!quizConfig) {
+      const { data } = await supabase
+        .from("quiz_configs")
+        .select("webhook_url, affiliate_config")
+        .eq("category_slug", categorySlug)
+        .eq("is_active", true)
+        .single();
+      quizConfig = data;
+    }
 
     // ----- 6. PER-QUIZ AFFILIATE API -----
     let affiliateStatus = "no_config";
@@ -129,21 +144,43 @@ serve(async (req: Request) => {
           Object.assign(affiliatePayload, ourData);
         }
 
+        // Merge any static fields (e.g. public_key_token, camp_id, emedia, eid)
+        const staticFields: Record<string, string> = affiliateCfg.static_fields || {};
+        for (const [k, v] of Object.entries(staticFields)) {
+          affiliatePayload[k] = v;
+        }
+
+        // Determine content type: "form" for x-www-form-urlencoded, default JSON
+        const useForm = affiliateCfg.content_type === "form";
         const affiliateHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
+          "Content-Type": useForm
+            ? "application/x-www-form-urlencoded"
+            : "application/json",
         };
         if (affiliateCfg.auth_header) {
           affiliateHeaders["Authorization"] = affiliateCfg.auth_header;
         }
 
+        let affiliateBody: string;
+        if (useForm) {
+          const params = new URLSearchParams();
+          for (const [k, v] of Object.entries(affiliatePayload)) {
+            if (v !== null && v !== undefined) params.append(k, String(v));
+          }
+          affiliateBody = params.toString();
+        } else {
+          affiliateBody = JSON.stringify(affiliatePayload);
+        }
+
         const affiliateRes = await fetch(affiliateCfg.url, {
           method: affiliateCfg.method || "POST",
           headers: affiliateHeaders,
-          body: JSON.stringify(affiliatePayload),
+          body: affiliateBody,
         });
 
+        const affiliateRespText = await affiliateRes.text().catch(() => "");
         affiliateStatus = affiliateRes.ok ? "sent" : `failed_${affiliateRes.status}`;
-        console.log(`[submit-lead] Affiliate dispatch: ${affiliateStatus} for lead ${leadId}`);
+        console.log(`[submit-lead] Affiliate dispatch: ${affiliateStatus} for lead ${leadId}. Response: ${affiliateRespText.slice(0, 200)}`);
       } catch (e) {
         affiliateStatus = "error";
         console.error(`[submit-lead] Affiliate dispatch error for lead ${leadId}:`, e);
