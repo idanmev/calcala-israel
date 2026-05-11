@@ -85,7 +85,7 @@ function injectModalStyles() {
 }
 
 // ── Open / Close ───────────────────────────────────────────────
-function _openQuizModalImpl(vertical = null, prefillAnswer = null, fallbackCategory = null, quizId = null) {
+window.openQuizModal = function (vertical = null, prefillAnswer = null, fallbackCategory = null, quizId = null) {
   currentVertical = vertical || fallbackCategory || getCurrentVertical();
   userAnswers = {};
   currentStepIndex = 0;
@@ -117,32 +117,16 @@ function _openQuizModalImpl(vertical = null, prefillAnswer = null, fallbackCateg
 
   if (quizId) loadConfigById(quizId);
   else loadConfig(currentVertical);
-}
+};
 
-function _closeQuizModalImpl() {
+window.closeQuizModal = function () {
   const modal = document.getElementById('quiz-modal');
   if (!modal) return;
   modal.classList.add('hidden');
   document.body.style.overflow = '';
   const inner = modal.querySelector(':scope > div');
   if (inner) inner.innerHTML = '<div id="quiz-modal-content"></div>';
-}
-
-// Register implementations under private names for lazy-proxy pages (medton-lp).
-// These are always set so the proxy can delegate here at call time.
-window._quizModalOpen  = _openQuizModalImpl;
-window._quizModalClose = _closeQuizModalImpl;
-
-// Only set the global if it hasn't been installed by a page's own wrapper.
-// (medton-lp's inline script defines window.openQuizModal BEFORE this runs.)
-if (typeof window.openQuizModal !== 'function') {
-  window.openQuizModal  = _openQuizModalImpl;
-  window.closeQuizModal = _closeQuizModalImpl;
-}
-
-// Notify medton-lp's lazy hook so any queued call gets replayed.
-// On other pages _quizModalReadyHook is undefined — the try/catch is a no-op.
-try { window._quizModalReadyHook = _openQuizModalImpl; } catch(e) {}
+};
 
 function getCurrentVertical() {
   if (window.currentArticleCategory) return window.currentArticleCategory;
