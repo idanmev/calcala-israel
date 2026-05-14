@@ -461,7 +461,8 @@ function renderEligibility(step) {
           <button class="qm-continue-btn" id="qm-phone-btn">שלח ←</button>
         </div>
       ` : `
-        <div style="text-align:center;margin-top:1rem;">
+        <div style="text-align:center;margin-top:1rem;display:flex;flex-direction:column;align-items:center;gap:0.6rem;">
+          <button class="qm-continue-btn" id="qm-back-elig" style="background:#374151;">← שנה תשובה</button>
           <button class="qm-close-btn" id="qm-close-elig">סגור</button>
         </div>
       `}
@@ -473,6 +474,7 @@ function renderEligibility(step) {
       setTimeout(() => document.getElementById(needsName ? 'qm-ph-name' : 'qm-phone')?.focus(), 80);
     } else {
       document.getElementById('qm-close-elig')?.addEventListener('click', closeQuizModal);
+      document.getElementById('qm-back-elig')?.addEventListener('click', goBack);
     }
 
     // Track quiz_complete + lead_form_view via GTM
